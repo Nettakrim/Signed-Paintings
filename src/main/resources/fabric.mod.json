@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"id": "signed_paintings",
+	"version": "${version}",
+	"name": "Signed Paintings",
+	"description": "Render custom paintings client side through signs",
+	"authors": [
+		"Nettakrim"
+	],
+	"contact": {
+		"sources": "https://github.com/Nettakrim/Signed-Paintings"
+	},
+	"license": "LGPL-3.0",
+	"icon": "assets/signed_paintings/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"com.nettakrim.SignedPaintingsClient"
+		]
+	},
+	"mixins": [
+		"signed_paintings.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.14.21",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
