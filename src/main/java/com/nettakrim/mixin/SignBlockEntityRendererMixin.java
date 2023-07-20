@@ -1,8 +1,7 @@
 package com.nettakrim.mixin;
 
-import com.nettakrim.Cuboid;
 import com.nettakrim.PaintingInfo;
-import com.nettakrim.SignedPaintingsClient;
+import com.nettakrim.access.AbstractSignBlockAccessor;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.client.model.Model;
@@ -12,7 +11,6 @@ import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.screen.PlayerScreenHandler;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,11 +26,12 @@ public abstract class SignBlockEntityRendererMixin {
                     target = "Lnet/minecraft/client/render/block/entity/SignBlockEntityRenderer;renderSign(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;IILnet/minecraft/block/WoodType;Lnet/minecraft/client/model/Model;)V"
             ),
             method = "render(Lnet/minecraft/block/entity/SignBlockEntity;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;IILnet/minecraft/block/BlockState;Lnet/minecraft/block/AbstractSignBlock;Lnet/minecraft/block/WoodType;Lnet/minecraft/client/model/Model;)V",
-            cancellable = true
+            cancellable = false
     )
     private void onRender(SignBlockEntity entity, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, BlockState state, AbstractSignBlock block, WoodType woodType, Model model, CallbackInfo ci) {
-        PaintingInfo info = new PaintingInfo(new Cuboid(2, 3, 0.0625f, 0.5f, 1, 0.5f+(0.0625f/2)), SignedPaintingsClient.imageManager.getImageData("https://cdn.modrinth.com/data/bzJkPbG1/7651dbb4352c1e341c1bce51c3acb2e4348183d7.png"), new Identifier("block/" + woodType.name() + "_planks"));
-        if (info.image.ready) {
+        PaintingInfo info = ((AbstractSignBlockAccessor)block).getPaintingInfo();
+
+        if (info != null && info.isReady()) {
             if (!(state.getBlock() instanceof SignBlock)) {
                 //wall sign
             }

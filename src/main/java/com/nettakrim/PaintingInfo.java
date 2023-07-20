@@ -7,9 +7,18 @@ public class PaintingInfo {
     public ImageData image;
     public Identifier back;
 
-    public PaintingInfo(Cuboid cuboid, ImageData image, Identifier back) {
+    public PaintingInfo(Cuboid cuboid, String url, Identifier back) {
         this.cuboid = cuboid;
-        this.image = image;
+        this.image = SignedPaintingsClient.imageManager.getImageData(url);
         this.back = back;
+    }
+
+    public void updateImage(String url) {
+        this.image = SignedPaintingsClient.imageManager.getImageData(url);
+    }
+
+    public boolean isReady() {
+        if (image == null) return false;
+        return image.ready;
     }
 }

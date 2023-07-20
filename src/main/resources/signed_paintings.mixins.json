@@ -1,11 +1,13 @@
 {
-	"required": true,
-	"package": "com.nettakrim.mixin",
-	"compatibilityLevel": "JAVA_17",
-	"mixins": [
-		"SignBlockEntityRendererMixin"
-	],
-	"injectors": {
-		"defaultRequire": 1
+  "required": true,
+  "package": "com.nettakrim.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "AbstractSignBlockMixin",
+    "SignBlockEntityMixin",
+    "SignBlockEntityRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
 	}
 }

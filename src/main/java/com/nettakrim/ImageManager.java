@@ -29,6 +29,7 @@ public class ImageManager {
 
     //https://github.com/Patbox/Image2Map/blob/1.20/src/main/java/space/essem/image2map/Image2Map.java
     public void registerImage(String url) {
+        if (urlToImageData.containsKey(url)) return;
         ImageData data = new ImageData();
         urlToImageData.put(url, data);
         SignedPaintingsClient.LOGGER.info("Started loading image from "+url);
@@ -45,10 +46,21 @@ public class ImageManager {
     }
 
     private void onImageLoad(BufferedImage image, String url, ImageData data) {
-        Identifier identifier = new Identifier(SignedPaintingsClient.MODID, "image_test");
+        Identifier identifier = new Identifier(SignedPaintingsClient.MODID, createIdentifierSafeStringFromURL(url));
         saveBufferedImageAsIdentifier(image, identifier);
         data.onImageReady(identifier);
         SignedPaintingsClient.LOGGER.info("Now ready to render image "+url);
+    }
+
+    private String createIdentifierSafeStringFromURL(String url) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < url.length(); i++) {
+            char character = url.charAt(i);
+            if (character == '_' || character == '-' || character >= 'a' && character <= 'z' || character >= '0' && character <= '9' || character == '/' || character == '.') {
+                builder.append(character);
+            }
+        }
+        return builder.toString();
     }
 
     public static void saveBufferedImageAsIdentifier(BufferedImage bufferedImage, Identifier identifier) {
