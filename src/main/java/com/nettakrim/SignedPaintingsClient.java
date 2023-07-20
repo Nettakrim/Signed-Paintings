@@ -12,8 +12,15 @@ public class SignedPaintingsClient implements ClientModInitializer {
 
 	public static MinecraftClient client;
 
+	public static ImageManager imageManager;
+
 	@Override
 	public void onInitializeClient() {
 		client = MinecraftClient.getInstance();
+
+		imageManager = new ImageManager();
+
+		String imageTest = "https://cdn.modrinth.com/data/bzJkPbG1/7651dbb4352c1e341c1bce51c3acb2e4348183d7.png";
+		imageManager.registerImage(imageTest);
 	}
 }
