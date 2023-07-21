@@ -26,6 +26,8 @@ public class SignedPaintingsClient implements ClientModInitializer {
 
 		imageManager = new ImageManager();
 		paintingRenderer = new PaintingRenderer();
+
+		imageManager.registerURLAlias(new URLAlias("https://i.imgur.com/", new String[]{"imgur.com/","imgur:"}, ".png"));
 	}
 
 	public static String combineSignText(SignText text) {

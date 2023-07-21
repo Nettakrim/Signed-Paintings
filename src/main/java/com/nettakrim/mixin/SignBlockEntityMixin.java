@@ -1,9 +1,6 @@
 package com.nettakrim.mixin;
 
-import com.nettakrim.ImageData;
-import com.nettakrim.ImageDataLoadInterface;
-import com.nettakrim.PaintingInfo;
-import com.nettakrim.SignedPaintingsClient;
+import com.nettakrim.*;
 import com.nettakrim.access.SignBlockEntityAccessor;
 import net.minecraft.block.AbstractSignBlock;
 import net.minecraft.block.BlockState;
@@ -62,9 +59,12 @@ public class SignBlockEntityMixin extends BlockEntity implements SignBlockEntity
 
     @Unique
     private void loadURL(String url, boolean front) {
+        url = SignedPaintingsClient.imageManager.tryApplyURLAliases(url);
+
         if (!url.contains("://")) {
             url = "https://"+url;
         }
+
         SignedPaintingsClient.LOGGER.info("trying to load url "+url+" at "+getPos());
         PaintingInfo info = (front ? frontPaintingInfo : backPaintingInfo);
         if (info != null) info.invalidateImage();

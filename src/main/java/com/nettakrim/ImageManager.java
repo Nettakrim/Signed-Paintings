@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -19,8 +20,11 @@ import java.util.concurrent.TimeUnit;
 public class ImageManager {
     private final HashMap<String, ImageData> urlToImageData;
 
+    private final ArrayList<URLAlias> urlAliases;
+
     public ImageManager() {
         urlToImageData = new HashMap<>();
+        urlAliases = new ArrayList<>();
     }
 
     //https://github.com/Patbox/Image2Map/blob/1.20/src/main/java/space/essem/image2map/Image2Map.java
@@ -110,5 +114,17 @@ public class ImageManager {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public void registerURLAlias(URLAlias urlAlias) {
+        urlAliases.add(urlAlias);
+    }
+
+    public String tryApplyURLAliases(String text) {
+        String url = text.contains("://") ? text.split("://", 2)[1] : text;
+        for (URLAlias urlAlias : urlAliases) {
+            url = urlAlias.tryApply(url);
+        }
+        return url;
     }
 }
