@@ -62,7 +62,7 @@ public class SignBlockEntityMixin extends BlockEntity implements SignBlockEntity
 
     @Unique
     private void loadURL(String url, boolean front) {
-        if (!url.startsWith("http")) {
+        if (!url.contains("://")) {
             url = "https://"+url;
         }
         SignedPaintingsClient.LOGGER.info("trying to load url "+url+" at "+getPos());

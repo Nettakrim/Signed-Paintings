@@ -80,14 +80,7 @@ public class Cuboid {
         Vector3f normal = rotation.transform(new Vector3f(0, 0, 1));
 
         if (!split) {
-            Vector3f cornerBL = adjustVertex(new Vector3f(-0.5f, -0.5f, 0.5F), rotation);
-            Vector3f cornerBR = adjustVertex(new Vector3f( 0.5f, -0.5f, 0.5F), rotation);
-            Vector3f cornerTR = adjustVertex(new Vector3f( 0.5f,  0.5f, 0.5F), rotation);
-            Vector3f cornerTL = adjustVertex(new Vector3f(-0.5f,  0.5f, 0.5F), rotation);
-            vertexFromVector(vertexConsumer, cornerBL, minU, maxV, normal, light);
-            vertexFromVector(vertexConsumer, cornerBR, maxU, maxV, normal, light);
-            vertexFromVector(vertexConsumer, cornerTR, maxU, minV, normal, light);
-            vertexFromVector(vertexConsumer, cornerTL, minU, minV, normal, light);
+            renderQuad(vertexConsumer, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, rotation, minU, maxU, minV, maxV, normal, light);
             return;
         }
 
@@ -97,32 +90,27 @@ public class Cuboid {
 
         for (float minX = 0; minX < relevantSize.x; minX++) {
             for (float minY = 0; minY < relevantSize.y; minY++) {
-
                 float maxX = Math.min(minX+1, relevantSize.x);
                 float maxY = Math.min(minY+1, relevantSize.y);
-
-                float xDelta = maxX-minX;
-                float yDelta = maxY-minY;
 
                 float scaledMinX = (minX/relevantSize.x)-0.5f;
                 float scaledMaxX = (maxX/relevantSize.x)-0.5f;
                 float scaledMinY = (minY/relevantSize.y)-0.5f;
                 float scaledMaxY = (maxY/relevantSize.y)-0.5f;
 
-                Vector3f cornerBL = adjustVertex(new Vector3f(scaledMinX, scaledMinY, 0.5F), rotation);
-                Vector3f cornerBR = adjustVertex(new Vector3f(scaledMaxX, scaledMinY, 0.5F), rotation);
-                Vector3f cornerTR = adjustVertex(new Vector3f(scaledMaxX, scaledMaxY, 0.5F), rotation);
-                Vector3f cornerTL = adjustVertex(new Vector3f(scaledMinX, scaledMaxY, 0.5F), rotation);
+                float newMaxU = minU+((maxU-minU)*(maxX-minX));
+                float newMaxV = minV+((maxV-minV)*(maxY-minY));
 
-                float newMaxU = minU+((maxU-minU)*xDelta);
-                float newMaxV = minV+((maxV-minV)*yDelta);
-
-                vertexFromVector(vertexConsumer, cornerBL, minU,    newMaxV, normal, light);
-                vertexFromVector(vertexConsumer, cornerBR, newMaxU, newMaxV, normal, light);
-                vertexFromVector(vertexConsumer, cornerTR, newMaxU, minV,    normal, light);
-                vertexFromVector(vertexConsumer, cornerTL, minU,    minV,    normal, light);
+                renderQuad(vertexConsumer, scaledMinX, scaledMaxX, scaledMinY, scaledMaxY, 0.5f, rotation, minU, newMaxU, minV, newMaxV, normal, light);
             }
         }
+    }
+
+    private void renderQuad(VertexConsumer vertexConsumer, float minX, float maxX, float minY, float maxY, float z, AxisAngle4f rotation, float minU, float maxU, float minV, float maxV, Vector3f normal, int light) {
+        vertexFromVector(vertexConsumer, adjustVertex(new Vector3f(minX, minY, z), rotation), minU, maxV, normal, light);
+        vertexFromVector(vertexConsumer, adjustVertex(new Vector3f(maxX, minY, z), rotation), maxU, maxV, normal, light);
+        vertexFromVector(vertexConsumer, adjustVertex(new Vector3f(maxX, maxY, z), rotation), maxU, minV, normal, light);
+        vertexFromVector(vertexConsumer, adjustVertex(new Vector3f(minX, maxY, z), rotation), minU, minV, normal, light);
     }
 
     private void vertexFromVector(VertexConsumer vertexConsumer, Vector3f vertexPos, float u, float v, Vector3f normal, int light) {
