@@ -15,7 +15,6 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 public class ImageManager {
     private final HashMap<String, ImageData> urlToImageData;
@@ -25,15 +24,15 @@ public class ImageManager {
     }
 
     //https://github.com/Patbox/Image2Map/blob/1.20/src/main/java/space/essem/image2map/Image2Map.java
-    public void loadImage(String url, Function<ImageData, Void> onLoad) {
+    public void loadImage(String url, ImageDataLoadInterface onLoadCallback) {
         if (urlToImageData.containsKey(url)) {
-            onLoad.apply(urlToImageData.get(url));
+            onLoadCallback.onLoad(urlToImageData.get(url));
         } else {
-            registerImage(url, onLoad);
+            registerImage(url, onLoadCallback);
         }
     }
 
-    private void registerImage(String url, Function<ImageData, Void> onLoad) {
+    private void registerImage(String url, ImageDataLoadInterface onLoadCallback) {
         ImageData data = new ImageData();
         urlToImageData.put(url, data);
         SignedPaintingsClient.LOGGER.info("Started loading image from "+url);
@@ -44,7 +43,7 @@ public class ImageManager {
             } else {
                 SignedPaintingsClient.LOGGER.info("Loaded image "+url);
                 onImageLoad(image, url, data);
-                if (onLoad != null) onLoad.apply(data);
+                if (onLoadCallback != null) onLoadCallback.onLoad(data);
             }
             return null;
         });

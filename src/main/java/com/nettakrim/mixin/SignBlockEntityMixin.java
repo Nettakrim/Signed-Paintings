@@ -1,6 +1,7 @@
 package com.nettakrim.mixin;
 
 import com.nettakrim.ImageData;
+import com.nettakrim.ImageDataLoadInterface;
 import com.nettakrim.PaintingInfo;
 import com.nettakrim.SignedPaintingsClient;
 import com.nettakrim.access.SignBlockEntityAccessor;
@@ -67,28 +68,19 @@ public class SignBlockEntityMixin extends BlockEntity implements SignBlockEntity
         SignedPaintingsClient.LOGGER.info("trying to load url "+url+" at "+getPos());
         PaintingInfo info = (front ? frontPaintingInfo : backPaintingInfo);
         if (info != null) info.invalidateImage();
-        SignedPaintingsClient.imageManager.loadImage(url, front ? this::onFrontImageLoad : this::onBackImageLoad);
+        ImageDataLoadInterface frontImageLoad = (data) -> frontPaintingInfo = updateInfo(frontPaintingInfo, data, true );
+        ImageDataLoadInterface backImageLoad =  (data) -> backPaintingInfo  = updateInfo(backPaintingInfo,  data, false);
+        SignedPaintingsClient.imageManager.loadImage(url, front ? frontImageLoad : backImageLoad);
     }
 
     @Unique
-    private Void onFrontImageLoad(ImageData data) {
+    private PaintingInfo updateInfo(PaintingInfo reference, ImageData data, boolean isFront) {
         SignedPaintingsClient.LOGGER.info("creating painting info for "+data+" at "+getPos());
-        if (frontPaintingInfo == null) {
-            frontPaintingInfo = new PaintingInfo(data, createBackIdentifier(), true, !(getCachedState().getBlock() instanceof SignBlock));
+        if (reference == null) {
+            return new PaintingInfo(data, createBackIdentifier(), isFront, !(getCachedState().getBlock() instanceof SignBlock));
         } else {
-            frontPaintingInfo.updateImage(data);
+            reference.updateImage(data);
+            return reference;
         }
-        return null;
-    }
-
-    @Unique
-    private Void onBackImageLoad(ImageData data) {
-        SignedPaintingsClient.LOGGER.info("creating painting info for "+data+" at "+getPos());
-        if (backPaintingInfo == null) {
-            backPaintingInfo = new PaintingInfo(data, createBackIdentifier(), false, !(getCachedState().getBlock() instanceof SignBlock));
-        } else {
-            backPaintingInfo.updateImage(data);
-        }
-        return null;
     }
 }
