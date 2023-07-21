@@ -20,6 +20,28 @@ public class Cuboid {
         this.offset = new Vector3f(xOffset, yOffset, zOffset);
     }
 
+    public static Cuboid CreateWallCuboid(float xSize, Centering xCentering, float ySize, Centering yCentering, float zSize) {
+        return new Cuboid(xSize, ySize, zSize, getOffsetFromCentering(xSize, xCentering), getOffsetFromCentering(ySize, yCentering), -0.5f + (zSize/2));
+    }
+
+    public static Cuboid CreateFlushCuboid(float xSize, Centering xCentering, float ySize, Centering yCentering, float zSize) {
+        return new Cuboid(xSize, ySize, zSize, getOffsetFromCentering(xSize, xCentering), getOffsetFromCentering(ySize, yCentering), 0.5f - (zSize/2));
+    }
+
+    private static float getOffsetFromCentering(float size, Centering centering) {
+        return switch (centering) {
+            case MIN -> (size-1)/2;
+            case CENTER -> 0;
+            case MAX -> (1-size)/2;
+        };
+    }
+
+    public enum Centering {
+        MIN,
+        CENTER,
+        MAX
+    }
+
     public void setupRendering(MatrixStack matrices) {
         MatrixStack.Entry entry = matrices.peek();
         this.positionCache = entry.getPositionMatrix();

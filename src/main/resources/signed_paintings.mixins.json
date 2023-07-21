@@ -3,7 +3,8 @@
   "package": "com.nettakrim.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "AbstractSignBlockMixin",
+    "AbstractSignEditScreenMixin",
+    "SelectionManagerMixin",
     "SignBlockEntityMixin",
     "SignBlockEntityRendererMixin"
   ],

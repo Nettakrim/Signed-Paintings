@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 public class ImageManager {
     private final HashMap<String, ImageData> urlToImageData;
@@ -23,13 +24,16 @@ public class ImageManager {
         urlToImageData = new HashMap<>();
     }
 
-    public ImageData getImageData(String url) {
-        return urlToImageData.get(url);
+    //https://github.com/Patbox/Image2Map/blob/1.20/src/main/java/space/essem/image2map/Image2Map.java
+    public void loadImage(String url, Function<ImageData, Void> onLoad) {
+        if (urlToImageData.containsKey(url)) {
+            onLoad.apply(urlToImageData.get(url));
+        } else {
+            registerImage(url, onLoad);
+        }
     }
 
-    //https://github.com/Patbox/Image2Map/blob/1.20/src/main/java/space/essem/image2map/Image2Map.java
-    public void registerImage(String url) {
-        if (urlToImageData.containsKey(url)) return;
+    private void registerImage(String url, Function<ImageData, Void> onLoad) {
         ImageData data = new ImageData();
         urlToImageData.put(url, data);
         SignedPaintingsClient.LOGGER.info("Started loading image from "+url);
@@ -40,6 +44,7 @@ public class ImageManager {
             } else {
                 SignedPaintingsClient.LOGGER.info("Loaded image "+url);
                 onImageLoad(image, url, data);
+                if (onLoad != null) onLoad.apply(data);
             }
             return null;
         });
@@ -48,7 +53,7 @@ public class ImageManager {
     private void onImageLoad(BufferedImage image, String url, ImageData data) {
         Identifier identifier = new Identifier(SignedPaintingsClient.MODID, createIdentifierSafeStringFromURL(url));
         saveBufferedImageAsIdentifier(image, identifier);
-        data.onImageReady(identifier);
+        data.onImageReady(identifier, image);
         SignedPaintingsClient.LOGGER.info("Now ready to render image "+url);
     }
 

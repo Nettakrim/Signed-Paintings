@@ -3,10 +3,10 @@ package com.nettakrim.access;
 import com.nettakrim.PaintingInfo;
 import net.minecraft.util.Identifier;
 
-public interface AbstractSignBlockAccessor {
-    PaintingInfo getPaintingInfo();
+public interface SignBlockEntityAccessor {
+    PaintingInfo getFrontPaintingInfo();
 
-    void setPaintingInfo(PaintingInfo info);
+    PaintingInfo getBackPaintingInfo();
 
     Identifier createBackIdentifier();
 }
