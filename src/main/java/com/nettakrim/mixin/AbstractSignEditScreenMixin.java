@@ -7,7 +7,6 @@ import com.nettakrim.access.AbstractSignEditScreenAccessor;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.AbstractSignEditScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -88,11 +87,6 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Inject(at = @At("TAIL"), method = "finishEditing")
     private void onScreenClose(CallbackInfo ci) {
         SignedPaintingsClient.currentSignEdit = null;
-    }
-
-    @Inject(at = @At("TAIL"), method = "render")
-    private void onRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-
     }
 
     @Override
