@@ -1,12 +1,17 @@
 package com.nettakrim.mixin;
 
+import com.nettakrim.Cuboid;
 import com.nettakrim.SignEditingInfo;
 import com.nettakrim.SignedPaintingsClient;
 import com.nettakrim.access.AbstractSignEditScreenAccessor;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.AbstractSignEditScreen;
+import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.util.SelectionManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Final;
@@ -18,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AbstractSignEditScreen.class)
-public abstract class AbstractSignEditScreenMixin implements AbstractSignEditScreenAccessor {
+public abstract class AbstractSignEditScreenMixin extends Screen implements AbstractSignEditScreenAccessor {
     @Shadow
     private SignText text;
 
@@ -37,22 +42,80 @@ public abstract class AbstractSignEditScreenMixin implements AbstractSignEditScr
     @Shadow
     private int currentRow;
 
+    @Shadow
+    private SelectionManager selectionManager;
+
+    protected AbstractSignEditScreenMixin(Text title) {
+        super(title);
+    }
+
     @Shadow protected abstract void setCurrentRowMessage(String message);
+
+    @Inject(at = @At("TAIL"), method = "init")
+    private void init(CallbackInfo ci) {
+        //🡤🡡🡥🡠◯🡢🡧🡣🡦
+        String[] arrows = new String[] {"\uD83E\uDC64","\uD83E\uDC61","\uD83E\uDC65","\uD83E\uDC60","◯","\uD83E\uDC62","\uD83E\uDC67","\uD83E\uDC63","\uD83E\uDC66"};
+        for (Cuboid.Centering xCentering : Cuboid.Centering.values()) {
+            for (Cuboid.Centering yCentering : Cuboid.Centering.values()) {
+                int arrowIndex = 2-xCentering.ordinal() + yCentering.ordinal()*3;
+                createCenteringButton(75, 25, arrows[arrowIndex], xCentering, yCentering);
+            }
+        }
+        SignedPaintingsClient.currentSignEdit.setSelectionManager(selectionManager);
+    }
+
+    @Unique
+    private void createCenteringButton(int areaSize, int buttonSize, String text, Cuboid.Centering xCentering, Cuboid.Centering yCentering) {
+        ButtonWidget widget = ButtonWidget.builder(Text.literal(text), button -> SignedPaintingsClient.currentSignEdit.updatePaintingCentering(front, xCentering, yCentering))
+        .position(getCenteringButtonPosition(areaSize, xCentering, buttonSize, width)-(width/4), getCenteringButtonPosition(-areaSize, yCentering, buttonSize, height))
+        .size(buttonSize, buttonSize)
+        .build();
+
+        addDrawableChild(widget);
+        addSelectableChild(widget);
+    }
+
+    @Unique
+    private int getCenteringButtonPosition(int size, Cuboid.Centering centering, int buttonSize, int screenSize) {
+        return MathHelper.floor(Cuboid.getOffsetFromCentering(size, centering)) + screenSize/2 - buttonSize/2;
+    }
 
     @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/block/entity/SignBlockEntity;ZZLnet/minecraft/text/Text;)V")
     private void onScreenOpen(SignBlockEntity blockEntity, boolean front, boolean filtered, Text title, CallbackInfo ci) {
         SignedPaintingsClient.currentSignEdit = new SignEditingInfo(blockEntity, this);
-        SignedPaintingsClient.LOGGER.info("SCREEN OPENED");
     }
 
     @Inject(at = @At("TAIL"), method = "finishEditing")
     private void onScreenClose(CallbackInfo ci) {
         SignedPaintingsClient.currentSignEdit = null;
-        SignedPaintingsClient.LOGGER.info("SCREEN CLOSED");
+    }
+
+    @Inject(at = @At("TAIL"), method = "render")
+    private void onRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+
     }
 
     @Override
-    public int tryPaste(String pasteString, int selectionStart, int selectionEnd) {
+    public void clear() {
+        for (int i = 0; i < messages.length; i++) {
+            this.messages[i] = "";
+            this.text = this.text.withMessage(i, Text.literal("message"));
+        }
+        this.blockEntity.setText(this.text, this.front);
+        this.currentRow = 0;
+    }
+
+    @Override
+    public String getCombinedMessage() {
+        StringBuilder builder = new StringBuilder();
+        for (String message : messages) {
+            builder.append(message);
+        }
+        return builder.toString();
+    }
+
+    @Override
+    public int paste(String pasteString, int selectionStart, int selectionEnd) {
         String[] newMessages = new String[messages.length];
         System.arraycopy(messages, 0, newMessages, 0, messages.length);
 

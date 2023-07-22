@@ -43,7 +43,7 @@ public class ImageManager {
         downloadImageBuffer(url).orTimeout(60, TimeUnit.SECONDS).handleAsync((image, ex) -> {
             if (image == null || ex != null) {
                 urlToImageData.remove(url);
-                SignedPaintingsClient.LOGGER.info("Couldnt load image "+url);
+                SignedPaintingsClient.LOGGER.info("Couldn't load image "+url);
             } else {
                 SignedPaintingsClient.LOGGER.info("Loaded image "+url);
                 onImageLoad(image, url, data);
