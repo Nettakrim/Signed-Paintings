@@ -90,7 +90,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Override
-    public void clear() {
+    public void signedPaintings$clear() {
         for (int i = 0; i < messages.length; i++) {
             this.messages[i] = "";
             this.text = this.text.withMessage(i, Text.literal("message"));
@@ -100,7 +100,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Override
-    public String getCombinedMessage() {
+    public String signedPaintings$getCombinedMessage() {
         StringBuilder builder = new StringBuilder();
         for (String message : messages) {
             builder.append(message);
@@ -109,7 +109,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Override
-    public int paste(String pasteString, int selectionStart, int selectionEnd) {
+    public int signedPaintings$paste(String pasteString, int selectionStart, int selectionEnd) {
         String[] newMessages = new String[messages.length];
         System.arraycopy(messages, 0, newMessages, 0, messages.length);
 

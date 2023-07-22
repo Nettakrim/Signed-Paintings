@@ -65,6 +65,10 @@ public class PaintingInfo {
         updateCuboid();
     }
 
+    public void setBackIdentifier(Identifier back) {
+        this.back = back;
+    }
+
     public Identifier getImageIdentifier() {
         return image.identifier;
     }

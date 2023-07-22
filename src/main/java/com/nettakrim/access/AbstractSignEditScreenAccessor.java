@@ -1,9 +1,9 @@
 package com.nettakrim.access;
 
 public interface AbstractSignEditScreenAccessor {
-    int paste(String s, int selectionStart, int selectionEnd);
+    int signedPaintings$paste(String s, int selectionStart, int selectionEnd);
 
-    void clear();
+    void signedPaintings$clear();
 
-    String getCombinedMessage();
+    String signedPaintings$getCombinedMessage();
 }

@@ -35,14 +35,14 @@ public class SignSideData {
         String centering = Cuboid.getNameFromCentering(true, xCentering)+Cuboid.getNameFromCentering(false, yCentering);
 
         //for some reason combineSignText(text) does not work?
-        String text = SignedPaintingsClient.currentSignEdit.screen.getCombinedMessage();
-        SignedPaintingsClient.currentSignEdit.screen.clear();
+        String newText = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$getCombinedMessage();
+        SignedPaintingsClient.currentSignEdit.screen.signedPaintings$clear();
 
-        int splitStart = text.indexOf(' ');
+        int splitStart = newText.indexOf(' ');
         int splitEnd;
 
         if (splitStart == -1) {
-            splitStart = text.length();
+            splitStart = newText.length();
             splitEnd = splitStart;
             centering = " "+centering;
         } else {
@@ -50,9 +50,9 @@ public class SignSideData {
             splitEnd = splitStart+2;
         }
 
-        text = text.substring(0, splitStart)+centering+text.substring(splitEnd);
+        newText = newText.substring(0, splitStart)+centering+newText.substring(splitEnd);
 
-        int newSelection = SignedPaintingsClient.currentSignEdit.screen.paste(text, 0, 0);
+        int newSelection = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(newText, 0, 0);
         SignedPaintingsClient.currentSignEdit.selectionManager.setSelection(newSelection, newSelection);
     }
 

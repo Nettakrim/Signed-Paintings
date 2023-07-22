@@ -33,26 +33,26 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
     @Unique
     protected SignSideData backData;
 
-    public PaintingInfo getFrontPaintingInfo() {
+    public PaintingInfo signedPaintings$getFrontPaintingInfo() {
         return frontData.paintingInfo;
     }
 
-    public PaintingInfo getBackPaintingInfo() {
+    public PaintingInfo signedPaintings$getBackPaintingInfo() {
         return backData.paintingInfo;
     }
 
-    public Identifier createBackIdentifier() {
+    public Identifier signedPaintings$createBackIdentifier() {
         if (getCachedState().getBlock() instanceof AbstractSignBlock signBlock) {
             return new Identifier("block/" + signBlock.getWoodType().name() + "_planks");
         }
         return new Identifier("block/" + WoodType.OAK.name() + "_planks");
     }
 
-    public void updatePaintingCentering(boolean front, Cuboid.Centering xCentering, Cuboid.Centering yCentering) {
+    public void signedPaintings$updatePaintingCentering(boolean front, Cuboid.Centering xCentering, Cuboid.Centering yCentering) {
         (front ? frontData : backData).updatePaintingCentering(xCentering, yCentering);
     }
 
-    public void updatePaintingSize(boolean front, float xSize, float ySize) {
+    public void signedPaintings$updatePaintingSize(boolean front, float xSize, float ySize) {
         (front ? frontData : backData).updatePaintingSize(xSize, ySize);
     }
 
@@ -88,6 +88,6 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
         SignedPaintingsClient.LOGGER.info("trying to load url "+url+" at "+getPos());
         SignSideData sideData = front ? frontData : backData;
         if (sideData.paintingInfo != null) sideData.paintingInfo.invalidateImage();
-        SignedPaintingsClient.imageManager.loadImage(url, (data) -> sideData.updateInfo(data, afterURL, createBackIdentifier(), front, !(getCachedState().getBlock() instanceof SignBlock)));
+        SignedPaintingsClient.imageManager.loadImage(url, (data) -> sideData.updateInfo(data, afterURL, signedPaintings$createBackIdentifier(), front, !(getCachedState().getBlock() instanceof SignBlock)));
     }
 }

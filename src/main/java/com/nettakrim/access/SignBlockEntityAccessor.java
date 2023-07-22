@@ -5,13 +5,13 @@ import com.nettakrim.PaintingInfo;
 import net.minecraft.util.Identifier;
 
 public interface SignBlockEntityAccessor {
-    PaintingInfo getFrontPaintingInfo();
+    PaintingInfo signedPaintings$getFrontPaintingInfo();
 
-    PaintingInfo getBackPaintingInfo();
+    PaintingInfo signedPaintings$getBackPaintingInfo();
 
-    Identifier createBackIdentifier();
+    Identifier signedPaintings$createBackIdentifier();
 
-    void updatePaintingCentering(boolean front, Cuboid.Centering xCentering, Cuboid.Centering yCentering);
+    void signedPaintings$updatePaintingCentering(boolean front, Cuboid.Centering xCentering, Cuboid.Centering yCentering);
 
-    void updatePaintingSize(boolean front, float xSize, float ySize);
+    void signedPaintings$updatePaintingSize(boolean front, float xSize, float ySize);
 }

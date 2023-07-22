@@ -22,10 +22,10 @@ public class SignEditingInfo {
     }
 
     public void updatePaintingCentering(boolean front, Cuboid.Centering xCentering, Cuboid.Centering yCentering) {
-        ((SignBlockEntityAccessor)sign).updatePaintingCentering(front, xCentering, yCentering);
+        ((SignBlockEntityAccessor)sign).signedPaintings$updatePaintingCentering(front, xCentering, yCentering);
     }
 
     public void updatePaintingSize(boolean front, float xSize, float ySize) {
-        ((SignBlockEntityAccessor)sign).updatePaintingSize(front, xSize, ySize);
+        ((SignBlockEntityAccessor)sign).signedPaintings$updatePaintingSize(front, xSize, ySize);
     }
 }

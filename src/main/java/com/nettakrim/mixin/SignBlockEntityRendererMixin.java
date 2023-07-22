@@ -28,8 +28,8 @@ public abstract class SignBlockEntityRendererMixin {
     private void onRender(SignBlockEntity entity, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, BlockState state, AbstractSignBlock block, WoodType woodType, Model model, CallbackInfo ci) {
         boolean success = false;
         SignBlockEntityAccessor accessor = (SignBlockEntityAccessor)entity;
-        success |= renderPaintingInfo(accessor.getFrontPaintingInfo(), matrices, vertexConsumers, model, light, block, state);
-        success |= renderPaintingInfo(accessor.getBackPaintingInfo(), matrices, vertexConsumers, model, light, block, state);
+        success |= renderPaintingInfo(accessor.signedPaintings$getFrontPaintingInfo(), matrices, vertexConsumers, model, light, block, state);
+        success |= renderPaintingInfo(accessor.signedPaintings$getBackPaintingInfo(), matrices, vertexConsumers, model, light, block, state);
         if (success) ci.cancel();
     }
 
