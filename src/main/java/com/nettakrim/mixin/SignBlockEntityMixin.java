@@ -79,11 +79,7 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
 
     @Unique
     private void loadURL(String url, String afterURL, boolean front) {
-        url = SignedPaintingsClient.imageManager.tryApplyURLAliases(url);
-
-        if (!url.contains("://")) {
-            url = "https://"+url;
-        }
+        url = SignedPaintingsClient.imageManager.applyURLInferences(url);
 
         SignedPaintingsClient.LOGGER.info("trying to load url "+url+" at "+getPos());
         SignSideData sideData = front ? frontData : backData;
