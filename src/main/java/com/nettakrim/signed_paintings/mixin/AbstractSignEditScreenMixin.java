@@ -1,6 +1,7 @@
 package com.nettakrim.signed_paintings.mixin;
 
 import com.nettakrim.signed_paintings.Cuboid;
+import com.nettakrim.signed_paintings.InputSlider;
 import com.nettakrim.signed_paintings.SignEditingInfo;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.access.AbstractSignEditScreenAccessor;
@@ -20,6 +21,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AbstractSignEditScreen.class)
 public abstract class AbstractSignEditScreenMixin extends Screen implements AbstractSignEditScreenAccessor {
@@ -44,6 +46,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Shadow
     private SelectionManager selectionManager;
 
+    @Unique
+    private InputSlider tempSlider;
+
     protected AbstractSignEditScreenMixin(Text title) {
         super(title);
     }
@@ -57,7 +62,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         for (Cuboid.Centering xCentering : Cuboid.Centering.values()) {
             for (Cuboid.Centering yCentering : Cuboid.Centering.values()) {
                 int arrowIndex = 2-xCentering.ordinal() + yCentering.ordinal()*3;
-                createCenteringButton(75, 25, arrows[arrowIndex], xCentering, yCentering);
+                createCenteringButton(50, 20, arrows[arrowIndex], xCentering, yCentering);
             }
         }
 
@@ -84,7 +89,15 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Unique
     private void createSizingSlider() {
+        InputSlider inputSlider = new InputSlider(5, 5, 30, 100, 20, 5, 0.5f, 10f, 0.5f, 1f);
 
+        addDrawableChild(inputSlider.textFieldWidget);
+        addSelectableChild(inputSlider.textFieldWidget);
+
+        addDrawableChild(inputSlider.sliderWidget);
+        addSelectableChild(inputSlider.sliderWidget);
+
+        tempSlider = inputSlider;
     }
 
     @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/block/entity/SignBlockEntity;ZZLnet/minecraft/text/Text;)V")
@@ -95,6 +108,22 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Inject(at = @At("TAIL"), method = "finishEditing")
     private void onScreenClose(CallbackInfo ci) {
         SignedPaintingsClient.currentSignEdit = null;
+    }
+
+    @Inject(at = @At("HEAD"), method = "keyPressed", cancellable = true)
+    private void onKeyPress(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
+        if (tempSlider.isActive()) {
+            cir.setReturnValue(tempSlider.keyPressed(keyCode, scanCode, modifiers));
+            cir.cancel();
+        }
+    }
+
+    @Inject(at = @At("HEAD"), method = "charTyped", cancellable = true)
+    private void onCharType(char chr, int modifiers, CallbackInfoReturnable<Boolean> cir) {
+        if (tempSlider.isActive()) {
+            cir.setReturnValue(tempSlider.charTyped(chr, modifiers));
+            cir.cancel();
+        }
     }
 
     @Override

@@ -9,6 +9,9 @@ import net.minecraft.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class SignedPaintingsClient implements ClientModInitializer {
 	public static final String MODID = "signed_paintings";
     public static final Logger LOGGER = LoggerFactory.getLogger(MODID);
@@ -69,5 +72,11 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		//length was not directly achievable, so use the next smallest length instead
 		if (textRenderer.getWidth(reference.substring(0, index)) > budgetWidth) index--;
 		return index;
+	}
+
+	public static String floatToStringDP(float d, int decimalPlace) {
+		BigDecimal bd = new BigDecimal(Float.toString(d));
+		bd = bd.setScale(decimalPlace, RoundingMode.HALF_UP);
+		return bd.toString();
 	}
 }
