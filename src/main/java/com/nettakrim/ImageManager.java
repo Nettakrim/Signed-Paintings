@@ -120,16 +120,16 @@ public class ImageManager {
         urlAliases.add(urlAlias);
     }
 
-    public String applyURLInferences(String url) {
-        url = applyURLAliases(url);
+    public String applyURLInferences(String text) {
+        String url = applyURLAliases(text);
         if (!url.contains("://")) {
             url = "https://"+url;
         }
         return url;
     }
 
-    private String applyURLAliases(String url) {
-        url = url.contains("://") ? url.split("://", 2)[1] : url;
+    private String applyURLAliases(String text) {
+        String url = text.contains("://") ? text.split("://", 2)[1] : text;
         for (URLAlias urlAlias : urlAliases) {
             url = urlAlias.tryApply(url);
         }

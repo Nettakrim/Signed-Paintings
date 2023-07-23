@@ -100,15 +100,6 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Override
-    public String signedPaintings$getCombinedMessage() {
-        StringBuilder builder = new StringBuilder();
-        for (String message : messages) {
-            builder.append(message);
-        }
-        return builder.toString();
-    }
-
-    @Override
     public int signedPaintings$paste(String pasteString, int selectionStart, int selectionEnd) {
         String[] newMessages = new String[messages.length];
         System.arraycopy(messages, 0, newMessages, 0, messages.length);

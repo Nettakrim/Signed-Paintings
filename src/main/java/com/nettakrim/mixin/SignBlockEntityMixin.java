@@ -19,6 +19,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(SignBlockEntity.class)
 public abstract class SignBlockEntityMixin extends BlockEntity implements SignBlockEntityAccessor {
@@ -64,26 +65,20 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
         backData = new SignSideData(backText, null);
     }
 
+    @Inject(at = @At("TAIL"), method = "setText")
+    private void onSetText(SignText text, boolean front, CallbackInfoReturnable<Boolean> cir) {
+        frontData.text = frontText;
+        backData.text = backText;
+    }
+
     @Inject(at = @At("TAIL"), method = "readNbt")
     private void onNBTRead(NbtCompound nbt, CallbackInfo ci) {
-        SignedPaintingsClient.LOGGER.info("nbt read "+frontText.getMessage(0, false).toString());
-        loadPainting(SignedPaintingsClient.combineSignText(frontText), true);
-        loadPainting(SignedPaintingsClient.combineSignText(backText), false);
-    }
-
-    @Unique
-    private void loadPainting(String text, boolean front) {
-        String[] parts = text.split(" ", 2);
-        loadURL(parts[0], parts.length > 1 ? parts[1] : "", front);
-    }
-
-    @Unique
-    private void loadURL(String url, String afterURL, boolean front) {
-        url = SignedPaintingsClient.imageManager.applyURLInferences(url);
-
-        SignedPaintingsClient.LOGGER.info("trying to load url "+url+" at "+getPos());
-        SignSideData sideData = front ? frontData : backData;
-        if (sideData.paintingInfo != null) sideData.paintingInfo.invalidateImage();
-        SignedPaintingsClient.imageManager.loadImage(url, (data) -> sideData.updateInfo(data, afterURL, signedPaintings$createBackIdentifier(), front, !(getCachedState().getBlock() instanceof SignBlock)));
+        frontData.text = frontText;
+        backData.text = backText;
+        SignedPaintingsClient.LOGGER.info("nbt read "+frontText.getMessage(0, false).toString()+" at "+getPos());
+        Identifier back = signedPaintings$createBackIdentifier();
+        boolean isWall = !(getCachedState().getBlock() instanceof SignBlock);
+        frontData.loadPainting(back, true, isWall);
+        backData.loadPainting(back, false, isWall);
     }
 }
