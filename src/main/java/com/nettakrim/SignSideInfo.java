@@ -3,11 +3,11 @@ package com.nettakrim;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.util.Identifier;
 
-public class SignSideData {
+public class SignSideInfo {
     public SignText text;
     public PaintingInfo paintingInfo;
 
-    public SignSideData(SignText text, PaintingInfo paintingInfo) {
+    public SignSideInfo(SignText text, PaintingInfo paintingInfo) {
         this.text = text;
         this.paintingInfo = paintingInfo;
     }

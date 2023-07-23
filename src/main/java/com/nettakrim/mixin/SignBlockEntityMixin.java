@@ -29,17 +29,17 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
     private SignText backText;
 
     @Unique
-    protected SignSideData frontData;
+    protected SignSideInfo frontInfo;
 
     @Unique
-    protected SignSideData backData;
+    protected SignSideInfo backInfo;
 
     public PaintingInfo signedPaintings$getFrontPaintingInfo() {
-        return frontData.paintingInfo;
+        return frontInfo.paintingInfo;
     }
 
     public PaintingInfo signedPaintings$getBackPaintingInfo() {
-        return backData.paintingInfo;
+        return backInfo.paintingInfo;
     }
 
     public Identifier signedPaintings$createBackIdentifier() {
@@ -50,35 +50,35 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
     }
 
     public void signedPaintings$updatePaintingCentering(boolean front, Cuboid.Centering xCentering, Cuboid.Centering yCentering) {
-        (front ? frontData : backData).updatePaintingCentering(xCentering, yCentering);
+        (front ? frontInfo : backInfo).updatePaintingCentering(xCentering, yCentering);
     }
 
     public void signedPaintings$updatePaintingSize(boolean front, float xSize, float ySize) {
-        (front ? frontData : backData).updatePaintingSize(xSize, ySize);
+        (front ? frontInfo : backInfo).updatePaintingSize(xSize, ySize);
     }
 
     public SignBlockEntityMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {super(type, pos, state);}
 
     @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/block/entity/BlockEntityType;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)V")
     private void onInit(BlockEntityType<?> blockEntityType, BlockPos blockPos, BlockState blockState, CallbackInfo ci) {
-        frontData = new SignSideData(frontText, null);
-        backData = new SignSideData(backText, null);
+        frontInfo = new SignSideInfo(frontText, null);
+        backInfo = new SignSideInfo(backText, null);
     }
 
     @Inject(at = @At("TAIL"), method = "setText")
     private void onSetText(SignText text, boolean front, CallbackInfoReturnable<Boolean> cir) {
-        frontData.text = frontText;
-        backData.text = backText;
+        frontInfo.text = frontText;
+        backInfo.text = backText;
     }
 
     @Inject(at = @At("TAIL"), method = "readNbt")
     private void onNBTRead(NbtCompound nbt, CallbackInfo ci) {
-        frontData.text = frontText;
-        backData.text = backText;
+        frontInfo.text = frontText;
+        backInfo.text = backText;
         SignedPaintingsClient.LOGGER.info("nbt read "+frontText.getMessage(0, false).toString()+" at "+getPos());
         Identifier back = signedPaintings$createBackIdentifier();
         boolean isWall = !(getCachedState().getBlock() instanceof SignBlock);
-        frontData.loadPainting(back, true, isWall);
-        backData.loadPainting(back, false, isWall);
+        frontInfo.loadPainting(back, true, isWall);
+        backInfo.loadPainting(back, false, isWall);
     }
 }
