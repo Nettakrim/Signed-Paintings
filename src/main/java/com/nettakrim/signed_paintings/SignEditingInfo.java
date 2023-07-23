@@ -1,7 +1,7 @@
-package com.nettakrim;
+package com.nettakrim.signed_paintings;
 
-import com.nettakrim.access.AbstractSignEditScreenAccessor;
-import com.nettakrim.access.SignBlockEntityAccessor;
+import com.nettakrim.signed_paintings.access.AbstractSignEditScreenAccessor;
+import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.client.util.SelectionManager;
 

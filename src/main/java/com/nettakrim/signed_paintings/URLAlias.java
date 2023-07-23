@@ -1,4 +1,4 @@
-package com.nettakrim;
+package com.nettakrim.signed_paintings;
 
 public record URLAlias (String domain, String[] aliases, String defaultImageFormat) {
     public String tryApply(String url) {

@@ -1,6 +1,6 @@
-package com.nettakrim.mixin;
+package com.nettakrim.signed_paintings.mixin;
 
-import com.nettakrim.SignedPaintingsClient;
+import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import net.minecraft.client.util.SelectionManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

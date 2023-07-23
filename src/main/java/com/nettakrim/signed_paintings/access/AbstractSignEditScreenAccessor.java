@@ -1,4 +1,4 @@
-package com.nettakrim.access;
+package com.nettakrim.signed_paintings.access;
 
 public interface AbstractSignEditScreenAccessor {
     int signedPaintings$paste(String s, int selectionStart, int selectionEnd);

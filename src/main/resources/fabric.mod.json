@@ -15,7 +15,7 @@
 	"environment": "client",
 	"entrypoints": {
 		"client": [
-			"com.nettakrim.SignedPaintingsClient"
+          "com.nettakrim.signed_paintings.SignedPaintingsClient"
 		]
 	},
 	"mixins": [

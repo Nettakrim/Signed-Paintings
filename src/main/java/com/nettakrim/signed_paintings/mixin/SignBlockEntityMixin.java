@@ -1,7 +1,10 @@
-package com.nettakrim.mixin;
+package com.nettakrim.signed_paintings.mixin;
 
-import com.nettakrim.*;
-import com.nettakrim.access.SignBlockEntityAccessor;
+import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
+import com.nettakrim.signed_paintings.Cuboid;
+import com.nettakrim.signed_paintings.PaintingInfo;
+import com.nettakrim.signed_paintings.SignSideInfo;
+import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import net.minecraft.block.AbstractSignBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SignBlock;

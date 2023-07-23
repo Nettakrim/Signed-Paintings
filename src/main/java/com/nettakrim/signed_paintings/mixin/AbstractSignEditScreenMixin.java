@@ -1,9 +1,9 @@
-package com.nettakrim.mixin;
+package com.nettakrim.signed_paintings.mixin;
 
-import com.nettakrim.Cuboid;
-import com.nettakrim.SignEditingInfo;
-import com.nettakrim.SignedPaintingsClient;
-import com.nettakrim.access.AbstractSignEditScreenAccessor;
+import com.nettakrim.signed_paintings.Cuboid;
+import com.nettakrim.signed_paintings.SignEditingInfo;
+import com.nettakrim.signed_paintings.SignedPaintingsClient;
+import com.nettakrim.signed_paintings.access.AbstractSignEditScreenAccessor;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.client.font.TextRenderer;
@@ -60,6 +60,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
                 createCenteringButton(75, 25, arrows[arrowIndex], xCentering, yCentering);
             }
         }
+
+        createSizingSlider();
+
         SignedPaintingsClient.currentSignEdit.setSelectionManager(selectionManager);
     }
 
@@ -77,6 +80,11 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private int getCenteringButtonPosition(int size, Cuboid.Centering centering, int buttonSize, int screenSize) {
         return MathHelper.floor(Cuboid.getOffsetFromCentering(size, centering)) + screenSize/2 - buttonSize/2;
+    }
+
+    @Unique
+    private void createSizingSlider() {
+
     }
 
     @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/block/entity/SignBlockEntity;ZZLnet/minecraft/text/Text;)V")

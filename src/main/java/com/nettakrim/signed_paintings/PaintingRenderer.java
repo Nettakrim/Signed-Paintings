@@ -1,4 +1,4 @@
-package com.nettakrim;
+package com.nettakrim.signed_paintings;
 
 import net.minecraft.client.model.Model;
 import net.minecraft.client.render.VertexConsumer;

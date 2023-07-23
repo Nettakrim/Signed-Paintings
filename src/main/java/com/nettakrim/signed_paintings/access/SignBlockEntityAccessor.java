@@ -1,7 +1,7 @@
-package com.nettakrim.access;
+package com.nettakrim.signed_paintings.access;
 
-import com.nettakrim.Cuboid;
-import com.nettakrim.PaintingInfo;
+import com.nettakrim.signed_paintings.Cuboid;
+import com.nettakrim.signed_paintings.PaintingInfo;
 import net.minecraft.util.Identifier;
 
 public interface SignBlockEntityAccessor {

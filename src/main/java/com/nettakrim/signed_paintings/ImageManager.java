@@ -1,4 +1,4 @@
-package com.nettakrim;
+package com.nettakrim.signed_paintings;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
