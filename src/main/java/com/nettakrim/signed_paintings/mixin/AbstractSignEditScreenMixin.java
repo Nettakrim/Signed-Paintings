@@ -53,6 +53,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Shadow protected abstract void setCurrentRowMessage(String message);
 
+    @Unique
+    private boolean aspectLocked;
+
     @Inject(at = @At("TAIL"), method = "init")
     private void init(CallbackInfo ci) {
         //🡤🡡🡥🡠◯🡢🡧🡣🡦
@@ -72,6 +75,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         }
 
         inputSliders[0] = createSizingSlider(Cuboid.Centering.MAX, 50, 30, 100, 20, 5, "Width", 2f);
+        createLockingButton(Cuboid.Centering.CENTER, 50, 20, getAspectLockIcon(aspectLocked));
         inputSliders[1] = createSizingSlider(Cuboid.Centering.MIN, 50, 30, 100, 20, 5, "Height", 3f);
 
         addSelectableChild(new BackgroundClick(inputSliders));
@@ -108,6 +112,29 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         addSelectableChild(inputSlider.sliderWidget);
 
         return inputSlider;
+    }
+
+    @Unique
+    private void createLockingButton(Cuboid.Centering centering, int areaSize, int buttonSize, String text) {
+        ButtonWidget widget = ButtonWidget.builder(Text.literal(text), this::toggleAspectLock)
+        .position((width/2 + width/4)-(areaSize)/2, getCenteringButtonPosition(areaSize, centering, buttonSize, height))
+        .size(buttonSize, buttonSize)
+        .build();
+
+        addDrawableChild(widget);
+        addSelectableChild(widget);
+    }
+
+    @Unique
+    private void toggleAspectLock(ButtonWidget button) {
+        aspectLocked = !aspectLocked;
+        button.setMessage(Text.literal(getAspectLockIcon(aspectLocked)));
+    }
+
+    @Unique
+    private static String getAspectLockIcon(boolean aspectLocked) {
+        // "🔒" : "🔓"
+        return aspectLocked ? "\uD83D\uDD12" : "\uD83D\uDD13";
     }
 
     @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/block/entity/SignBlockEntity;ZZLnet/minecraft/text/Text;)V")
