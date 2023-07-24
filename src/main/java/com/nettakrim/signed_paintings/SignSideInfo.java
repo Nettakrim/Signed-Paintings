@@ -68,6 +68,7 @@ public class SignSideInfo {
     }
 
     public void updatePaintingSize(float xSize, float ySize) {
+        SignedPaintingsClient.LOGGER.info("setting size to "+xSize+" "+ySize);
         paintingInfo.updateCuboidSize(xSize, ySize);
     }
 }

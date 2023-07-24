@@ -19,6 +19,8 @@ public class InputSlider {
 
     private static final Predicate<String> textPredicate = text -> StringUtils.countMatches(text, '.') <= 1 && text.replaceAll("[^0-9.]", "").length() == text.length();
 
+    private Consumer<Float> onValueChanged;
+
     public InputSlider(int x, int y, int textWidth, int sliderWidth, int height, int elementSpacing, float minSlider, float maxSlider, float sliderStep, float startingValue, Text text) {
         textFieldWidget = createTextField(x, y, textWidth, height);
         textFieldWidget.setChangedListener(this::onTextChanged);
@@ -36,6 +38,10 @@ public class InputSlider {
 
     private InputSliderWidget createSlider(int x, int y, int width, int height, Text text, float min, float max, float step) {
         return new InputSliderWidget(x, y, width, height, text, min, max, step, 0.5f);
+    }
+
+    public void setOnValueChanged(Consumer<Float> onValueChanged) {
+        this.onValueChanged = onValueChanged;
     }
 
     public boolean isFocused() {
@@ -63,6 +69,7 @@ public class InputSlider {
     public void onTextChanged(String newValue) {
         try {
             value = Float.parseFloat(newValue);
+            if (onValueChanged != null) onValueChanged.accept(value);
             updateSlider();
         }
         catch (NumberFormatException ignored) {
@@ -72,6 +79,7 @@ public class InputSlider {
 
     public void onSliderChanged(float newValue) {
         value = newValue;
+        if (onValueChanged != null) onValueChanged.accept(value);
         updateTextField();
     }
 
@@ -89,6 +97,10 @@ public class InputSlider {
         textFieldWidget.setChangedListener(null);
         textFieldWidget.setText(Float.toString(value));
         textFieldWidget.setChangedListener(this::onTextChanged);
+    }
+
+    public float getValue() {
+        return value;
     }
 
     public static class InputTextFieldWidget extends TextFieldWidget {

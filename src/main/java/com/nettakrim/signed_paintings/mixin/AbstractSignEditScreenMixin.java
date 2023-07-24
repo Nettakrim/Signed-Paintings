@@ -56,6 +56,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private boolean aspectLocked;
 
+    @Unique
+    private float aspectRatio;
+
     @Inject(at = @At("TAIL"), method = "init")
     private void init(CallbackInfo ci) {
         //🡤🡡🡥🡠◯🡢🡧🡣🡦
@@ -77,6 +80,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         inputSliders[0] = createSizingSlider(Cuboid.Centering.MAX, 50, 30, 100, 20, 5, "Width", 2f);
         createLockingButton(Cuboid.Centering.CENTER, 50, 20, getAspectLockIcon(aspectLocked));
         inputSliders[1] = createSizingSlider(Cuboid.Centering.MIN, 50, 30, 100, 20, 5, "Height", 3f);
+
+        inputSliders[0].setOnValueChanged(value -> onSizeSliderChanged(value, true));
+        inputSliders[1].setOnValueChanged(value -> onSizeSliderChanged(value, false));
 
         addSelectableChild(new BackgroundClick(inputSliders));
 
@@ -129,12 +135,27 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private void toggleAspectLock(ButtonWidget button) {
         aspectLocked = !aspectLocked;
         button.setMessage(Text.literal(getAspectLockIcon(aspectLocked)));
+        if (aspectLocked) {
+            aspectRatio = inputSliders[0].getValue() / inputSliders[1].getValue();
+        }
     }
 
     @Unique
     private static String getAspectLockIcon(boolean aspectLocked) {
         // "🔒" : "🔓"
         return aspectLocked ? "\uD83D\uDD12" : "\uD83D\uDD13";
+    }
+
+    @Unique
+    private void onSizeSliderChanged(float value, boolean isWidth) {
+        if (aspectLocked) {
+            if (isWidth) {
+                inputSliders[1].setValue(value/aspectRatio);
+            } else {
+                inputSliders[0].setValue(value*aspectRatio);
+            }
+        }
+        SignedPaintingsClient.currentSignEdit.updatePaintingSize(front, inputSliders[0].getValue(), inputSliders[1].getValue());
     }
 
     @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/block/entity/SignBlockEntity;ZZLnet/minecraft/text/Text;)V")
