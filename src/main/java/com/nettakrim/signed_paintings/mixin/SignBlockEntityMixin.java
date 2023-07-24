@@ -1,13 +1,9 @@
 package com.nettakrim.signed_paintings.mixin;
 
+import com.nettakrim.signed_paintings.*;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
-import com.nettakrim.signed_paintings.Cuboid;
-import com.nettakrim.signed_paintings.PaintingInfo;
-import com.nettakrim.signed_paintings.SignSideInfo;
-import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import net.minecraft.block.AbstractSignBlock;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.SignBlock;
 import net.minecraft.block.WoodType;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
@@ -86,7 +82,7 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
             if (SignedPaintingsClient.currentSignEdit != null) {
                 SignedPaintingsClient.currentSignEdit.screen.signedPaintings$setVisibility(false);
             }
-            info.loadPainting(signedPaintings$createBackIdentifier(), front, !(getCachedState().getBlock() instanceof SignBlock));
+            info.loadPainting(signedPaintings$createBackIdentifier(), front, SignType.getType(getCachedState().getBlock()));
         }
     }
 
@@ -96,8 +92,8 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
         backInfo.text = backText;
         SignedPaintingsClient.LOGGER.info("nbt read "+frontText.getMessage(0, false).toString()+" at "+getPos());
         Identifier back = signedPaintings$createBackIdentifier();
-        boolean isWall = !(getCachedState().getBlock() instanceof SignBlock);
-        frontInfo.loadPainting(back, true, isWall);
-        backInfo.loadPainting(back, false, isWall);
+        SignType.Type signType = SignType.getType(getCachedState().getBlock());
+        frontInfo.loadPainting(back, true, signType);
+        backInfo.loadPainting(back, false, signType);
     }
 }

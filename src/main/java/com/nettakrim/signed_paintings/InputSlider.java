@@ -68,7 +68,7 @@ public class InputSlider {
 
     public void onTextChanged(String newValue) {
         try {
-            value = Float.parseFloat(newValue);
+            value = MathHelper.clamp(Float.parseFloat(newValue), 1f/32f, 128f);
             if (onValueChanged != null) onValueChanged.accept(value);
             updateSlider();
         }

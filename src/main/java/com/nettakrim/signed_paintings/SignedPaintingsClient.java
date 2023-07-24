@@ -23,7 +23,6 @@ public class SignedPaintingsClient implements ClientModInitializer {
 
 	public static SignEditingInfo currentSignEdit;
 
-
 	@Override
 	public void onInitializeClient() {
 		client = MinecraftClient.getInstance();

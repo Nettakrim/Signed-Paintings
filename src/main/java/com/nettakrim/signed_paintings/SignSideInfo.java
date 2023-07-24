@@ -3,6 +3,7 @@ package com.nettakrim.signed_paintings;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 
 public class SignSideInfo {
     public SignText text;
@@ -15,11 +16,11 @@ public class SignSideInfo {
         this.paintingInfo = paintingInfo;
     }
 
-    public void loadPainting(Identifier back, boolean isFront, boolean isWall) {
+    public void loadPainting(Identifier back, boolean isFront, SignType.Type signType) {
         String[] parts = getParts();
         cache = new PaintingDataCache(parts[0]);
         String url = SignedPaintingsClient.imageManager.applyURLInferences(parts[0]);
-        loadURL(url, parts.length > 1 ? parts[1] : "", back, isFront, isWall);
+        loadURL(url, parts.length > 1 ? parts[1] : "", back, isFront, signType);
     }
 
     private String[] getParts() {
@@ -27,15 +28,15 @@ public class SignSideInfo {
         return combinedText.split("[\\n ]|(:(?!//))", 2);
     }
 
-    private void loadURL(String url, String afterURL, Identifier back, boolean isFront, boolean isWall) {
+    private void loadURL(String url, String afterURL, Identifier back, boolean isFront, SignType.Type signType) {
         if (paintingInfo != null) paintingInfo.invalidateImage();
-        SignedPaintingsClient.imageManager.loadImage(url, (data) -> updateInfo(data, afterURL, back, isFront, isWall));
+        SignedPaintingsClient.imageManager.loadImage(url, (data) -> updateInfo(data, afterURL, back, isFront, signType));
     }
 
-    public void updateInfo(ImageData data, String afterURL, Identifier back, boolean isFront, boolean isWall) {
+    public void updateInfo(ImageData data, String afterURL, Identifier back, boolean isFront, SignType.Type signType) {
         SignedPaintingsClient.LOGGER.info("updating painting info for "+data.identifier);
         if (paintingInfo == null) {
-            paintingInfo = new PaintingInfo(data, back, isFront, isWall);
+            paintingInfo = new PaintingInfo(data, back, isFront, signType);
         } else {
             paintingInfo.updateImage(data);
         }
@@ -136,8 +137,8 @@ public class SignSideInfo {
             String[] parts = s.split("/");
             float[] values = new float[2];
             try {
-                values[0] = Float.parseFloat(parts[0]);
-                values[1] = Float.parseFloat(parts[1]);
+                values[0] = MathHelper.clamp(Float.parseFloat(parts[0]), 1f/32f, 128f);
+                values[1] = MathHelper.clamp(Float.parseFloat(parts[1]), 1f/32f, 128f);
             } catch (NumberFormatException ignored) {
                 return false;
             }

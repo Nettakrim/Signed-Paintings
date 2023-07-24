@@ -6,7 +6,7 @@ public class PaintingInfo {
     public Cuboid cuboid;
     private ImageData image;
     private Identifier back;
-    public boolean isWall;
+    public SignType.Type signType;
     public float rotation;
 
     private float width;
@@ -15,10 +15,10 @@ public class PaintingInfo {
     private Cuboid.Centering xCentering;
     private Cuboid.Centering yCentering;
 
-    public PaintingInfo(ImageData image, Identifier back, boolean isFront, boolean isWall) {
+    public PaintingInfo(ImageData image, Identifier back, boolean isFront, SignType.Type signType) {
         this.image = image;
         this.back = back;
-        this.isWall = isWall;
+        this.signType = signType;
         this.rotation = isFront ? 0 : 180;
         resetCuboid();
     }
@@ -46,11 +46,11 @@ public class PaintingInfo {
     }
 
     private void updateCuboid() {
-        if (isWall) {
-            this.cuboid = Cuboid.CreateWallCuboid(width, xCentering, height, yCentering, depth);
-        } else {
-            this.cuboid = Cuboid.CreateFlushCuboid(width, xCentering, height, yCentering, depth);
-        }
+        this.cuboid =  switch (signType) {
+            case WALL -> Cuboid.CreateWallCuboid(width, xCentering, height, yCentering, depth);
+            case STANDING -> Cuboid.CreateFlushCuboid(width, xCentering, height, yCentering, depth);
+            case HANGING, WALL_HANGING -> Cuboid.CreateCentralCuboid(width, xCentering, height, yCentering, depth);
+        };
     }
 
     public void updateCuboidCentering(Cuboid.Centering xCentering, Cuboid.Centering yCentering) {

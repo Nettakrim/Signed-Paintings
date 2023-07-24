@@ -28,6 +28,10 @@ public class Cuboid {
         return new Cuboid(xSize, ySize, zSize, getOffsetFromCentering(xSize, xCentering), getOffsetFromCentering(ySize, yCentering), 0.5f - (zSize/2));
     }
 
+    public static Cuboid CreateCentralCuboid(float xSize, Centering xCentering, float ySize, Centering yCentering, float zSize) {
+        return new Cuboid(xSize, ySize, zSize, getOffsetFromCentering(xSize, xCentering), getOffsetFromCentering(ySize, yCentering), (zSize/2));
+    }
+
     public static float getOffsetFromCentering(float size, Centering centering) {
         return switch (centering) {
             case MIN -> (size-1)/2;
