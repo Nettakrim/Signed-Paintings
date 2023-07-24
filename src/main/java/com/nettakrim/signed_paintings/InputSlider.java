@@ -19,12 +19,12 @@ public class InputSlider {
 
     private static final Predicate<String> textPredicate = text -> StringUtils.countMatches(text, '.') <= 1 && text.replaceAll("[^0-9.]", "").length() == text.length();
 
-    public InputSlider(int x, int y, int textWidth, int sliderWidth, int height, int elementSpacing, float minSlider, float maxSlider, float sliderStep, float startingValue) {
+    public InputSlider(int x, int y, int textWidth, int sliderWidth, int height, int elementSpacing, float minSlider, float maxSlider, float sliderStep, float startingValue, Text text) {
         textFieldWidget = createTextField(x, y, textWidth, height);
         textFieldWidget.setChangedListener(this::onTextChanged);
         textFieldWidget.setTextPredicate(textPredicate);
 
-        sliderWidget = createSlider(x+textWidth+elementSpacing, y, sliderWidth, height, minSlider, maxSlider, sliderStep);
+        sliderWidget = createSlider(x+textWidth+elementSpacing, y, sliderWidth, height, text, minSlider, maxSlider, sliderStep);
         sliderWidget.setChangedListener(this::onSliderChanged);
 
         setValue(startingValue);
@@ -34,20 +34,30 @@ public class InputSlider {
         return new InputTextFieldWidget(SignedPaintingsClient.client.textRenderer, x, y, width, height, Text.literal("0"));
     }
 
-    private InputSliderWidget createSlider(int x, int y, int width, int height, float min, float max, float step) {
-        return new InputSliderWidget(x, y, width, height, Text.literal("test:"), min, max, step, 0.5f);
+    private InputSliderWidget createSlider(int x, int y, int width, int height, Text text, float min, float max, float step) {
+        return new InputSliderWidget(x, y, width, height, text, min, max, step, 0.5f);
     }
 
-    public boolean isActive() {
-        return textFieldWidget.isActive();
+    public boolean isFocused() {
+        return textFieldWidget.isFocused() || sliderWidget.isFocused();
     }
 
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return textFieldWidget.keyPressed(keyCode, scanCode, modifiers);
+        if (textFieldWidget.isActive()) {
+            return textFieldWidget.keyPressed(keyCode, scanCode, modifiers);
+        } else if (sliderWidget.isFocused()) {
+            return sliderWidget.keyPressed(keyCode, scanCode, modifiers);
+        }
+        return false;
     }
 
     public boolean charTyped(char chr, int modifiers) {
-        return textFieldWidget.charTyped(chr, modifiers);
+        if (textFieldWidget.isActive()) {
+            return textFieldWidget.charTyped(chr, modifiers);
+        } else if (sliderWidget.isFocused()) {
+            return sliderWidget.charTyped(chr, modifiers);
+        }
+        return false;
     }
 
     public void onTextChanged(String newValue) {
@@ -85,6 +95,18 @@ public class InputSlider {
         public InputTextFieldWidget(TextRenderer textRenderer, int x, int y, int width, int height, Text text) {
             super(textRenderer, x, y, width, height, text);
         }
+
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (keyCode == 257) {
+                this.setFocused(false);
+                return true;
+            } else if (keyCode == 258) {
+                return false;
+            } else {
+                return super.keyPressed(keyCode, scanCode, modifiers);
+            }
+        }
     }
 
     public static class InputSliderWidget extends SliderWidget {
@@ -105,8 +127,16 @@ public class InputSlider {
         }
 
         @Override
-        protected void updateMessage() {
-            this.setMessage(Text.literal(SignedPaintingsClient.floatToStringDP((float)(min + (max-min) * value), 2)));
+        protected void updateMessage() {}
+
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (keyCode == 263 || keyCode == 262) {
+                value = MathHelper.clamp(value + (keyCode == 263 ? -step : step)/(max-min), 0, 1);
+                applyValue();
+                return true;
+            }
+            return super.keyPressed(keyCode, scanCode, modifiers);
         }
 
         @Override

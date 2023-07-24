@@ -1,9 +1,6 @@
 package com.nettakrim.signed_paintings.mixin;
 
-import com.nettakrim.signed_paintings.Cuboid;
-import com.nettakrim.signed_paintings.InputSlider;
-import com.nettakrim.signed_paintings.SignEditingInfo;
-import com.nettakrim.signed_paintings.SignedPaintingsClient;
+import com.nettakrim.signed_paintings.*;
 import com.nettakrim.signed_paintings.access.AbstractSignEditScreenAccessor;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
@@ -20,6 +17,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -47,7 +45,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private SelectionManager selectionManager;
 
     @Unique
-    private InputSlider tempSlider;
+    private final InputSlider[] inputSliders = new InputSlider[2];
 
     protected AbstractSignEditScreenMixin(Text title) {
         super(title);
@@ -59,14 +57,24 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private void init(CallbackInfo ci) {
         //🡤🡡🡥🡠◯🡢🡧🡣🡦
         String[] arrows = new String[] {"\uD83E\uDC64","\uD83E\uDC61","\uD83E\uDC65","\uD83E\uDC60","◯","\uD83E\uDC62","\uD83E\uDC67","\uD83E\uDC63","\uD83E\uDC66"};
-        for (Cuboid.Centering xCentering : Cuboid.Centering.values()) {
-            for (Cuboid.Centering yCentering : Cuboid.Centering.values()) {
+
+        Cuboid.Centering[] centering = Cuboid.Centering.values();
+        Cuboid.Centering[] reversedCentering = new Cuboid.Centering[] {
+            Cuboid.Centering.MAX,
+            Cuboid.Centering.CENTER,
+            Cuboid.Centering.MIN
+        };
+        for (Cuboid.Centering yCentering : centering) {
+            for (Cuboid.Centering xCentering : reversedCentering) {
                 int arrowIndex = 2-xCentering.ordinal() + yCentering.ordinal()*3;
                 createCenteringButton(50, 20, arrows[arrowIndex], xCentering, yCentering);
             }
         }
 
-        createSizingSlider();
+        inputSliders[0] = createSizingSlider(Cuboid.Centering.MAX, 50, 30, 100, 20, 5, "Width", 2f);
+        inputSliders[1] = createSizingSlider(Cuboid.Centering.MIN, 50, 30, 100, 20, 5, "Height", 3f);
+
+        addSelectableChild(new BackgroundClick(inputSliders));
 
         SignedPaintingsClient.currentSignEdit.setSelectionManager(selectionManager);
     }
@@ -88,8 +96,10 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
-    private void createSizingSlider() {
-        InputSlider inputSlider = new InputSlider(5, 5, 30, 100, 20, 5, 0.5f, 10f, 0.5f, 1f);
+    private InputSlider createSizingSlider(Cuboid.Centering centering, int areaSize, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String name, float startingValue) {
+        int x = (width/2 + width/4)-(textWidth+sliderWidth+elementSpacing)/2;
+        int y = getCenteringButtonPosition(areaSize, centering, widgetHeight, height);
+        InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, 0.5f, 10f, 0.5f, startingValue, Text.literal(name));
 
         addDrawableChild(inputSlider.textFieldWidget);
         addSelectableChild(inputSlider.textFieldWidget);
@@ -97,7 +107,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         addDrawableChild(inputSlider.sliderWidget);
         addSelectableChild(inputSlider.sliderWidget);
 
-        tempSlider = inputSlider;
+        return inputSlider;
     }
 
     @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/block/entity/SignBlockEntity;ZZLnet/minecraft/text/Text;)V")
@@ -112,18 +122,35 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Inject(at = @At("HEAD"), method = "keyPressed", cancellable = true)
     private void onKeyPress(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        if (tempSlider.isActive()) {
-            cir.setReturnValue(tempSlider.keyPressed(keyCode, scanCode, modifiers));
-            cir.cancel();
+        for (InputSlider slider : inputSliders) {
+            if (slider.isFocused() && slider.keyPressed(keyCode, scanCode, modifiers)) {
+                cir.setReturnValue(true);
+                cir.cancel();
+                return;
+            }
         }
     }
 
     @Inject(at = @At("HEAD"), method = "charTyped", cancellable = true)
     private void onCharType(char chr, int modifiers, CallbackInfoReturnable<Boolean> cir) {
-        if (tempSlider.isActive()) {
-            cir.setReturnValue(tempSlider.charTyped(chr, modifiers));
-            cir.cancel();
+        for (InputSlider slider : inputSliders) {
+            if (slider.isFocused() && slider.charTyped(chr, modifiers)) {
+                cir.setReturnValue(true);
+                cir.cancel();
+                return;
+            }
         }
+    }
+
+    @ModifyVariable(at = @At("STORE"), method = "renderSignText", ordinal = 0)
+    private boolean stopTextCaret(boolean bl) {
+        for (InputSlider slider : inputSliders) {
+            if (slider.isFocused()) {
+                selectionManager.setSelectionEnd(selectionManager.getSelectionStart());
+                return false;
+            }
+        }
+        return bl;
     }
 
     @Override
