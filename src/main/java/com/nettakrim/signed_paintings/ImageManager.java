@@ -14,6 +14,7 @@ import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -62,6 +63,7 @@ public class ImageManager {
 
     private String createIdentifierSafeStringFromURL(String url) {
         StringBuilder builder = new StringBuilder();
+        url = url.toLowerCase(Locale.ROOT);
         for (int i = 0; i < url.length(); i++) {
             char character = url.charAt(i);
             if (character == '_' || character == '-' || character >= 'a' && character <= 'z' || character >= '0' && character <= '9' || character == '/' || character == '.') {

@@ -11,9 +11,9 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class InputSlider {
-    public InputTextFieldWidget textFieldWidget;
+    public final InputTextFieldWidget textFieldWidget;
 
-    public InputSliderWidget sliderWidget;
+    public final InputSliderWidget sliderWidget;
 
     private float value;
 
