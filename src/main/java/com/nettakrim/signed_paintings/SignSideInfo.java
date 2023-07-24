@@ -78,6 +78,7 @@ public class SignSideInfo {
     }
 
     private void updateCache(String afterUrl) {
+        SignedPaintingsClient.LOGGER.info("SignSideInfo.updateCache gets called after changing a slider value due to (blockentity).setText being called by paste - it does not need to be");
         cache.parseAfterUrl(afterUrl);
 
         paintingInfo.updateCuboidCentering(cache.xCentering, cache.yCentering);
