@@ -21,6 +21,7 @@ public class BackgroundClick extends ClickableWidget {
 
     @Override
     protected boolean clicked(double mouseX, double mouseY) {
+        if (!visible) return false;
         for (InputSlider inputSlider : sliders) {
             if (inputSlider.isFocused()) return true;
         }

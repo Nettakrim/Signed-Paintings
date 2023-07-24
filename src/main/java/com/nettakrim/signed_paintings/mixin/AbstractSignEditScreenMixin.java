@@ -2,12 +2,14 @@ package com.nettakrim.signed_paintings.mixin;
 
 import com.nettakrim.signed_paintings.*;
 import com.nettakrim.signed_paintings.access.AbstractSignEditScreenAccessor;
+import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.AbstractSignEditScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
@@ -20,6 +22,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.ArrayList;
 
 @Mixin(AbstractSignEditScreen.class)
 public abstract class AbstractSignEditScreenMixin extends Screen implements AbstractSignEditScreenAccessor {
@@ -47,6 +51,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private final InputSlider[] inputSliders = new InputSlider[2];
 
+    @Unique
+    private final ArrayList<ClickableWidget> buttons = new ArrayList<>();
+
     protected AbstractSignEditScreenMixin(Text title) {
         super(title);
     }
@@ -61,6 +68,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Inject(at = @At("TAIL"), method = "init")
     private void init(CallbackInfo ci) {
+        buttons.clear();
+
         //🡤🡡🡥🡠◯🡢🡧🡣🡦
         String[] arrows = new String[] {"\uD83E\uDC64","\uD83E\uDC61","\uD83E\uDC65","\uD83E\uDC60","◯","\uD83E\uDC62","\uD83E\uDC67","\uD83E\uDC63","\uD83E\uDC66"};
 
@@ -77,8 +86,18 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             }
         }
 
-        float width = 2;
-        float height = 3;
+        float width;
+        float height;
+
+        SignBlockEntityAccessor sign = (SignBlockEntityAccessor)blockEntity;
+        PaintingInfo info = front ? sign.signedPaintings$getFrontPaintingInfo() : sign.signedPaintings$getBackPaintingInfo();
+        if (info == null) {
+            width = 1f;
+            height = 1f;
+        } else {
+            width = info.getWidth();
+            height = info.getHeight();
+        }
 
         inputSliders[0] = createSizingSlider(Cuboid.Centering.MAX, 50, 50, 50, 20, 5, "Width", width);
         createLockingButton(Cuboid.Centering.CENTER, 50, 20, getAspectLockIcon(aspectLocked));
@@ -88,9 +107,15 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         inputSliders[1].setOnValueChanged(value -> onSizeSliderChanged(value, false));
         aspectRatio = width / height;
 
-        addSelectableChild(new BackgroundClick(inputSliders));
+        BackgroundClick backgroundClick = new BackgroundClick(inputSliders);
+        addSelectableChild(backgroundClick);
+        buttons.add(backgroundClick);
 
         SignedPaintingsClient.currentSignEdit.setSelectionManager(selectionManager);
+
+        if (info == null) {
+            setVisibility(false);
+        }
     }
 
     @Unique
@@ -102,6 +127,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         addDrawableChild(widget);
         addSelectableChild(widget);
+        buttons.add(widget);
     }
 
     @Unique
@@ -117,9 +143,11 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         addDrawableChild(inputSlider.textFieldWidget);
         addSelectableChild(inputSlider.textFieldWidget);
+        buttons.add(inputSlider.textFieldWidget);
 
         addDrawableChild(inputSlider.sliderWidget);
         addSelectableChild(inputSlider.sliderWidget);
+        buttons.add(inputSlider.sliderWidget);
 
         return inputSlider;
     }
@@ -133,6 +161,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         addDrawableChild(widget);
         addSelectableChild(widget);
+        buttons.add(widget);
     }
 
     @Unique
@@ -266,5 +295,12 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         currentRow = cursorRow;
         return cursor;
+    }
+
+    @Unique
+    public void setVisibility(boolean to) {
+        for (ClickableWidget clickableWidget : buttons) {
+            clickableWidget.visible = to;
+        }
     }
 }

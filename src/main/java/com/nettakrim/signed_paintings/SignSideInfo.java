@@ -15,11 +15,15 @@ public class SignSideInfo {
     }
 
     public void loadPainting(Identifier back, boolean isFront, boolean isWall) {
-        String combinedText = SignedPaintingsClient.combineSignText(text);
-        String[] parts = combinedText.split("[:\n ]", 2);
+        String[] parts = getParts();
         cache = new PaintingDataCache(parts[0]);
         String url = SignedPaintingsClient.imageManager.applyURLInferences(parts[0]);
         loadURL(url, parts.length > 1 ? parts[1] : "", back, isFront, isWall);
+    }
+
+    private String[] getParts() {
+        String combinedText = SignedPaintingsClient.combineSignText(text);
+        return combinedText.split("[\\n ]|(:(?!//))", 2);
     }
 
     private void loadURL(String url, String afterURL, Identifier back, boolean isFront, boolean isWall) {
@@ -42,6 +46,7 @@ public class SignSideInfo {
     }
 
     public void updatePaintingCentering(Cuboid.Centering xCentering, Cuboid.Centering yCentering) {
+        if (paintingInfo == null) return;
         paintingInfo.updateCuboidCentering(xCentering, yCentering);
         cache.xCentering = xCentering;
         cache.yCentering = yCentering;
@@ -49,7 +54,7 @@ public class SignSideInfo {
     }
 
     public void updatePaintingSize(float xSize, float ySize) {
-        SignedPaintingsClient.LOGGER.info("setting size to "+xSize+" "+ySize);
+        if (paintingInfo == null) return;
         paintingInfo.updateCuboidSize(xSize, ySize);
         cache.width = xSize;
         cache.height = ySize;
@@ -58,8 +63,7 @@ public class SignSideInfo {
 
     public void updateText() {
         if (paintingInfo == null) return;
-        String combinedText = SignedPaintingsClient.combineSignText(text);
-        String[] parts = combinedText.split("[:\n ]", 2);
+        String[] parts = getParts();
         cache.url = parts[0];
         if (parts.length > 1) updateCache(parts[1]);
     }
@@ -113,7 +117,6 @@ public class SignSideInfo {
         }
 
         private boolean tryParseCentering(String s) {
-            SignedPaintingsClient.LOGGER.info(s);
             if (s.length() != 2) return false;
             this.xCentering = Cuboid.getCenteringFromName(String.valueOf(s.charAt(0)));
             this.yCentering = Cuboid.getCenteringFromName(String.valueOf(s.charAt(1)));
