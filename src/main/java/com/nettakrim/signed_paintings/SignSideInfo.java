@@ -7,6 +7,8 @@ public class SignSideInfo {
     public SignText text;
     public PaintingInfo paintingInfo;
 
+    private PaintingDataCache cache;
+
     public SignSideInfo(SignText text, PaintingInfo paintingInfo) {
         this.text = text;
         this.paintingInfo = paintingInfo;
@@ -14,7 +16,8 @@ public class SignSideInfo {
 
     public void loadPainting(Identifier back, boolean isFront, boolean isWall) {
         String combinedText = SignedPaintingsClient.combineSignText(text);
-        String[] parts = combinedText.split(" ", 2);
+        String[] parts = combinedText.split("[:\n ]", 2);
+        cache = new PaintingDataCache(parts[0]);
         String url = SignedPaintingsClient.imageManager.applyURLInferences(parts[0]);
         loadURL(url, parts.length > 1 ? parts[1] : "", back, isFront, isWall);
     }
@@ -32,43 +35,112 @@ public class SignSideInfo {
             paintingInfo.updateImage(data);
         }
 
-        //this should probably be done through regex groups, to cleanly extract positioning, sizing data etc. regardless of order?
+        cache.initFromImageData(data);
+
         SignedPaintingsClient.LOGGER.info("loading extra data \""+afterURL+"\"");
-        if (afterURL.length() > 1) {
-            String xCentering = afterURL.substring(0,1);
-            String yCentering = afterURL.substring(1,2);
-            paintingInfo.updateCuboidCentering(Cuboid.getCenteringFromName(xCentering), Cuboid.getCenteringFromName(yCentering));
-        }
+        updateCache(afterURL);
     }
 
     public void updatePaintingCentering(Cuboid.Centering xCentering, Cuboid.Centering yCentering) {
         paintingInfo.updateCuboidCentering(xCentering, yCentering);
-
-        String centering = Cuboid.getNameFromCentering(true, xCentering)+Cuboid.getNameFromCentering(false, yCentering);
-
-        String newText = SignedPaintingsClient.combineSignText(text);
-
-        int splitStart = newText.indexOf(' ');
-        int splitEnd;
-
-        if (splitStart == -1) {
-            splitStart = newText.length();
-            splitEnd = splitStart;
-            centering = " "+centering;
-        } else {
-            splitStart++;
-            splitEnd = splitStart+2;
-        }
-
-        newText = newText.substring(0, splitStart)+centering+newText.substring(splitEnd);
-
-        SignedPaintingsClient.currentSignEdit.screen.signedPaintings$clear();
-        int newSelection = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(newText, 0, 0);
-        SignedPaintingsClient.currentSignEdit.selectionManager.setSelection(newSelection, newSelection);
+        cache.xCentering = xCentering;
+        cache.yCentering = yCentering;
+        cache.updateSignText();
     }
 
     public void updatePaintingSize(float xSize, float ySize) {
         SignedPaintingsClient.LOGGER.info("setting size to "+xSize+" "+ySize);
         paintingInfo.updateCuboidSize(xSize, ySize);
+        cache.width = xSize;
+        cache.height = ySize;
+        cache.updateSignText();
+    }
+
+    public void updateText() {
+        if (paintingInfo == null) return;
+        String combinedText = SignedPaintingsClient.combineSignText(text);
+        String[] parts = combinedText.split("[:\n ]", 2);
+        cache.url = parts[0];
+        if (parts.length > 1) updateCache(parts[1]);
+    }
+
+    private void updateCache(String afterUrl) {
+        cache.parseAfterUrl(afterUrl);
+
+        paintingInfo.updateCuboidCentering(cache.xCentering, cache.yCentering);
+        paintingInfo.updateCuboidSize(cache.width, cache.height);
+    }
+
+    private static class PaintingDataCache {
+        private String url;
+        private Cuboid.Centering xCentering;
+        private Cuboid.Centering yCentering;
+        private float width;
+        private float height;
+        private String extraText;
+
+        public PaintingDataCache(String url) {
+            this.url = url;
+        }
+
+        public void initFromImageData(ImageData imageData) {
+            this.xCentering = Cuboid.Centering.CENTER;
+            this.yCentering = Cuboid.Centering.CENTER;
+
+            this.width = imageData.width/16f;
+            this.height = imageData.height/16f;
+            while (this.width > 8 || this.height > 8) {
+                this.width /= 2f;
+                this.height /= 2f;
+            }
+        }
+
+        public void parseAfterUrl(String s) {
+            String[] parts = s.split("[:\n ]");
+
+            int currentIndex = 0;
+
+            if (currentIndex < parts.length && tryParseCentering(parts[currentIndex])) currentIndex++;
+
+            if (currentIndex < parts.length && tryParseSize(parts[currentIndex])) currentIndex++;
+
+            StringBuilder builder = new StringBuilder();
+            for (int i = currentIndex; i < parts.length; i++) {
+                if (builder.length() > 0) builder.append(":");
+                builder.append(parts[i]);
+            }
+            this.extraText = builder.toString();
+        }
+
+        private boolean tryParseCentering(String s) {
+            SignedPaintingsClient.LOGGER.info(s);
+            if (s.length() != 2) return false;
+            this.xCentering = Cuboid.getCenteringFromName(String.valueOf(s.charAt(0)));
+            this.yCentering = Cuboid.getCenteringFromName(String.valueOf(s.charAt(1)));
+            return true;
+        }
+
+        private boolean tryParseSize(String s) {
+            if (!s.contains("/")) return false;
+            String[] parts = s.split("/");
+            float[] values = new float[2];
+            try {
+                values[0] = Float.parseFloat(parts[0]);
+                values[1] = Float.parseFloat(parts[1]);
+            } catch (NumberFormatException ignored) {
+                return false;
+            }
+            this.width = values[0];
+            this.height = values[1];
+            return true;
+        }
+
+        public void updateSignText() {
+            String text = url + ':' + Cuboid.getNameFromCentering(true, xCentering) + Cuboid.getNameFromCentering(false, yCentering) + ':' + width + '/' + height + ':' + extraText;
+
+            SignedPaintingsClient.currentSignEdit.screen.signedPaintings$clear();
+            int newSelection = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(text, 0, 0);
+            SignedPaintingsClient.currentSignEdit.selectionManager.setSelection(newSelection, newSelection);
+        }
     }
 }

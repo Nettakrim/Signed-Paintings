@@ -54,7 +54,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Shadow protected abstract void setCurrentRowMessage(String message);
 
     @Unique
-    private boolean aspectLocked;
+    private boolean aspectLocked = true;
 
     @Unique
     private float aspectRatio;
@@ -77,12 +77,16 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             }
         }
 
-        inputSliders[0] = createSizingSlider(Cuboid.Centering.MAX, 50, 30, 100, 20, 5, "Width", 2f);
+        float width = 2;
+        float height = 3;
+
+        inputSliders[0] = createSizingSlider(Cuboid.Centering.MAX, 50, 50, 50, 20, 5, "Width", width);
         createLockingButton(Cuboid.Centering.CENTER, 50, 20, getAspectLockIcon(aspectLocked));
-        inputSliders[1] = createSizingSlider(Cuboid.Centering.MIN, 50, 30, 100, 20, 5, "Height", 3f);
+        inputSliders[1] = createSizingSlider(Cuboid.Centering.MIN, 50, 50, 50, 20, 5, "Height", height);
 
         inputSliders[0].setOnValueChanged(value -> onSizeSliderChanged(value, true));
         inputSliders[1].setOnValueChanged(value -> onSizeSliderChanged(value, false));
+        aspectRatio = width / height;
 
         addSelectableChild(new BackgroundClick(inputSliders));
 
@@ -133,8 +137,13 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Unique
     private void toggleAspectLock(ButtonWidget button) {
-        aspectLocked = !aspectLocked;
+        setAspectLock(!aspectLocked);
         button.setMessage(Text.literal(getAspectLockIcon(aspectLocked)));
+    }
+
+    @Unique
+    private void setAspectLock(boolean to) {
+        aspectLocked = to;
         if (aspectLocked) {
             aspectRatio = inputSliders[0].getValue() / inputSliders[1].getValue();
         }

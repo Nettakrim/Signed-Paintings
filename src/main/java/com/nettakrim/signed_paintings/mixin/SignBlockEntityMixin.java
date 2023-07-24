@@ -72,6 +72,7 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
     private void onSetText(SignText text, boolean front, CallbackInfoReturnable<Boolean> cir) {
         frontInfo.text = frontText;
         backInfo.text = backText;
+        (front ? frontInfo : backInfo).updateText();
     }
 
     @Inject(at = @At("TAIL"), method = "readNbt")
