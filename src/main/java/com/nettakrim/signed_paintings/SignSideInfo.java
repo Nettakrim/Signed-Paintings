@@ -1,5 +1,6 @@
 package com.nettakrim.signed_paintings;
 
+import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.util.Identifier;
 
@@ -39,6 +40,10 @@ public class SignSideInfo {
             paintingInfo.updateImage(data);
         }
 
+        if (data.ready && SignedPaintingsClient.currentSignEdit != null && ((SignBlockEntityAccessor)SignedPaintingsClient.currentSignEdit.sign).signedPaintings$hasSignSideInfo(this)) {
+            SignedPaintingsClient.currentSignEdit.screen.signedPaintings$setVisibility(true);
+        }
+
         cache.initFromImageData(data);
 
         SignedPaintingsClient.LOGGER.info("loading extra data \""+afterURL+"\"");
@@ -61,11 +66,14 @@ public class SignSideInfo {
         cache.updateSignText();
     }
 
-    public void updateText() {
-        if (paintingInfo == null) return;
+    public boolean updateText() {
+        if (paintingInfo == null) return false;
         String[] parts = getParts();
-        cache.url = parts[0];
+        if (!cache.url.equals(parts[0])) {
+            return false;
+        }
         if (parts.length > 1) updateCache(parts[1]);
+        return true;
     }
 
     private void updateCache(String afterUrl) {
@@ -76,7 +84,7 @@ public class SignSideInfo {
     }
 
     private static class PaintingDataCache {
-        private String url;
+        private final String url;
         private Cuboid.Centering xCentering;
         private Cuboid.Centering yCentering;
         private float width;

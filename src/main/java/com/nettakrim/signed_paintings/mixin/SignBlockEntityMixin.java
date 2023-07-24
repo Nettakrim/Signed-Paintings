@@ -60,6 +60,10 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
         (front ? frontInfo : backInfo).updatePaintingSize(xSize, ySize);
     }
 
+    public boolean signedPaintings$hasSignSideInfo(SignSideInfo info) {
+        return frontInfo == info || backInfo == info;
+    }
+
     public SignBlockEntityMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {super(type, pos, state);}
 
     @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/block/entity/BlockEntityType;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)V")
@@ -72,7 +76,18 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
     private void onSetText(SignText text, boolean front, CallbackInfoReturnable<Boolean> cir) {
         frontInfo.text = frontText;
         backInfo.text = backText;
-        (front ? frontInfo : backInfo).updateText();
+        SignSideInfo info = (front ? frontInfo : backInfo);
+        boolean valid = info.paintingInfo != null;
+        if (valid) {
+            valid = info.updateText();
+        }
+
+        if (!valid) {
+            if (SignedPaintingsClient.currentSignEdit != null) {
+                SignedPaintingsClient.currentSignEdit.screen.signedPaintings$setVisibility(false);
+            }
+            info.loadPainting(signedPaintings$createBackIdentifier(), front, !(getCachedState().getBlock() instanceof SignBlock));
+        }
     }
 
     @Inject(at = @At("TAIL"), method = "readNbt")

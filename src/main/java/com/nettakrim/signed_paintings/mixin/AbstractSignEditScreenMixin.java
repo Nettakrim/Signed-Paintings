@@ -113,8 +113,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         SignedPaintingsClient.currentSignEdit.setSelectionManager(selectionManager);
 
-        if (info == null) {
-            setVisibility(false);
+        if (info == null || !info.isReady()) {
+            signedPaintings$setVisibility(false);
         }
     }
 
@@ -297,8 +297,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         return cursor;
     }
 
-    @Unique
-    public void setVisibility(boolean to) {
+    @Override
+    public void signedPaintings$setVisibility(boolean to) {
         for (ClickableWidget clickableWidget : buttons) {
             clickableWidget.visible = to;
         }
