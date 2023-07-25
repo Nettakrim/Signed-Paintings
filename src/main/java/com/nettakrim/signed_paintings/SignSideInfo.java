@@ -41,14 +41,16 @@ public class SignSideInfo {
             paintingInfo.updateImage(data);
         }
 
-        if (data.ready && SignedPaintingsClient.currentSignEdit != null && ((SignBlockEntityAccessor)SignedPaintingsClient.currentSignEdit.sign).signedPaintings$hasSignSideInfo(this)) {
-            SignedPaintingsClient.currentSignEdit.screen.signedPaintings$setVisibility(true);
-        }
-
         cache.initFromImageData(data);
 
         SignedPaintingsClient.LOGGER.info("loading extra data \""+afterURL+"\"");
         updateCache(afterURL);
+
+        if (data.ready && SignedPaintingsClient.currentSignEdit != null && ((SignBlockEntityAccessor)SignedPaintingsClient.currentSignEdit.sign).signedPaintings$hasSignSideInfo(this)) {
+            SignedPaintingsClient.currentSignEdit.screen.signedPaintings$setVisibility(true);
+            SignedPaintingsClient.currentSignEdit.screen.signedPaintings$initSliders(cache.width, cache.height);
+        }
+
     }
 
     public void updatePaintingCentering(Cuboid.Centering xCentering, Cuboid.Centering yCentering) {

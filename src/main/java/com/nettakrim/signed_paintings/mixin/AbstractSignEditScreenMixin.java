@@ -303,4 +303,11 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             clickableWidget.visible = to;
         }
     }
+
+    @Override
+    public void signedPaintings$initSliders(float width, float height) {
+        inputSliders[0].setValue(width);
+        inputSliders[1].setValue(height);
+        aspectRatio = width / height;
+    }
 }

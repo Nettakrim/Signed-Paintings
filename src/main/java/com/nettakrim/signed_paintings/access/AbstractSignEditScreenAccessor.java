@@ -6,4 +6,6 @@ public interface AbstractSignEditScreenAccessor {
     void signedPaintings$clear();
 
     void signedPaintings$setVisibility(boolean to);
+
+    void signedPaintings$initSliders(float width, float height);
 }

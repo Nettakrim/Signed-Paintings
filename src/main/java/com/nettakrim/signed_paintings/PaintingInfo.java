@@ -37,8 +37,12 @@ public class PaintingInfo {
     }
 
     private void resetCuboid() {
-        width = image.width / 16f;
-        height = image.height / 16f;
+        this.width = image.width/16f;
+        this.height = image.height/16f;
+        while (this.width > 8 || this.height > 8) {
+            this.width /= 2f;
+            this.height /= 2f;
+        }
         depth = 1 / 16f;
         xCentering = Cuboid.Centering.CENTER;
         yCentering = Cuboid.Centering.CENTER;
