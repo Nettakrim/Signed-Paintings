@@ -1,5 +1,6 @@
-package com.nettakrim.signed_paintings;
+package com.nettakrim.signed_paintings.rendering;
 
+import com.nettakrim.signed_paintings.util.ImageData;
 import net.minecraft.util.Identifier;
 
 public class PaintingInfo {

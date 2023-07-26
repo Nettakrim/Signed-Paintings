@@ -1,4 +1,4 @@
-package com.nettakrim.signed_paintings;
+package com.nettakrim.signed_paintings.rendering;
 
 import net.minecraft.block.*;
 

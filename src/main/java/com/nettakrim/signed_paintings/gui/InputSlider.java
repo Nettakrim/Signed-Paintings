@@ -1,5 +1,6 @@
-package com.nettakrim.signed_paintings;
+package com.nettakrim.signed_paintings.gui;
 
+import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;

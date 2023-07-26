@@ -1,4 +1,6 @@
-package com.nettakrim.signed_paintings;
+package com.nettakrim.signed_paintings.util;
+
+import com.nettakrim.signed_paintings.SignedPaintingsClient;
 
 import java.util.Arrays;
 import java.util.Comparator;

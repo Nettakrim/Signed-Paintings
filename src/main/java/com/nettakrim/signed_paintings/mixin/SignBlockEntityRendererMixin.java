@@ -1,6 +1,6 @@
 package com.nettakrim.signed_paintings.mixin;
 
-import com.nettakrim.signed_paintings.PaintingInfo;
+import com.nettakrim.signed_paintings.rendering.PaintingInfo;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import net.minecraft.block.*;

@@ -1,7 +1,8 @@
-package com.nettakrim.signed_paintings;
+package com.nettakrim.signed_paintings.gui;
 
 import com.nettakrim.signed_paintings.access.AbstractSignEditScreenAccessor;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
+import com.nettakrim.signed_paintings.rendering.Cuboid;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.client.util.SelectionManager;
 

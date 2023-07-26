@@ -1,5 +1,6 @@
-package com.nettakrim.signed_paintings;
+package com.nettakrim.signed_paintings.util;
 
+import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;

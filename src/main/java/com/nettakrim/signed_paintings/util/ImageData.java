@@ -1,4 +1,4 @@
-package com.nettakrim.signed_paintings;
+package com.nettakrim.signed_paintings.util;
 
 import net.minecraft.util.Identifier;
 

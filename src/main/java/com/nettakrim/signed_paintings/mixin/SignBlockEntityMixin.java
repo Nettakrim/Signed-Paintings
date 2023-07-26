@@ -2,6 +2,10 @@ package com.nettakrim.signed_paintings.mixin;
 
 import com.nettakrim.signed_paintings.*;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
+import com.nettakrim.signed_paintings.rendering.Cuboid;
+import com.nettakrim.signed_paintings.rendering.PaintingInfo;
+import com.nettakrim.signed_paintings.rendering.SignSideInfo;
+import com.nettakrim.signed_paintings.rendering.SignType;
 import net.minecraft.block.AbstractSignBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.WoodType;

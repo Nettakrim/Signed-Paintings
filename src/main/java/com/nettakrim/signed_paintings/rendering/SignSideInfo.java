@@ -1,6 +1,8 @@
-package com.nettakrim.signed_paintings;
+package com.nettakrim.signed_paintings.rendering;
 
+import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
+import com.nettakrim.signed_paintings.util.ImageData;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;

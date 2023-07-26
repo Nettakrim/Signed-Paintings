@@ -1,5 +1,9 @@
 package com.nettakrim.signed_paintings;
 
+import com.nettakrim.signed_paintings.gui.SignEditingInfo;
+import com.nettakrim.signed_paintings.rendering.PaintingRenderer;
+import com.nettakrim.signed_paintings.util.ImageManager;
+import com.nettakrim.signed_paintings.util.URLAlias;
 import net.fabricmc.api.ClientModInitializer;
 
 import net.minecraft.block.entity.SignText;
