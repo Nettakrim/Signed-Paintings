@@ -12,5 +12,9 @@
     "signed_paintings.size.x" : "Width",
     "signed_paintings.size.y" : "Height",
     "signed_paintings.aspect.locked" : "🔒",
-    "signed_paintings.aspect.unlocked" : "🔓"
+    "signed_paintings.aspect.unlocked" : "🔓",
+
+    "signed_paintings.back_mode.sign" : "Frame: Sign",
+    "signed_paintings.back_mode.block" : "Frame: Block",
+    "signed_paintings.back_mode.none" : "Frame: None"
 }

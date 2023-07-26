@@ -91,6 +91,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             }
         }
 
+        createBackModeButton(76, 70, 20);
+
         float width;
         float height;
 
@@ -127,10 +129,21 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private void createCenteringButton(int areaSize, int buttonSize, Cuboid.Centering xCentering, Cuboid.Centering yCentering) {
         String id = (Cuboid.getNameFromCentering(true, xCentering)+Cuboid.getNameFromCentering(false, yCentering)).toLowerCase(Locale.ROOT);
         ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".align."+id), button -> SignedPaintingsClient.currentSignEdit.updatePaintingCentering(front, xCentering, yCentering))
-        //.position(getCenteringButtonPosition(areaSize, xCentering, buttonSize, width)-(width/4), getCenteringButtonPosition(-areaSize, yCentering, buttonSize, height))
         .position(getCenteringButtonPosition(areaSize, xCentering, buttonSize, width)-(areaSize/2)-(buttonSize/2)-60, getCenteringButtonPosition(-areaSize, yCentering, buttonSize, 0)+(areaSize/2)+(buttonSize/2)+67)
         .size(buttonSize, buttonSize)
         .build();
+
+        addDrawableChild(widget);
+        addSelectableChild(widget);
+        buttons.add(widget);
+    }
+
+    @Unique
+    private void createBackModeButton(int yOffset, int buttonWidth, int buttonHeight) {
+        ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".back_mode.sign"), button -> SignedPaintingsClient.LOGGER.info("hi! you pressed a button!"))
+                .position(width/2-60-buttonWidth, yOffset+68)
+                .size(buttonWidth, buttonHeight)
+                .build();
 
         addDrawableChild(widget);
         addSelectableChild(widget);
