@@ -78,13 +78,13 @@ public class InputSlider {
     }
 
     public void onSliderChanged(float newValue) {
-        value = newValue;
+        value = MathHelper.clamp(newValue, 1f/32f, 128f);
         if (onValueChanged != null) onValueChanged.accept(value);
         updateTextField();
     }
 
     public void setValue(float to) {
-        value = to;
+        value = MathHelper.clamp(to, 1f/32f, 128f);
         updateTextField();
         updateSlider();
     }

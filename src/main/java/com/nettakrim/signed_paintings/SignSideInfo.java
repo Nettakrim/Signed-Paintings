@@ -27,7 +27,7 @@ public class SignSideInfo {
 
     private String[] getParts() {
         String combinedText = SignedPaintingsClient.combineSignText(text);
-        return combinedText.split("[\\n ]|(:(?!//))", 2);
+        return combinedText.split("[\\n ]|(\\|)", 2);
     }
 
     private void loadURL(String url, String afterURL, Identifier back, boolean isFront, SignType.Type signType) {
@@ -99,8 +99,8 @@ public class SignSideInfo {
 
     private static class PaintingDataCache {
         private final String url;
-        private Cuboid.Centering xCentering;
-        private Cuboid.Centering yCentering;
+        private Cuboid.Centering xCentering = Cuboid.Centering.CENTER;
+        private Cuboid.Centering yCentering = Cuboid.Centering.CENTER;
         private float width;
         private float height;
         private String extraText;
@@ -122,7 +122,7 @@ public class SignSideInfo {
         }
 
         public void parseAfterUrl(String s) {
-            String[] parts = s.split("[:\n ]");
+            String[] parts = s.split("[|\n ]");
 
             int currentIndex = 0;
 
@@ -132,7 +132,7 @@ public class SignSideInfo {
 
             StringBuilder builder = new StringBuilder();
             for (int i = currentIndex; i < parts.length; i++) {
-                if (builder.length() > 0) builder.append(":");
+                if (builder.length() > 0) builder.append(" ");
                 builder.append(parts[i]);
             }
             this.extraText = builder.toString();
@@ -161,11 +161,23 @@ public class SignSideInfo {
         }
 
         public void updateSignText() {
-            String text = url + ':' + Cuboid.getNameFromCentering(true, xCentering) + Cuboid.getNameFromCentering(false, yCentering) + ':' + width + '/' + height + ':' + extraText;
+            String urlString = SignedPaintingsClient.imageManager.getShortestURLInference(url);
+            String widthString = getShortFloatString(width);
+            String heightString = getShortFloatString(height);
+
+            String text = urlString + '|' + Cuboid.getNameFromCentering(true, xCentering) + Cuboid.getNameFromCentering(false, yCentering) + '|' + widthString + '/' + heightString + '|' + extraText;
 
             SignedPaintingsClient.currentSignEdit.screen.signedPaintings$clear();
             int newSelection = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(text, 0, 0);
             SignedPaintingsClient.currentSignEdit.selectionManager.setSelection(newSelection, newSelection);
+        }
+
+        private String getShortFloatString(float value) {
+            String s = SignedPaintingsClient.floatToStringDP(value, 5);
+            s = s.contains(".") ? s.replaceAll("\\.?0*$","") : s;
+            s = s.replaceAll("\\.66[67]+$",".667");
+            s = s.replaceAll("\\.333+$",".333");
+            return s;
         }
     }
 }

@@ -137,4 +137,15 @@ public class ImageManager {
         }
         return url;
     }
+
+    public String getShortestURLInference(String url) {
+        if (!url.contains("://")) {
+            url = "https://"+url;
+        }
+        for (URLAlias urlAlias : urlAliases) {
+            url = urlAlias.getShortestAlias(url);
+        }
+        if (url.startsWith("https://")) url = url.substring(8);
+        return url;
+    }
 }
