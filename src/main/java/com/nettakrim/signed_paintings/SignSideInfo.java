@@ -146,8 +146,8 @@ public class SignSideInfo {
         }
 
         private boolean tryParseSize(String s) {
-            if (!s.contains("/")) return false;
-            String[] parts = s.split("/");
+            if (!s.contains("/") && !s.contains(":")) return false;
+            String[] parts = s.split("[/:]");
             float[] values = new float[2];
             try {
                 values[0] = MathHelper.clamp(Float.parseFloat(parts[0]), 1f/32f, 128f);
@@ -165,7 +165,7 @@ public class SignSideInfo {
             String widthString = getShortFloatString(width);
             String heightString = getShortFloatString(height);
 
-            String text = urlString + '|' + Cuboid.getNameFromCentering(true, xCentering) + Cuboid.getNameFromCentering(false, yCentering) + '|' + widthString + '/' + heightString + '|' + extraText;
+            String text = urlString + '|' + Cuboid.getNameFromCentering(true, xCentering) + Cuboid.getNameFromCentering(false, yCentering) + '|' + widthString + ':' + heightString + '|' + extraText;
 
             SignedPaintingsClient.currentSignEdit.screen.signedPaintings$clear();
             int newSelection = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(text, 0, 0);

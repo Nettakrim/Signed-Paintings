@@ -82,7 +82,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         for (Cuboid.Centering yCentering : centering) {
             for (Cuboid.Centering xCentering : reversedCentering) {
                 int arrowIndex = 2-xCentering.ordinal() + yCentering.ordinal()*3;
-                createCenteringButton(50, 20, arrows[arrowIndex], xCentering, yCentering);
+                createCenteringButton(51, 20, arrows[arrowIndex], xCentering, yCentering);
             }
         }
 
@@ -99,9 +99,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             height = info.getHeight();
         }
 
-        inputSliders[0] = createSizingSlider(Cuboid.Centering.MAX, 50, 50, 50, 20, 5, "Width", width);
-        createLockingButton(Cuboid.Centering.CENTER, 50, 20, getAspectLockIcon(aspectLocked));
-        inputSliders[1] = createSizingSlider(Cuboid.Centering.MIN, 50, 50, 50, 20, 5, "Height", height);
+        inputSliders[0] = createSizingSlider(Cuboid.Centering.MAX, 51, 50, 50, 20, 5, "Width", width);
+        createLockingButton(Cuboid.Centering.CENTER, 51, 20, getAspectLockIcon(aspectLocked));
+        inputSliders[1] = createSizingSlider(Cuboid.Centering.MIN, 51, 50, 50, 20, 5, "Height", height);
 
         inputSliders[0].setOnValueChanged(value -> onSizeSliderChanged(value, true));
         inputSliders[1].setOnValueChanged(value -> onSizeSliderChanged(value, false));
@@ -121,7 +121,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private void createCenteringButton(int areaSize, int buttonSize, String text, Cuboid.Centering xCentering, Cuboid.Centering yCentering) {
         ButtonWidget widget = ButtonWidget.builder(Text.literal(text), button -> SignedPaintingsClient.currentSignEdit.updatePaintingCentering(front, xCentering, yCentering))
-        .position(getCenteringButtonPosition(areaSize, xCentering, buttonSize, width)-(width/4), getCenteringButtonPosition(-areaSize, yCentering, buttonSize, height))
+        //.position(getCenteringButtonPosition(areaSize, xCentering, buttonSize, width)-(width/4), getCenteringButtonPosition(-areaSize, yCentering, buttonSize, height))
+        .position(getCenteringButtonPosition(areaSize, xCentering, buttonSize, width)-(areaSize/2)-(buttonSize/2)-60, getCenteringButtonPosition(-areaSize, yCentering, buttonSize, 0)+(areaSize/2)+(buttonSize/2)+67)
         .size(buttonSize, buttonSize)
         .build();
 
@@ -137,8 +138,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Unique
     private InputSlider createSizingSlider(Cuboid.Centering centering, int areaSize, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String name, float startingValue) {
-        int x = (width/2 + width/4)-(textWidth+sliderWidth+elementSpacing)/2;
-        int y = getCenteringButtonPosition(areaSize, centering, widgetHeight, height);
+        //int x = (width/2 + width/4)-(textWidth+sliderWidth+elementSpacing)/2;
+        int x = (width/2)+60;
+        int y = getCenteringButtonPosition(areaSize, centering, widgetHeight, 0)+(areaSize/2)+(widgetHeight/2)+67;
         InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, 0.5f, 10f, 0.5f, startingValue, Text.literal(name));
 
         addDrawableChild(inputSlider.textFieldWidget);
@@ -155,7 +157,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private void createLockingButton(Cuboid.Centering centering, int areaSize, int buttonSize, String text) {
         ButtonWidget widget = ButtonWidget.builder(Text.literal(text), this::toggleAspectLock)
-        .position((width/2 + width/4)-(areaSize)/2, getCenteringButtonPosition(areaSize, centering, buttonSize, height))
+        .position((width/2)+60, getCenteringButtonPosition(areaSize, centering, buttonSize, 0)+(areaSize/2)+(buttonSize/2)+67)
         .size(buttonSize, buttonSize)
         .build();
 
