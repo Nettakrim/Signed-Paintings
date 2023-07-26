@@ -11,6 +11,8 @@ public class SignSideInfo {
 
     private PaintingDataCache cache;
 
+    private boolean updatingSignText;
+
     public SignSideInfo(SignText text, PaintingInfo paintingInfo) {
         this.text = text;
         this.paintingInfo = paintingInfo;
@@ -58,7 +60,7 @@ public class SignSideInfo {
         paintingInfo.updateCuboidCentering(xCentering, yCentering);
         cache.xCentering = xCentering;
         cache.yCentering = yCentering;
-        cache.updateSignText();
+        updateSignText();
     }
 
     public void updatePaintingSize(float xSize, float ySize) {
@@ -66,21 +68,29 @@ public class SignSideInfo {
         paintingInfo.updateCuboidSize(xSize, ySize);
         cache.width = xSize;
         cache.height = ySize;
+        updateSignText();
+    }
+
+    private void updateSignText() {
+        updatingSignText = true;
         cache.updateSignText();
+        updatingSignText = false;
     }
 
     public boolean updateText() {
         if (paintingInfo == null) return false;
+        if (updatingSignText) return true;
         String[] parts = getParts();
         if (!cache.url.equals(parts[0])) {
             return false;
         }
-        if (parts.length > 1) updateCache(parts[1]);
+        if (parts.length > 1) {
+            updateCache(parts[1]);
+        }
         return true;
     }
 
     private void updateCache(String afterUrl) {
-        SignedPaintingsClient.LOGGER.info("SignSideInfo.updateCache gets called after changing a slider value due to (blockentity).setText being called by paste - it does not need to be");
         cache.parseAfterUrl(afterUrl);
 
         paintingInfo.updateCuboidCentering(cache.xCentering, cache.yCentering);
