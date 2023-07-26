@@ -23,7 +23,10 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Locale;
 
 @Mixin(AbstractSignEditScreen.class)
 public abstract class AbstractSignEditScreenMixin extends Screen implements AbstractSignEditScreenAccessor {
@@ -70,10 +73,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private void init(CallbackInfo ci) {
         buttons.clear();
 
-        //🡤🡡🡥🡠◯🡢🡧🡣🡦
-        String[] arrows = new String[] {"\uD83E\uDC64","\uD83E\uDC61","\uD83E\uDC65","\uD83E\uDC60","◯","\uD83E\uDC62","\uD83E\uDC67","\uD83E\uDC63","\uD83E\uDC66"};
-
         Cuboid.Centering[] centering = Cuboid.Centering.values();
+        //x centering is reversed to make the buttons have a sensible order when using tab
         Cuboid.Centering[] reversedCentering = new Cuboid.Centering[] {
             Cuboid.Centering.MAX,
             Cuboid.Centering.CENTER,
@@ -81,8 +82,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         };
         for (Cuboid.Centering yCentering : centering) {
             for (Cuboid.Centering xCentering : reversedCentering) {
-                int arrowIndex = 2-xCentering.ordinal() + yCentering.ordinal()*3;
-                createCenteringButton(51, 20, arrows[arrowIndex], xCentering, yCentering);
+                createCenteringButton(51, 20, xCentering, yCentering);
             }
         }
 
@@ -99,9 +99,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             height = info.getHeight();
         }
 
-        inputSliders[0] = createSizingSlider(Cuboid.Centering.MAX, 51, 50, 50, 20, 5, "Width", width);
+        inputSliders[0] = createSizingSlider(Cuboid.Centering.MAX, 51, 50, 50, 20, 5, SignedPaintingsClient.MODID+".size.x", width);
         createLockingButton(Cuboid.Centering.CENTER, 51, 20, getAspectLockIcon(aspectLocked));
-        inputSliders[1] = createSizingSlider(Cuboid.Centering.MIN, 51, 50, 50, 20, 5, "Height", height);
+        inputSliders[1] = createSizingSlider(Cuboid.Centering.MIN, 51, 50, 50, 20, 5, SignedPaintingsClient.MODID+".size.y", height);
 
         inputSliders[0].setOnValueChanged(value -> onSizeSliderChanged(value, true));
         inputSliders[1].setOnValueChanged(value -> onSizeSliderChanged(value, false));
@@ -119,8 +119,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
-    private void createCenteringButton(int areaSize, int buttonSize, String text, Cuboid.Centering xCentering, Cuboid.Centering yCentering) {
-        ButtonWidget widget = ButtonWidget.builder(Text.literal(text), button -> SignedPaintingsClient.currentSignEdit.updatePaintingCentering(front, xCentering, yCentering))
+    private void createCenteringButton(int areaSize, int buttonSize, Cuboid.Centering xCentering, Cuboid.Centering yCentering) {
+        String id = (Cuboid.getNameFromCentering(true, xCentering)+Cuboid.getNameFromCentering(false, yCentering)).toLowerCase(Locale.ROOT);
+        ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".align."+id), button -> SignedPaintingsClient.currentSignEdit.updatePaintingCentering(front, xCentering, yCentering))
         //.position(getCenteringButtonPosition(areaSize, xCentering, buttonSize, width)-(width/4), getCenteringButtonPosition(-areaSize, yCentering, buttonSize, height))
         .position(getCenteringButtonPosition(areaSize, xCentering, buttonSize, width)-(areaSize/2)-(buttonSize/2)-60, getCenteringButtonPosition(-areaSize, yCentering, buttonSize, 0)+(areaSize/2)+(buttonSize/2)+67)
         .size(buttonSize, buttonSize)
@@ -137,26 +138,26 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
-    private InputSlider createSizingSlider(Cuboid.Centering centering, int areaSize, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String name, float startingValue) {
+    private InputSlider createSizingSlider(Cuboid.Centering centering, int areaSize, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
         //int x = (width/2 + width/4)-(textWidth+sliderWidth+elementSpacing)/2;
         int x = (width/2)+60;
         int y = getCenteringButtonPosition(areaSize, centering, widgetHeight, 0)+(areaSize/2)+(widgetHeight/2)+67;
-        InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, 0.5f, 10f, 0.5f, startingValue, Text.literal(name));
-
-        addDrawableChild(inputSlider.textFieldWidget);
-        addSelectableChild(inputSlider.textFieldWidget);
-        buttons.add(inputSlider.textFieldWidget);
+        InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, 0.5f, 10f, 0.5f, startingValue, Text.translatable(key));
 
         addDrawableChild(inputSlider.sliderWidget);
         addSelectableChild(inputSlider.sliderWidget);
         buttons.add(inputSlider.sliderWidget);
 
+        addDrawableChild(inputSlider.textFieldWidget);
+        addSelectableChild(inputSlider.textFieldWidget);
+        buttons.add(inputSlider.textFieldWidget);
+
         return inputSlider;
     }
 
     @Unique
-    private void createLockingButton(Cuboid.Centering centering, int areaSize, int buttonSize, String text) {
-        ButtonWidget widget = ButtonWidget.builder(Text.literal(text), this::toggleAspectLock)
+    private void createLockingButton(Cuboid.Centering centering, int areaSize, int buttonSize, Text text) {
+        ButtonWidget widget = ButtonWidget.builder(text, this::toggleAspectLock)
         .position((width/2)+60, getCenteringButtonPosition(areaSize, centering, buttonSize, 0)+(areaSize/2)+(buttonSize/2)+67)
         .size(buttonSize, buttonSize)
         .build();
@@ -169,7 +170,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private void toggleAspectLock(ButtonWidget button) {
         setAspectLock(!aspectLocked);
-        button.setMessage(Text.literal(getAspectLockIcon(aspectLocked)));
+        button.setMessage(getAspectLockIcon(aspectLocked));
     }
 
     @Unique
@@ -181,19 +182,29 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
-    private static String getAspectLockIcon(boolean aspectLocked) {
-        // "🔒" : "🔓"
-        return aspectLocked ? "\uD83D\uDD12" : "\uD83D\uDD13";
+    private static Text getAspectLockIcon(boolean aspectLocked) {
+        return Text.translatable(SignedPaintingsClient.MODID+".aspect."+ (aspectLocked ? "locked" : "unlocked"));
     }
 
     @Unique
     private void onSizeSliderChanged(float value, boolean isWidth) {
         if (aspectLocked) {
-            if (isWidth) {
-                inputSliders[1].setValue(value/aspectRatio);
+            if (isWidth) value/=aspectRatio;
+            else value*=aspectRatio;
+
+            //silly conversions to try get rid of awkwardly long numbers like 1.499 or 3.002
+            BigDecimal bd = new BigDecimal(value);
+            bd = bd.setScale(3, RoundingMode.HALF_UP);
+            BigDecimal bd2 = bd.setScale(2, RoundingMode.HALF_UP);
+            double difference = Math.abs(bd.subtract(bd2).doubleValue());
+            String s = bd.toString();
+            if ((difference < 0.0011 || s.contains("00")) && !s.endsWith(".667") && !s.endsWith(".334")) {
+                value = bd2.floatValue();
             } else {
-                inputSliders[0].setValue(value*aspectRatio);
+                value = bd.floatValue();
             }
+
+            inputSliders[isWidth ? 1 : 0].setValue(value);
         }
         SignedPaintingsClient.currentSignEdit.updatePaintingSize(front, inputSliders[0].getValue(), inputSliders[1].getValue());
     }

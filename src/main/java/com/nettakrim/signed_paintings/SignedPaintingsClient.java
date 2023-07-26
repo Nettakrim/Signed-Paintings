@@ -74,7 +74,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	}
 
 	public static String floatToStringDP(float d, int decimalPlace) {
-		BigDecimal bd = new BigDecimal(Float.toString(d));
+		BigDecimal bd = new BigDecimal(d);
 		bd = bd.setScale(decimalPlace, RoundingMode.HALF_UP);
 		String s1 =  bd.toString();
 		String s2 = Float.toString(d);

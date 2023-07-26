@@ -1,0 +1,16 @@
+{
+    "signed_paintings.align.lt" : "🡤",
+    "signed_paintings.align.ct" : "🡡",
+    "signed_paintings.align.rt" : "🡥",
+    "signed_paintings.align.lc" : "🡠",
+    "signed_paintings.align.cc" : "◯",
+    "signed_paintings.align.rc" : "🡢",
+    "signed_paintings.align.lb" : "🡧",
+    "signed_paintings.align.cb" : "🡣",
+    "signed_paintings.align.rb" : "🡦",
+
+    "signed_paintings.size.x" : "Width",
+    "signed_paintings.size.y" : "Height",
+    "signed_paintings.aspect.locked" : "🔒",
+    "signed_paintings.aspect.unlocked" : "🔓"
+}

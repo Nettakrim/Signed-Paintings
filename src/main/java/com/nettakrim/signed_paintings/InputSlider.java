@@ -22,12 +22,12 @@ public class InputSlider {
     private Consumer<Float> onValueChanged;
 
     public InputSlider(int x, int y, int textWidth, int sliderWidth, int height, int elementSpacing, float minSlider, float maxSlider, float sliderStep, float startingValue, Text text) {
-        textFieldWidget = createTextField(x+1, y+1, textWidth-2, height-2);
+        sliderWidget = createSlider(x, y, sliderWidth, height, text, minSlider, maxSlider, sliderStep);
+        sliderWidget.setChangedListener(this::onSliderChanged);
+
+        textFieldWidget = createTextField(x+textWidth+elementSpacing+1, y+1, textWidth-2, height-2);
         textFieldWidget.setChangedListener(this::onTextChanged);
         textFieldWidget.setTextPredicate(textPredicate);
-
-        sliderWidget = createSlider(x+textWidth+elementSpacing, y, sliderWidth, height, text, minSlider, maxSlider, sliderStep);
-        sliderWidget.setChangedListener(this::onSliderChanged);
 
         setValue(startingValue);
     }
