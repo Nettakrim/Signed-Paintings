@@ -29,7 +29,7 @@ public abstract class SignBlockEntityRendererMixin {
         boolean success = false;
         SignBlockEntityAccessor accessor = (SignBlockEntityAccessor)entity;
         success |= renderPaintingInfo(accessor.signedPaintings$getFrontPaintingInfo(), matrices, vertexConsumers, model, light, block, state);
-        success |= renderPaintingInfo(accessor.signedPaintings$getBackPaintingInfo(), matrices, vertexConsumers, model, light, block, state);
+        success |= renderPaintingInfo(accessor.signedPaintings$getBackPaintingInfo(),  matrices, vertexConsumers, model, light, block, state);
         if (success) ci.cancel();
     }
 

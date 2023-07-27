@@ -1,25 +1,37 @@
 package com.nettakrim.signed_paintings.rendering;
 
+import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.util.ImageData;
+import net.minecraft.block.AbstractSignBlock;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.SignBlockEntity;
+import net.minecraft.client.render.block.BlockModels;
+import net.minecraft.client.texture.Sprite;
+import net.minecraft.client.util.ModelIdentifier;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 
 public class PaintingInfo {
+    public BlockEntity blockEntity;
     public Cuboid cuboid;
     private ImageData image;
-    private Identifier back;
+    private Sprite back;
     public SignType.Type signType;
     public float rotation;
-
     private float width;
     private float height;
     private float depth;
-    private Cuboid.Centering xCentering;
-    private Cuboid.Centering yCentering;
+    private Centering.Type xCentering;
+    private Centering.Type yCentering;
+    private BackType.Type backType;
 
-    public PaintingInfo(ImageData image, Identifier back, boolean isFront, SignType.Type signType) {
+    public PaintingInfo(ImageData image, boolean isFront, SignBlockEntity blockEntity) {
+        this.blockEntity = blockEntity;
         this.image = image;
-        this.back = back;
-        this.signType = signType;
+        this.signType = SignType.getType(blockEntity.getCachedState().getBlock());
         this.rotation = isFront ? 0 : 180;
         resetCuboid();
     }
@@ -45,8 +57,8 @@ public class PaintingInfo {
             this.height /= 2f;
         }
         depth = 1 / 16f;
-        xCentering = Cuboid.Centering.CENTER;
-        yCentering = Cuboid.Centering.CENTER;
+        xCentering = Centering.Type.CENTER;
+        yCentering = Centering.Type.CENTER;
         updateCuboid();
     }
 
@@ -58,7 +70,7 @@ public class PaintingInfo {
         };
     }
 
-    public void updateCuboidCentering(Cuboid.Centering xCentering, Cuboid.Centering yCentering) {
+    public void updateCuboidCentering(Centering.Type xCentering, Centering.Type yCentering) {
         this.xCentering = xCentering;
         this.yCentering = yCentering;
         updateCuboid();
@@ -70,15 +82,46 @@ public class PaintingInfo {
         updateCuboid();
     }
 
-    public void setBackIdentifier(Identifier back) {
-        this.back = back;
+    public void setBackType(BackType.Type backType) {
+        this.backType = backType;
+        updateBack();
+    }
+
+    public BackType.Type getBackType() {
+        return backType;
+    }
+
+    private void updateBack() {
+        BlockState blockState = null;
+        if (this.backType == BackType.Type.BLOCK) {
+            World world = this.blockEntity.getWorld();
+            if (world == null) world = SignedPaintingsClient.client.world;
+            BlockPos blockPos = this.blockEntity.getPos();
+            double rotation = ((AbstractSignBlock)this.blockEntity.getCachedState().getBlock()).getRotationDegrees(this.blockEntity.getCachedState());
+            blockPos = switch (signType) {
+                case STANDING -> blockPos.down();
+                case WALL -> blockPos.offset(Direction.fromRotation(rotation+180), 1);
+                case HANGING -> blockPos.up();
+                case WALL_HANGING -> getSolidWallHang(world, blockPos, Direction.fromRotation(rotation+90));
+            };
+            blockState = world.getBlockState(blockPos);
+        }
+
+        if (blockState == null || blockState.isAir()) blockState = this.blockEntity.getCachedState();
+
+        ModelIdentifier modelIdentifier = BlockModels.getModelId(blockState);
+        this.back = SignedPaintingsClient.client.getBakedModelManager().getModel(modelIdentifier).getParticleSprite();
+    }
+
+    private BlockPos getSolidWallHang(World world, BlockPos blockPos, Direction direction) {
+        return blockPos.offset(direction, world.getBlockState(blockPos.offset(direction, 1)).isAir() ? -1 : 1);
     }
 
     public Identifier getImageIdentifier() {
         return image.identifier;
     }
 
-    public Identifier getBackIdentifier() {
+    public Sprite getBackSprite() {
         return back;
     }
 

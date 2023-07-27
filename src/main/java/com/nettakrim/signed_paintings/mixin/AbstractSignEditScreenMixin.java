@@ -6,7 +6,8 @@ import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import com.nettakrim.signed_paintings.gui.BackgroundClick;
 import com.nettakrim.signed_paintings.gui.InputSlider;
 import com.nettakrim.signed_paintings.gui.SignEditingInfo;
-import com.nettakrim.signed_paintings.rendering.Cuboid;
+import com.nettakrim.signed_paintings.rendering.BackType;
+import com.nettakrim.signed_paintings.rendering.Centering;
 import com.nettakrim.signed_paintings.rendering.PaintingInfo;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
@@ -78,37 +79,40 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private void init(CallbackInfo ci) {
         buttons.clear();
 
-        Cuboid.Centering[] centering = Cuboid.Centering.values();
+        Centering.Type[] centering = Centering.Type.values();
         //x centering is reversed to make the buttons have a sensible order when using tab
-        Cuboid.Centering[] reversedCentering = new Cuboid.Centering[] {
-            Cuboid.Centering.MAX,
-            Cuboid.Centering.CENTER,
-            Cuboid.Centering.MIN
+        Centering.Type[] reversedCentering = new Centering.Type[] {
+            Centering.Type.MAX,
+            Centering.Type.CENTER,
+            Centering.Type.MIN
         };
-        for (Cuboid.Centering yCentering : centering) {
-            for (Cuboid.Centering xCentering : reversedCentering) {
+        for (Centering.Type yCentering : centering) {
+            for (Centering.Type xCentering : reversedCentering) {
                 createCenteringButton(51, 20, xCentering, yCentering);
             }
         }
 
-        createBackModeButton(76, 70, 20);
-
         float width;
         float height;
+        BackType.Type backType;
 
         SignBlockEntityAccessor sign = (SignBlockEntityAccessor)blockEntity;
         PaintingInfo info = front ? sign.signedPaintings$getFrontPaintingInfo() : sign.signedPaintings$getBackPaintingInfo();
         if (info == null) {
             width = 1f;
             height = 1f;
+            backType = BackType.Type.SIGN;
         } else {
             width = info.getWidth();
             height = info.getHeight();
+            backType = info.getBackType();
         }
 
-        inputSliders[0] = createSizingSlider(Cuboid.Centering.MAX, 51, 50, 50, 20, 5, SignedPaintingsClient.MODID+".size.x", width);
-        createLockingButton(Cuboid.Centering.CENTER, 51, 20, getAspectLockIcon(aspectLocked));
-        inputSliders[1] = createSizingSlider(Cuboid.Centering.MIN, 51, 50, 50, 20, 5, SignedPaintingsClient.MODID+".size.y", height);
+        createBackModeButton(76, 105, 20, backType);
+
+        inputSliders[0] = createSizingSlider(Centering.Type.MAX, 51, 50, 50, 20, 5, SignedPaintingsClient.MODID+".size.x", width);
+        createLockingButton(Centering.Type.CENTER, 51, 20, getAspectLockIcon(aspectLocked));
+        inputSliders[1] = createSizingSlider(Centering.Type.MIN, 51, 50, 50, 20, 5, SignedPaintingsClient.MODID+".size.y", height);
 
         inputSliders[0].setOnValueChanged(value -> onSizeSliderChanged(value, true));
         inputSliders[1].setOnValueChanged(value -> onSizeSliderChanged(value, false));
@@ -126,8 +130,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
-    private void createCenteringButton(int areaSize, int buttonSize, Cuboid.Centering xCentering, Cuboid.Centering yCentering) {
-        String id = (Cuboid.getNameFromCentering(true, xCentering)+Cuboid.getNameFromCentering(false, yCentering)).toLowerCase(Locale.ROOT);
+    private void createCenteringButton(int areaSize, int buttonSize, Centering.Type xCentering, Centering.Type yCentering) {
+        String id = (Centering.getName(true, xCentering)+Centering.getName(false, yCentering)).toLowerCase(Locale.ROOT);
         ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".align."+id), button -> SignedPaintingsClient.currentSignEdit.updatePaintingCentering(front, xCentering, yCentering))
         .position(getCenteringButtonPosition(areaSize, xCentering, buttonSize, width)-(areaSize/2)-(buttonSize/2)-60, getCenteringButtonPosition(-areaSize, yCentering, buttonSize, 0)+(areaSize/2)+(buttonSize/2)+67)
         .size(buttonSize, buttonSize)
@@ -139,8 +143,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
-    private void createBackModeButton(int yOffset, int buttonWidth, int buttonHeight) {
-        ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".back_mode.sign"), button -> SignedPaintingsClient.LOGGER.info("hi! you pressed a button!"))
+    private void createBackModeButton(int yOffset, int buttonWidth, int buttonHeight, BackType.Type backType) {
+        ButtonWidget widget = ButtonWidget.builder(getBackTypeText(backType), this::cyclePaintingBack)
                 .position(width/2-60-buttonWidth, yOffset+68)
                 .size(buttonWidth, buttonHeight)
                 .build();
@@ -151,13 +155,12 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
-    private int getCenteringButtonPosition(int size, Cuboid.Centering centering, int buttonSize, int screenSize) {
-        return MathHelper.floor(Cuboid.getOffsetFromCentering(size, centering)) + screenSize/2 - buttonSize/2;
+    private int getCenteringButtonPosition(int size, Centering.Type centering, int buttonSize, int screenSize) {
+        return MathHelper.floor(Centering.getOffset(size, centering)) + screenSize/2 - buttonSize/2;
     }
 
     @Unique
-    private InputSlider createSizingSlider(Cuboid.Centering centering, int areaSize, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
-        //int x = (width/2 + width/4)-(textWidth+sliderWidth+elementSpacing)/2;
+    private InputSlider createSizingSlider(Centering.Type centering, int areaSize, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
         int x = (width/2)+60;
         int y = getCenteringButtonPosition(areaSize, centering, widgetHeight, 0)+(areaSize/2)+(widgetHeight/2)+67;
         InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, 0.5f, 10f, 0.5f, startingValue, Text.translatable(key));
@@ -174,7 +177,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
-    private void createLockingButton(Cuboid.Centering centering, int areaSize, int buttonSize, Text text) {
+    private void createLockingButton(Centering.Type centering, int areaSize, int buttonSize, Text text) {
         ButtonWidget widget = ButtonWidget.builder(text, this::toggleAspectLock)
         .position((width/2)+60, getCenteringButtonPosition(areaSize, centering, buttonSize, 0)+(areaSize/2)+(buttonSize/2)+67)
         .size(buttonSize, buttonSize)
@@ -202,6 +205,17 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private static Text getAspectLockIcon(boolean aspectLocked) {
         return Text.translatable(SignedPaintingsClient.MODID+".aspect."+ (aspectLocked ? "locked" : "unlocked"));
+    }
+
+    @Unique
+    private static Text getBackTypeText(BackType.Type backType) {
+        return Text.translatable(SignedPaintingsClient.MODID+".back_mode."+(backType.toString().toLowerCase(Locale.ROOT)));
+    }
+
+    @Unique
+    private void cyclePaintingBack(ButtonWidget button) {
+        BackType.Type newType = SignedPaintingsClient.currentSignEdit.cyclePaintingBack(front);
+        button.setMessage(getBackTypeText(newType));
     }
 
     @Unique

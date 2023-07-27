@@ -4,9 +4,7 @@ import net.minecraft.client.model.Model;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.texture.Sprite;
-import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.util.math.RotationAxis;
 import org.joml.Vector3f;
 
@@ -25,9 +23,11 @@ public class PaintingRenderer {
         VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(model.getLayer(info.getImageIdentifier()));
         renderImage(imageVertexConsumer, info, light);
 
-        SpriteIdentifier backSprite = new SpriteIdentifier(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE, info.getBackIdentifier());
-        VertexConsumer backVertexConsumer = backSprite.getVertexConsumer(vertexConsumers, model::getLayer);
-        renderBack(backVertexConsumer, backSprite.getSprite(), info, light);
+        if (info.getBackType() != BackType.Type.NONE) {
+            Sprite sprite = info.getBackSprite();
+            VertexConsumer backVertexConsumer = sprite.getTextureSpecificVertexConsumer(vertexConsumers.getBuffer(model.getLayer(sprite.getAtlasId())));
+            renderBack(backVertexConsumer, sprite, info, light);
+        }
 
         matrices.pop();
     }

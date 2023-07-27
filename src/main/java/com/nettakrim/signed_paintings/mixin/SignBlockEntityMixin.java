@@ -2,19 +2,13 @@ package com.nettakrim.signed_paintings.mixin;
 
 import com.nettakrim.signed_paintings.*;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
-import com.nettakrim.signed_paintings.rendering.Cuboid;
-import com.nettakrim.signed_paintings.rendering.PaintingInfo;
-import com.nettakrim.signed_paintings.rendering.SignSideInfo;
-import com.nettakrim.signed_paintings.rendering.SignType;
-import net.minecraft.block.AbstractSignBlock;
+import com.nettakrim.signed_paintings.rendering.*;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.WoodType;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -37,6 +31,9 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
     @Unique
     protected SignSideInfo backInfo;
 
+    @Unique
+    protected SignBlockEntity entity;
+
     public PaintingInfo signedPaintings$getFrontPaintingInfo() {
         return frontInfo.paintingInfo;
     }
@@ -45,19 +42,19 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
         return backInfo.paintingInfo;
     }
 
-    public Identifier signedPaintings$createBackIdentifier() {
-        if (getCachedState().getBlock() instanceof AbstractSignBlock signBlock) {
-            return new Identifier("block/" + signBlock.getWoodType().name() + "_planks");
-        }
-        return new Identifier("block/" + WoodType.OAK.name() + "_planks");
-    }
-
-    public void signedPaintings$updatePaintingCentering(boolean front, Cuboid.Centering xCentering, Cuboid.Centering yCentering) {
+    @Override
+    public void signedPaintings$updatePaintingCentering(boolean front, Centering.Type xCentering, Centering.Type yCentering) {
         (front ? frontInfo : backInfo).updatePaintingCentering(xCentering, yCentering);
     }
 
+    @Override
     public void signedPaintings$updatePaintingSize(boolean front, float xSize, float ySize) {
         (front ? frontInfo : backInfo).updatePaintingSize(xSize, ySize);
+    }
+
+    @Override
+    public BackType.Type signedPaintings$cyclePaintingBack(boolean front) {
+        return (front ? frontInfo : backInfo).cyclePaintingBack();
     }
 
     public boolean signedPaintings$hasSignSideInfo(SignSideInfo info) {
@@ -70,6 +67,7 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
     private void onInit(BlockEntityType<?> blockEntityType, BlockPos blockPos, BlockState blockState, CallbackInfo ci) {
         frontInfo = new SignSideInfo(frontText, null);
         backInfo = new SignSideInfo(backText, null);
+        entity = (SignBlockEntity)(Object)this;
     }
 
     @Inject(at = @At("TAIL"), method = "setText")
@@ -86,7 +84,7 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
             if (SignedPaintingsClient.currentSignEdit != null) {
                 SignedPaintingsClient.currentSignEdit.screen.signedPaintings$setVisibility(false);
             }
-            info.loadPainting(signedPaintings$createBackIdentifier(), front, SignType.getType(getCachedState().getBlock()));
+            info.loadPainting(front, entity);
         }
     }
 
@@ -95,9 +93,7 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
         frontInfo.text = frontText;
         backInfo.text = backText;
         SignedPaintingsClient.LOGGER.info("nbt read "+frontText.getMessage(0, false).toString()+" at "+getPos());
-        Identifier back = signedPaintings$createBackIdentifier();
-        SignType.Type signType = SignType.getType(getCachedState().getBlock());
-        frontInfo.loadPainting(back, true, signType);
-        backInfo.loadPainting(back, false, signType);
+        frontInfo.loadPainting(true, entity);
+        backInfo.loadPainting(false, entity);
     }
 }
