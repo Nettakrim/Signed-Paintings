@@ -56,17 +56,19 @@ public class PaintingInfo {
             this.width /= 2f;
             this.height /= 2f;
         }
-        depth = 1 / 16f;
-        xCentering = Centering.Type.CENTER;
-        yCentering = Centering.Type.CENTER;
+        this.depth = 1 / 16f;
+        this.xCentering = Centering.Type.CENTER;
+        this.yCentering = Centering.Type.CENTER;
         updateCuboid();
     }
 
     private void updateCuboid() {
-        this.cuboid =  switch (signType) {
-            case WALL -> Cuboid.CreateWallCuboid(width, xCentering, height, yCentering, depth);
-            case STANDING -> Cuboid.CreateFlushCuboid(width, xCentering, height, yCentering, depth);
-            case HANGING, WALL_HANGING -> Cuboid.CreateCentralCuboid(width, xCentering, height, yCentering, depth);
+        float reducedDepth = this.depth;
+        if (backType == BackType.Type.NONE) reducedDepth = 1/256f;
+        this.cuboid = switch (signType) {
+            case WALL -> Cuboid.CreateWallCuboid(width, xCentering, height, yCentering, reducedDepth);
+            case STANDING -> Cuboid.CreateFlushCuboid(width, xCentering, height, yCentering, reducedDepth);
+            case HANGING, WALL_HANGING -> Cuboid.CreateCentralCuboid(width, xCentering, height, yCentering, reducedDepth);
         };
     }
 
@@ -85,6 +87,7 @@ public class PaintingInfo {
     public void setBackType(BackType.Type backType) {
         this.backType = backType;
         updateBack();
+        updateCuboid();
     }
 
     public BackType.Type getBackType() {
