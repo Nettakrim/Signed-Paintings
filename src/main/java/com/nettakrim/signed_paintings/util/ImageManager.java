@@ -74,7 +74,7 @@ public class ImageManager {
         return builder.toString();
     }
 
-    public static void saveBufferedImageAsIdentifier(BufferedImage bufferedImage, Identifier identifier) {
+    private static void saveBufferedImageAsIdentifier(BufferedImage bufferedImage, Identifier identifier) {
         //https://discord.com/channels/507304429255393322/807617488313516032/934395931380576287
         try {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();

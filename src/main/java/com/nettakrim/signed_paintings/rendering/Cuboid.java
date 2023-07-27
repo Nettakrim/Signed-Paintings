@@ -32,6 +32,17 @@ public class Cuboid {
         return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering), Centering.getOffset(ySize, yCentering), (zSize/2));
     }
 
+    public static Cuboid CreateOverlayCuboid(float aspectRatio) {
+        float width = 5/6f;
+        float height = 5/3f;
+        if (aspectRatio > 0.5f) {
+            height /= aspectRatio*2;
+        } else {
+            width *= aspectRatio*2;
+        }
+        return new Cuboid(width, height, 1/8f, 0, -5/6f, 0);
+    }
+
     public void setupRendering(MatrixStack matrices) {
         MatrixStack.Entry entry = matrices.peek();
         this.positionCache = entry.getPositionMatrix();

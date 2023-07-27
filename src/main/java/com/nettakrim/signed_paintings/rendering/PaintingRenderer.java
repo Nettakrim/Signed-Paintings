@@ -1,6 +1,8 @@
 package com.nettakrim.signed_paintings.rendering;
 
 import net.minecraft.client.model.Model;
+import net.minecraft.client.model.ModelPart;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.texture.Sprite;
@@ -44,5 +46,16 @@ public class PaintingRenderer {
 
         info.cuboid.renderFace(vertexConsumer, new Vector3f(0,  1,  0),  true, backSprite.getMinU(), backSprite.getMaxU(), backSprite.getMinV(), backSprite.getMaxV(), light);
         info.cuboid.renderFace(vertexConsumer, new Vector3f(0,  -1, 0),  true, backSprite.getMinU(), backSprite.getMaxU(), backSprite.getMinV(), backSprite.getMaxV(), light);
+    }
+
+    public void renderImageOverlay(MatrixStack matrices, VertexConsumerProvider vertexConsumers, OverlayInfo info, ModelPart canvas, int light) {
+        matrices.push();
+        //these numbers are entirely trial and error, I have no idea how to derive them, Z:0.021 is more accurate but severely z-fights at long distances
+        matrices.translate(0F, 3.335f, 0.025f);
+        canvas.rotate(matrices);
+        VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntitySolid(info.getImageIdentifier()));
+        info.cuboid.setupRendering(matrices);
+        info.cuboid.renderFace(imageVertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
+        matrices.pop();
     }
 }

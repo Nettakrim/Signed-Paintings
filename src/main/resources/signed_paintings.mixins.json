@@ -4,11 +4,15 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "AbstractSignEditScreenMixin",
+    "BannerBlockEntityMixin",
     "SelectionManagerMixin",
     "SignBlockEntityMixin",
     "SignBlockEntityRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-	}
+  },
+  "client": [
+    "BannerBlockEntityRendererMixin"
+  ]
 }
