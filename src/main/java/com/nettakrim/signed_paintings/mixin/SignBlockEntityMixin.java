@@ -53,6 +53,11 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
     }
 
     @Override
+    public void signedPaintings$updatePaintingYOffset(boolean front, float yOffset) {
+        (front ? frontInfo : backInfo).updatePaintingYOffset(yOffset);
+    }
+
+    @Override
     public BackType.Type signedPaintings$cyclePaintingBack(boolean front) {
         return (front ? frontInfo : backInfo).cyclePaintingBack();
     }

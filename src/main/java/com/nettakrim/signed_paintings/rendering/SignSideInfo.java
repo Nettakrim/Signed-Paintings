@@ -72,6 +72,13 @@ public class SignSideInfo {
         updateSignText();
     }
 
+    public void updatePaintingYOffset(float yOffset) {
+        if (paintingInfo == null) return;
+        paintingInfo.updateCuboidOffset(0, yOffset, 0);
+        cache.yOffset = yOffset;
+        updateSignText();
+    }
+
     public BackType.Type cyclePaintingBack() {
         cache.backType = BackType.cycle(cache.backType);
         paintingInfo.setBackType(cache.backType);
@@ -114,6 +121,7 @@ public class SignSideInfo {
         private float height;
         private BackType.Type backType = BackType.Type.SIGN;
         private String extraText;
+        private float yOffset;
 
         public PaintingDataCache(String url) {
             this.url = url;
@@ -131,6 +139,7 @@ public class SignSideInfo {
             }
 
             this.backType = BackType.Type.SIGN;
+            this.yOffset = 0;
         }
 
         public void parseAfterUrl(String s) {
@@ -141,6 +150,8 @@ public class SignSideInfo {
             if (currentIndex < parts.length && tryParseCharFlags(parts[currentIndex])) currentIndex++;
 
             if (currentIndex < parts.length && tryParseSize(parts[currentIndex])) currentIndex++;
+
+            if (currentIndex < parts.length && tryParseOffset(parts[currentIndex])) currentIndex++;
 
             StringBuilder builder = new StringBuilder();
             for (int i = currentIndex; i < parts.length; i++) {
@@ -164,8 +175,8 @@ public class SignSideInfo {
             String[] parts = s.split("[/:]");
             float[] values = new float[2];
             try {
-                values[0] = MathHelper.clamp(Float.parseFloat(parts[0]), 1f/32f, 128f);
-                values[1] = MathHelper.clamp(Float.parseFloat(parts[1]), 1f/32f, 128f);
+                values[0] = MathHelper.clamp(Float.parseFloat(parts[0]), 1f/32f, 64f);
+                values[1] = MathHelper.clamp(Float.parseFloat(parts[1]), 1f/32f, 64f);
             } catch (NumberFormatException ignored) {
                 return false;
             }
@@ -174,12 +185,26 @@ public class SignSideInfo {
             return true;
         }
 
+        private boolean tryParseOffset(String s) {
+            if (!s.contains("/") && !s.contains(":")) return false;
+            String[] parts = s.split("[/:]");
+            float[] values = new float[1];
+            try {
+                values[0] = MathHelper.clamp(Float.parseFloat(parts[0]), -64f, 64f);
+            } catch (NumberFormatException ignored) {
+                return false;
+            }
+            this.yOffset = values[0];
+            return true;
+        }
+
         public void updateSignText() {
             String urlString = SignedPaintingsClient.imageManager.getShortestURLInference(url);
             String widthString = getShortFloatString(width);
             String heightString = getShortFloatString(height);
+            String yOffsetString = getShortFloatString(yOffset);
 
-            String text = urlString + '|' + Centering.getName(true, xCentering) + Centering.getName(false, yCentering) + BackType.getName(backType) + '|' + widthString + ':' + heightString + '|' + extraText;
+            String text = urlString + '|' + Centering.getName(true, xCentering) + Centering.getName(false, yCentering) + BackType.getName(backType) + '|' + widthString + ':' + heightString + '|' + yOffsetString + '|' + extraText;
 
             SignedPaintingsClient.currentSignEdit.screen.signedPaintings$clear();
             int newSelection = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(text, 0, 0);

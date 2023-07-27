@@ -24,6 +24,9 @@ public class PaintingInfo {
     private float width;
     private float height;
     private float depth;
+    private float xOffset;
+    private float yOffset;
+    private float zOffset;
     private Centering.Type xCentering;
     private Centering.Type yCentering;
     private BackType.Type backType;
@@ -66,9 +69,9 @@ public class PaintingInfo {
         float reducedDepth = this.depth;
         if (backType == BackType.Type.NONE) reducedDepth = 1/256f;
         this.cuboid = switch (signType) {
-            case WALL -> Cuboid.CreateWallCuboid(width, xCentering, height, yCentering, reducedDepth);
-            case STANDING -> Cuboid.CreateFlushCuboid(width, xCentering, height, yCentering, reducedDepth);
-            case HANGING, WALL_HANGING -> Cuboid.CreateCentralCuboid(width, xCentering, height, yCentering, reducedDepth);
+            case WALL                  -> Cuboid.CreateWallCuboid(    width, xCentering, height, yCentering, reducedDepth, xOffset, yOffset, zOffset);
+            case STANDING              -> Cuboid.CreateFlushCuboid(   width, xCentering, height, yCentering, reducedDepth, xOffset, yOffset, zOffset);
+            case HANGING, WALL_HANGING -> Cuboid.CreateCentralCuboid( width, xCentering, height, yCentering, reducedDepth, xOffset, yOffset, zOffset);
         };
     }
 
@@ -82,6 +85,17 @@ public class PaintingInfo {
         this.width = xSize;
         this.height = ySize;
         updateCuboid();
+    }
+
+    public void updateCuboidOffset(float xOffset, float yOffset, float zOffset) {
+        this.xOffset = xOffset;
+        this.yOffset = yOffset;
+        this.zOffset = zOffset;
+        updateCuboid();
+    }
+
+    public float getYOffset() {
+        return yOffset;
     }
 
     public void setBackType(BackType.Type backType) {

@@ -20,16 +20,16 @@ public class Cuboid {
         this.offset = new Vector3f(xOffset, yOffset, zOffset);
     }
 
-    public static Cuboid CreateWallCuboid(float xSize, Centering.Type xCentering, float ySize, Centering.Type yCentering, float zSize) {
-        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering), Centering.getOffset(ySize, yCentering), -0.5f + (zSize/2));
+    public static Cuboid CreateWallCuboid(float xSize, Centering.Type xCentering, float ySize, Centering.Type yCentering, float zSize, float xOffset, float yOffset, float zOffset) {
+        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering)+xOffset, Centering.getOffset(ySize, yCentering)+yOffset, -0.5f + (zSize/2) + zOffset);
     }
 
-    public static Cuboid CreateFlushCuboid(float xSize, Centering.Type xCentering, float ySize, Centering.Type yCentering, float zSize) {
-        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering), Centering.getOffset(ySize, yCentering), 0.5f - (zSize/2));
+    public static Cuboid CreateFlushCuboid(float xSize, Centering.Type xCentering, float ySize, Centering.Type yCentering, float zSize, float xOffset, float yOffset, float zOffset) {
+        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering)+xOffset, Centering.getOffset(ySize, yCentering)+yOffset, 0.5f - (zSize/2) + zOffset);
     }
 
-    public static Cuboid CreateCentralCuboid(float xSize, Centering.Type xCentering, float ySize, Centering.Type yCentering, float zSize) {
-        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering), Centering.getOffset(ySize, yCentering), (zSize/2));
+    public static Cuboid CreateCentralCuboid(float xSize, Centering.Type xCentering, float ySize, Centering.Type yCentering, float zSize, float xOffset, float yOffset, float zOffset) {
+        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering)+xOffset, Centering.getOffset(ySize, yCentering)+yOffset, (zSize/2) + zOffset);
     }
 
     public static Cuboid CreateOverlayCuboid(float aspectRatio) {

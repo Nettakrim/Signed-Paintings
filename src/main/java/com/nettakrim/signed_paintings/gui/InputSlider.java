@@ -8,6 +8,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import org.apache.commons.lang3.StringUtils;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -17,12 +19,17 @@ public class InputSlider {
     public final InputSliderWidget sliderWidget;
 
     private float value;
+    private final float minValue;
+    private final float maxValue;
 
-    private static final Predicate<String> textPredicate = text -> StringUtils.countMatches(text, '.') <= 1 && text.replaceAll("[^0-9.]", "").length() == text.length();
+    private static final Predicate<String> textPredicate = text -> StringUtils.countMatches(text, '.') <= 1 && text.replaceAll("[^0-9.-]", "").length() == text.length();
 
     private Consumer<Float> onValueChanged;
 
-    public InputSlider(int x, int y, int textWidth, int sliderWidth, int height, int elementSpacing, float minSlider, float maxSlider, float sliderStep, float startingValue, Text text) {
+    public InputSlider(int x, int y, int textWidth, int sliderWidth, int height, int elementSpacing, float minSlider, float maxSlider, float sliderStep, float startingValue, float minValue, float maxValue, Text text) {
+        this.minValue = minValue;
+        this.maxValue = maxValue;
+
         sliderWidget = createSlider(x, y, sliderWidth, height, text, minSlider, maxSlider, sliderStep);
         sliderWidget.setChangedListener(this::onSliderChanged);
 
@@ -69,7 +76,7 @@ public class InputSlider {
 
     public void onTextChanged(String newValue) {
         try {
-            value = MathHelper.clamp(Float.parseFloat(newValue), 1f/32f, 128f);
+            value = MathHelper.clamp(Float.parseFloat(newValue), minValue, maxValue);
             if (onValueChanged != null) onValueChanged.accept(value);
             updateSlider();
         }
@@ -79,13 +86,13 @@ public class InputSlider {
     }
 
     public void onSliderChanged(float newValue) {
-        value = MathHelper.clamp(newValue, 1f/32f, 128f);
+        value = MathHelper.clamp(newValue, minValue, maxValue);
         if (onValueChanged != null) onValueChanged.accept(value);
         updateTextField();
     }
 
     public void setValue(float to) {
-        value = MathHelper.clamp(to, 1f/32f, 128f);
+        value = MathHelper.clamp(to, minValue, maxValue);
         updateTextField();
         updateSlider();
     }
@@ -157,11 +164,12 @@ public class InputSlider {
         protected void applyValue() {
             float round = (max-min)/step;
             value = Math.round(value*round)/round;
-            onChange.accept((float)(min + (max-min) * value));
+            float result = (float)(min + (max-min) * value);
+            BigDecimal bd = new BigDecimal(result);
+            onChange.accept(bd.setScale(3, RoundingMode.HALF_UP).floatValue());
         }
 
         public void setValue(float to) {
-            //to = Math.round(to/step)*step;
             to = (to - min)/(max - min);
             value = MathHelper.clamp(to, 0, 1);
             updateMessage();

@@ -58,7 +58,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private SelectionManager selectionManager;
 
     @Unique
-    private final InputSlider[] inputSliders = new InputSlider[2];
+    private final InputSlider[] inputSliders = new InputSlider[3];
 
     @Unique
     private final ArrayList<ClickableWidget> buttons = new ArrayList<>();
@@ -95,6 +95,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         float width;
         float height;
         BackType.Type backType;
+        float yOffset;
 
         SignBlockEntityAccessor sign = (SignBlockEntityAccessor)blockEntity;
         PaintingInfo info = front ? sign.signedPaintings$getFrontPaintingInfo() : sign.signedPaintings$getBackPaintingInfo();
@@ -102,13 +103,16 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             width = 1f;
             height = 1f;
             backType = BackType.Type.SIGN;
+            yOffset = 0;
         } else {
             width = info.getWidth();
             height = info.getHeight();
             backType = info.getBackType();
+            yOffset = info.getYOffset();
         }
 
-        createBackModeButton(76, 105, 20, backType);
+        inputSliders[2] = createYOffsetSlider(76, 50, 50, 20, 5, SignedPaintingsClient.MODID+".offset_y", yOffset);
+        inputSliders[2].setOnValueChanged(this::onYOffsetSliderChanged);
 
         inputSliders[0] = createSizingSlider(Centering.Type.MAX, 51, 50, 50, 20, 5, SignedPaintingsClient.MODID+".size.x", width);
         createLockingButton(Centering.Type.CENTER, 51, 20, getAspectLockIcon(aspectLocked));
@@ -117,6 +121,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         inputSliders[0].setOnValueChanged(value -> onSizeSliderChanged(value, true));
         inputSliders[1].setOnValueChanged(value -> onSizeSliderChanged(value, false));
         aspectRatio = width / height;
+
+        createBackModeButton(76, 105, 20, backType);
 
         BackgroundClick backgroundClick = new BackgroundClick(inputSliders);
         addSelectableChild(backgroundClick);
@@ -145,7 +151,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private void createBackModeButton(int yOffset, int buttonWidth, int buttonHeight, BackType.Type backType) {
         ButtonWidget widget = ButtonWidget.builder(getBackTypeText(backType), this::cyclePaintingBack)
-                .position(width/2-60-buttonWidth, yOffset+68)
+                .position((width/2)+60, yOffset+68)
                 .size(buttonWidth, buttonHeight)
                 .build();
 
@@ -163,7 +169,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private InputSlider createSizingSlider(Centering.Type centering, int areaSize, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
         int x = (width/2)+60;
         int y = getCenteringButtonPosition(areaSize, centering, widgetHeight, 0)+(areaSize/2)+(widgetHeight/2)+67;
-        InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, 0.5f, 10f, 0.5f, startingValue, Text.translatable(key));
+        InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, 0.5f, 10f, 0.5f, startingValue, 1/32f, 64f, Text.translatable(key));
 
         addDrawableChild(inputSlider.sliderWidget);
         addSelectableChild(inputSlider.sliderWidget);
@@ -186,6 +192,23 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         addDrawableChild(widget);
         addSelectableChild(widget);
         buttons.add(widget);
+    }
+
+    @Unique
+    private InputSlider createYOffsetSlider(int yOffset, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
+        int x = (width/2)-60-(textWidth+sliderWidth+elementSpacing);
+        int y = yOffset+68;
+        InputSlider inputSlider = new InputSlider(x, y, textWidth, sliderWidth, widgetHeight, elementSpacing, -8f, 8f, 1f, startingValue, -64f, 64f, Text.translatable(key));
+
+        addDrawableChild(inputSlider.sliderWidget);
+        addSelectableChild(inputSlider.sliderWidget);
+        buttons.add(inputSlider.sliderWidget);
+
+        addDrawableChild(inputSlider.textFieldWidget);
+        addSelectableChild(inputSlider.textFieldWidget);
+        buttons.add(inputSlider.textFieldWidget);
+
+        return inputSlider;
     }
 
     @Unique
@@ -239,6 +262,11 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             inputSliders[isWidth ? 1 : 0].setValue(value);
         }
         SignedPaintingsClient.currentSignEdit.updatePaintingSize(front, inputSliders[0].getValue(), inputSliders[1].getValue());
+    }
+
+    @Unique
+    private void onYOffsetSliderChanged(float value) {
+        SignedPaintingsClient.currentSignEdit.updatePaintingYOffset(front, value);
     }
 
     @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/block/entity/SignBlockEntity;ZZLnet/minecraft/text/Text;)V")

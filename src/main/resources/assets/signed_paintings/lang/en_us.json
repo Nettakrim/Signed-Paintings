@@ -16,5 +16,7 @@
 
     "signed_paintings.back_mode.sign" : "Frame: Sign",
     "signed_paintings.back_mode.block" : "Frame: Block",
-    "signed_paintings.back_mode.none" : "Frame: None"
+    "signed_paintings.back_mode.none" : "Frame: None",
+
+    "signed_paintings.offset_y" : "Offset"
 }
