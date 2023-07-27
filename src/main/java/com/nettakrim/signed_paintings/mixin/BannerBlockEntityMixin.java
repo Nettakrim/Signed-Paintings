@@ -1,6 +1,6 @@
 package com.nettakrim.signed_paintings.mixin;
 
-import com.nettakrim.signed_paintings.access.BannerBlockEntityAccessor;
+import com.nettakrim.signed_paintings.access.OverlayInfoAccessor;
 import com.nettakrim.signed_paintings.rendering.OverlayInfo;
 import net.minecraft.block.entity.BannerBlockEntity;
 import net.minecraft.nbt.NbtCompound;
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BannerBlockEntity.class)
-public class BannerBlockEntityMixin implements BannerBlockEntityAccessor {
+public class BannerBlockEntityMixin implements OverlayInfoAccessor {
     @Shadow
     private Text customName;
 

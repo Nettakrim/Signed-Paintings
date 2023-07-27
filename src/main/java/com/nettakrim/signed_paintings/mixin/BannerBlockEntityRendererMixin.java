@@ -1,7 +1,7 @@
 package com.nettakrim.signed_paintings.mixin;
 
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
-import com.nettakrim.signed_paintings.access.BannerBlockEntityAccessor;
+import com.nettakrim.signed_paintings.access.OverlayInfoAccessor;
 import com.nettakrim.signed_paintings.rendering.OverlayInfo;
 import net.minecraft.block.entity.BannerBlockEntity;
 import net.minecraft.client.model.ModelPart;
@@ -23,7 +23,7 @@ public class BannerBlockEntityRendererMixin {
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/math/MatrixStack;pop()V", ordinal = 1), method = "render(Lnet/minecraft/block/entity/BannerBlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;II)V")
     private void onRender(BannerBlockEntity bannerBlockEntity, float f, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, int j, CallbackInfo ci) {
-        BannerBlockEntityAccessor accessor = (BannerBlockEntityAccessor)bannerBlockEntity;
+        OverlayInfoAccessor accessor = (OverlayInfoAccessor)bannerBlockEntity;
         OverlayInfo overlayInfo = accessor.signedPaintings$getOverlayInfo();
         if (overlayInfo.isReady()) {
             SignedPaintingsClient.paintingRenderer.renderImageOverlay(matrixStack, vertexConsumerProvider, overlayInfo, banner, i);

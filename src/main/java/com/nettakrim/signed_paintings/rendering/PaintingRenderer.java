@@ -58,4 +58,14 @@ public class PaintingRenderer {
         info.cuboid.renderFace(imageVertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
         matrices.pop();
     }
+
+    public void renderItemOverlay(MatrixStack matrices, VertexConsumerProvider vertexConsumers, OverlayInfo info, int light) {
+        matrices.push();
+        matrices.scale(0.75f, 0.75f, 1f);
+        matrices.translate(0F, 0.825f, 0.065f);
+        VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntitySolid(info.getImageIdentifier()));
+        info.cuboid.setupRendering(matrices);
+        info.cuboid.renderFace(imageVertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
+        matrices.pop();
+    }
 }
