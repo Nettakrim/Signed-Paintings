@@ -1,13 +1,10 @@
 package com.nettakrim.signed_paintings.util;
 
-import com.nettakrim.signed_paintings.SignedPaintingsClient;
-
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.Locale;
 
 public record URLAlias (String domain, String[] aliases, String defaultImageFormat) {
     public String tryApply(String url) {
-        String lowercaseUrl = url.toLowerCase();
+        String lowercaseUrl = url.toLowerCase(Locale.ROOT);
         for (String alias : aliases) {
             if (lowercaseUrl.startsWith(alias)) {
                 String id = url.substring(alias.length());
@@ -20,11 +17,21 @@ public record URLAlias (String domain, String[] aliases, String defaultImageForm
     }
 
     public String getShortestAlias(String url) {
-        if (!url.toLowerCase().startsWith(domain)) return url;
-        String shortest = Arrays.stream(aliases).min(Comparator.comparing(String::length)).get();
-        url = shortest+url.substring(domain.length());
-        SignedPaintingsClient.LOGGER.info(shortest+" "+url);
-        //if (url.endsWith(defaultImageFormat)) url = url.substring(0, url.length()-defaultImageFormat.length());
+        String lowercaseUrl = url.toLowerCase(Locale.ROOT);
+        String current = domain;
+        String shortest = current;
+        if (!lowercaseUrl.startsWith(domain)) {
+            for (String alias : aliases) {
+                if (lowercaseUrl.startsWith(alias)) {
+                    current = alias;
+                }
+                if (shortest.length() > alias.length()) {
+                    shortest = alias;
+                }
+            }
+            if (current.equals(domain)) return url;
+        }
+        url = shortest+url.substring(current.length());
         return url;
     }
 }

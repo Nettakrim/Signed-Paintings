@@ -124,6 +124,16 @@ public class ImageManager {
     }
 
     public String applyURLInferences(String text) {
+        //for some reason "https://i.imgur.com/Avp3T5M.pngabcdefg..." is a valid link, so it should be counted as just .png
+        int index = text.lastIndexOf('.');
+        if (index != -1) {
+            String file = text.substring(index);
+            String domain = text.substring(0, index);
+            if (file.length() > 4 && (file.startsWith(".png") || file.startsWith(".gif") || file.startsWith(".jpg"))) {
+                text = domain + file.substring(0, 4);
+            }
+        }
+
         String url = applyURLAliases(text);
         if (!url.contains("://")) {
             url = "https://"+url;
