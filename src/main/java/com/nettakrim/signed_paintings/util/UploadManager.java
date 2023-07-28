@@ -41,8 +41,8 @@ public class UploadManager {
             } else {
                 SignedPaintingsClient.LOGGER.info("Uploaded " + url + " to " + link);
                 urlToImgurCache.put(url, link);
-                if (onLoadCallback != null) onLoadCallback.accept(link);
             }
+            if (onLoadCallback != null) onLoadCallback.accept(link);
             return null;
         });
     }

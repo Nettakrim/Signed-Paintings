@@ -4,6 +4,7 @@ import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.util.ImageData;
 import net.minecraft.block.AbstractSignBlock;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.client.render.block.BlockModels;
@@ -32,6 +33,7 @@ public class PaintingInfo {
     private BackType.Type backType;
     private float pixelsPerBlock;
     public boolean working;
+    private boolean needsBackUpdate = false;
 
     public PaintingInfo(ImageData image, boolean isFront, SignBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
@@ -129,6 +131,10 @@ public class PaintingInfo {
         if (this.backType == BackType.Type.BLOCK) {
             World world = this.blockEntity.getWorld();
             if (world == null) world = SignedPaintingsClient.client.world;
+            if (world == null) {
+                needsBackUpdate = true;
+                return;
+            }
             BlockPos blockPos = this.blockEntity.getPos();
             double rotation = ((AbstractSignBlock)this.blockEntity.getCachedState().getBlock()).getRotationDegrees(this.blockEntity.getCachedState());
             blockPos = switch (signType) {
@@ -138,6 +144,12 @@ public class PaintingInfo {
                 case WALL_HANGING -> getSolidWallHang(world, blockPos, Direction.fromRotation(rotation+90));
             };
             blockState = world.getBlockState(blockPos);
+
+            // while the world is loading it can end up detecting void air instead of the actual block
+            // the performance impact if the sign actually does have void air should be negligible, as well as unlikely
+            if (blockState.isOf(Blocks.VOID_AIR)) {
+                needsBackUpdate = true;
+            }
         }
 
         if (blockState == null || blockState.isAir()) blockState = this.blockEntity.getCachedState();
@@ -159,6 +171,7 @@ public class PaintingInfo {
     }
 
     public Sprite getBackSprite() {
+        if (needsBackUpdate) updateBack();
         return back;
     }
 
