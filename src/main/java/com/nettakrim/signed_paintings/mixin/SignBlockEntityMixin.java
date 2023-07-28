@@ -43,28 +43,8 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
     }
 
     @Override
-    public void signedPaintings$updatePaintingCentering(boolean front, Centering.Type xCentering, Centering.Type yCentering) {
-        (front ? frontInfo : backInfo).updatePaintingCentering(xCentering, yCentering);
-    }
-
-    @Override
-    public void signedPaintings$updatePaintingSize(boolean front, float xSize, float ySize) {
-        (front ? frontInfo : backInfo).updatePaintingSize(xSize, ySize);
-    }
-
-    @Override
-    public void signedPaintings$updatePaintingYOffset(boolean front, float yOffset) {
-        (front ? frontInfo : backInfo).updatePaintingYOffset(yOffset);
-    }
-
-    @Override
-    public void signedPaintings$updatePaintingPixelsPerBlock(boolean front, float pixelsPerBlock) {
-        (front ? frontInfo : backInfo).updatePaintingPixelsPerBlock(pixelsPerBlock);
-    }
-
-    @Override
-    public BackType.Type signedPaintings$cyclePaintingBack(boolean front) {
-        return (front ? frontInfo : backInfo).cyclePaintingBack();
+    public SignSideInfo signedPaintings$getSideInfo(boolean front) {
+        return front ? frontInfo : backInfo;
     }
 
     public boolean signedPaintings$hasSignSideInfo(SignSideInfo info) {

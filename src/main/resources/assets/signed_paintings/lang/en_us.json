@@ -13,6 +13,7 @@
     "signed_paintings.size.y" : "Height",
     "signed_paintings.aspect.locked" : "🔒",
     "signed_paintings.aspect.unlocked" : "🔓",
+    "signed_paintings.size.reset": "Reset Size",
 
     "signed_paintings.back_mode.sign" : "Frame: Sign",
     "signed_paintings.back_mode.block" : "Frame: Block",
@@ -20,5 +21,8 @@
 
     "signed_paintings.offset_y" : "Offset",
 
-    "signed_paintings.pixels_per_block" : "Pixels"
+    "signed_paintings.pixels_per_block" : "Pixels",
+
+    "signed_paintings.upload_prompt" : "Link too large: Upload to Imgur",
+    "signed_paintings.upload_fail" : "Upload Failed"
 }

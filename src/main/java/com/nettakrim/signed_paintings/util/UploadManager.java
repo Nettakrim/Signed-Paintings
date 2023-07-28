@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UploadManager {
-    public String clientId;
+    private final String clientId;
 
     public UploadManager(String clientId) {
         this.clientId = clientId;

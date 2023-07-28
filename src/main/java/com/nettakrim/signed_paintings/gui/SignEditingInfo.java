@@ -2,8 +2,7 @@ package com.nettakrim.signed_paintings.gui;
 
 import com.nettakrim.signed_paintings.access.AbstractSignEditScreenAccessor;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
-import com.nettakrim.signed_paintings.rendering.BackType;
-import com.nettakrim.signed_paintings.rendering.Centering;
+import com.nettakrim.signed_paintings.rendering.SignSideInfo;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.client.util.SelectionManager;
 
@@ -23,22 +22,7 @@ public class SignEditingInfo {
         this.selectionManager = selectionManager;
     }
 
-    public void updatePaintingCentering(boolean front, Centering.Type xCentering, Centering.Type yCentering) {
-        ((SignBlockEntityAccessor)sign).signedPaintings$updatePaintingCentering(front, xCentering, yCentering);
-    }
-
-    public void updatePaintingSize(boolean front, float xSize, float ySize) {
-        ((SignBlockEntityAccessor)sign).signedPaintings$updatePaintingSize(front, xSize, ySize);
-    }
-
-    public void updatePaintingYOffset(boolean front, float offset) {
-        ((SignBlockEntityAccessor)sign).signedPaintings$updatePaintingYOffset(front, offset);
-    }
-
-    public void updatePaintingPixelsPerBlock(boolean front, float pixelsPerBlock) {
-        ((SignBlockEntityAccessor)sign).signedPaintings$updatePaintingPixelsPerBlock(front, pixelsPerBlock);
-    }
-    public BackType.Type cyclePaintingBack(boolean front) {
-        return ((SignBlockEntityAccessor)sign).signedPaintings$cyclePaintingBack(front);
+    public SignSideInfo getSideInfo(boolean front) {
+        return ((SignBlockEntityAccessor)sign).signedPaintings$getSideInfo(front);
     }
 }

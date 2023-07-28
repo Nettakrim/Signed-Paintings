@@ -114,7 +114,7 @@ public class ImageManager {
         });
     }
 
-    private static boolean isValid(String url) {
+    public static boolean isValid(String url) {
         try {
             new URL(url).toURI();
             return true;

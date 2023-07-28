@@ -46,7 +46,7 @@ public class SignSideInfo {
         }
         paintingInfo.working = working;
 
-        cache.initFromImageData(data);
+        cache.init(paintingInfo);
 
         SignedPaintingsClient.LOGGER.info("loading extra data \""+afterURL+"\"");
         updateCache(afterURL);
@@ -94,6 +94,13 @@ public class SignSideInfo {
         return cache.backType;
     }
 
+    public void resetSize() {
+        paintingInfo.resetSize();
+        cache.width = paintingInfo.getWidth();
+        cache.height = paintingInfo.getHeight();
+        updateSignText();
+    }
+
     private void updateSignText() {
         updatingSignText = true;
         cache.updateSignText();
@@ -119,6 +126,8 @@ public class SignSideInfo {
         paintingInfo.updateCuboidCentering(cache.xCentering, cache.yCentering);
         paintingInfo.updateCuboidSize(cache.width, cache.height);
         paintingInfo.setBackType(cache.backType);
+        paintingInfo.updateCuboidOffset(0, cache.yOffset, 0);
+        paintingInfo.updatePixelsPerBlock(cache.pixelsPerBlock);
     }
 
     private static class PaintingDataCache {
@@ -136,17 +145,11 @@ public class SignSideInfo {
             this.url = url;
         }
 
-        public void initFromImageData(ImageData imageData) {
+        public void init(PaintingInfo paintingInfo) {
             this.xCentering = Centering.Type.CENTER;
             this.yCentering = Centering.Type.CENTER;
-
-            this.width = imageData.width/16f;
-            this.height = imageData.height/16f;
-            while (this.width > 8 || this.height > 8) {
-                this.width /= 2f;
-                this.height /= 2f;
-            }
-
+            this.width = paintingInfo.getWidth();
+            this.height = paintingInfo.getHeight();
             this.backType = BackType.Type.SIGN;
             this.yOffset = 0;
         }

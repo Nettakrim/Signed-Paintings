@@ -25,7 +25,7 @@ public record URLAlias (String domain, String[] aliases, String defaultImageForm
                 if (lowercaseUrl.startsWith(alias)) {
                     current = alias;
                 }
-                if (shortest.length() > alias.length()) {
+                if (alias.length() < shortest.length()) {
                     shortest = alias;
                 }
             }

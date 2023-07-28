@@ -55,15 +55,19 @@ public class PaintingInfo {
     }
 
     private void resetCuboid() {
+        this.depth = 1 / 16f;
+        this.xCentering = Centering.Type.CENTER;
+        this.yCentering = Centering.Type.CENTER;
+        resetSize();
+    }
+
+    public void resetSize() {
         this.width = image.width/16f;
         this.height = image.height/16f;
         while (this.width > 8 || this.height > 8) {
             this.width /= 2f;
             this.height /= 2f;
         }
-        this.depth = 1 / 16f;
-        this.xCentering = Centering.Type.CENTER;
-        this.yCentering = Centering.Type.CENTER;
         updateCuboid();
     }
 

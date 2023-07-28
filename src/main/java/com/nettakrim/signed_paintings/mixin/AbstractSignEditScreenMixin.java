@@ -9,6 +9,8 @@ import com.nettakrim.signed_paintings.gui.SignEditingInfo;
 import com.nettakrim.signed_paintings.rendering.BackType;
 import com.nettakrim.signed_paintings.rendering.Centering;
 import com.nettakrim.signed_paintings.rendering.PaintingInfo;
+import com.nettakrim.signed_paintings.rendering.SignSideInfo;
+import com.nettakrim.signed_paintings.util.ImageManager;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.client.font.TextRenderer;
@@ -63,6 +65,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private final ArrayList<ClickableWidget> buttons = new ArrayList<>();
 
+    @Unique
+    private ClickableWidget uploadButton;
+
     protected AbstractSignEditScreenMixin(Text title) {
         super(title);
     }
@@ -74,6 +79,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Unique
     private float aspectRatio;
+
+    @Unique
+    private String uploadURL = null;
 
     @Inject(at = @At("TAIL"), method = "init")
     private void init(CallbackInfo ci) {
@@ -119,6 +127,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         inputSliders[0] = createSizingSlider(Centering.Type.MAX, 51, 50, 50, 20, 5, SignedPaintingsClient.MODID+".size.x", width);
         createLockingButton(Centering.Type.CENTER, 51, 20, getAspectLockIcon(aspectLocked));
+        createResetButton(Centering.Type.CENTER, 51, 80, 20, Text.translatable(SignedPaintingsClient.MODID+".size.reset"));
         inputSliders[1] = createSizingSlider(Centering.Type.MIN, 51, 50, 50, 20, 5, SignedPaintingsClient.MODID+".size.y", height);
 
         inputSliders[0].setOnValueChanged(value -> onSizeSliderChanged(value, true));
@@ -129,6 +138,11 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         inputSliders[3].setOnValueChanged(this::onPixelSliderChanged);
 
         createBackModeButton(76, 105, 20, backType);
+
+        uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".upload_prompt"), this::upload).dimensions(this.width / 2 - 100, (this.height / 4 + 144) - 25, 200, 20).build();
+        addDrawableChild(uploadButton);
+        addSelectableChild(uploadButton);
+        if (uploadURL == null) uploadButton.visible = false;
 
         BackgroundClick backgroundClick = new BackgroundClick(inputSliders);
         addSelectableChild(backgroundClick);
@@ -144,7 +158,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private void createCenteringButton(int areaSize, int buttonSize, Centering.Type xCentering, Centering.Type yCentering) {
         String id = (Centering.getName(true, xCentering)+Centering.getName(false, yCentering)).toLowerCase(Locale.ROOT);
-        ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".align."+id), button -> SignedPaintingsClient.currentSignEdit.updatePaintingCentering(front, xCentering, yCentering))
+        ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID+".align."+id), button -> SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingCentering(xCentering, yCentering))
         .position(getCenteringButtonPosition(areaSize, xCentering, buttonSize, width)-(areaSize/2)-(buttonSize/2)-60, getCenteringButtonPosition(-areaSize, yCentering, buttonSize, 0)+(areaSize/2)+(buttonSize/2)+67)
         .size(buttonSize, buttonSize)
         .build();
@@ -201,6 +215,18 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
+    private void createResetButton(Centering.Type centering, int areaSize, int buttonWidth, int buttonHeight, Text text) {
+        ButtonWidget widget = ButtonWidget.builder(text, this::resetSize)
+                .position((width/2)+60+25, getCenteringButtonPosition(areaSize, centering, buttonHeight, 0)+(areaSize/2)+(buttonHeight/2)+67)
+                .size(buttonWidth, buttonHeight)
+                .build();
+
+        addDrawableChild(widget);
+        addSelectableChild(widget);
+        buttons.add(widget);
+    }
+
+    @Unique
     private InputSlider createYOffsetSlider(int yOffset, int textWidth, int sliderWidth, int widgetHeight, int elementSpacing, String key, float startingValue) {
         int x = (width/2)-60-(textWidth+sliderWidth+elementSpacing);
         int y = yOffset+68;
@@ -249,6 +275,15 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
+    private void resetSize(ButtonWidget button) {
+        SignSideInfo info = SignedPaintingsClient.currentSignEdit.getSideInfo(front);
+        info.resetSize();
+        inputSliders[0].setValue(info.paintingInfo.getWidth());
+        inputSliders[1].setValue(info.paintingInfo.getHeight());
+        aspectRatio = inputSliders[0].getValue() / inputSliders[1].getValue();
+    }
+
+    @Unique
     private static Text getAspectLockIcon(boolean aspectLocked) {
         return Text.translatable(SignedPaintingsClient.MODID+".aspect."+ (aspectLocked ? "locked" : "unlocked"));
     }
@@ -260,7 +295,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Unique
     private void cyclePaintingBack(ButtonWidget button) {
-        BackType.Type newType = SignedPaintingsClient.currentSignEdit.cyclePaintingBack(front);
+        BackType.Type newType = SignedPaintingsClient.currentSignEdit.getSideInfo(front).cyclePaintingBack();
         button.setMessage(getBackTypeText(newType));
     }
 
@@ -284,17 +319,17 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
             inputSliders[isWidth ? 1 : 0].setValue(value);
         }
-        SignedPaintingsClient.currentSignEdit.updatePaintingSize(front, inputSliders[0].getValue(), inputSliders[1].getValue());
+        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingSize(inputSliders[0].getValue(), inputSliders[1].getValue());
     }
 
     @Unique
     private void onYOffsetSliderChanged(float value) {
-        SignedPaintingsClient.currentSignEdit.updatePaintingYOffset(front, value);
+        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingYOffset(value);
     }
 
     @Unique
     private void onPixelSliderChanged(float value) {
-        SignedPaintingsClient.currentSignEdit.updatePaintingPixelsPerBlock(front, value);
+        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingPixelsPerBlock(value);
     }
 
     @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/block/entity/SignBlockEntity;ZZLnet/minecraft/text/Text;)V")
@@ -365,6 +400,14 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         int cursor = selectionStart+pasteString.length();
 
+        if (ImageManager.isValid(pasteString)) {
+            if (textRenderer.getWidth(pasteString) > maxWidthPerLine*2.5) {
+                SignedPaintingsClient.LOGGER.info("link "+pasteString+" is too long");
+                uploadURL = pasteString;
+                uploadButton.visible = true;
+            }
+        }
+
         if (currentWidth < maxWidthPerLine) {
             setCurrentRowMessage(newMessages[currentRow]);
             return cursor;
@@ -396,6 +439,20 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         currentRow = cursorRow;
         return cursor;
+    }
+
+    @Unique
+    private void upload(ButtonWidget button) {
+        if (uploadURL == null) return;
+        String link = SignedPaintingsClient.uploadManager.uploadToImgur(uploadURL);
+        if (link == null) {
+            button.setMessage(Text.translatable(SignedPaintingsClient.MODID+".upload_fail"));
+            uploadURL = null;
+            return;
+        }
+        button.visible = false;
+        signedPaintings$clear();
+        signedPaintings$paste(link, 0, 0);
     }
 
     @Override
