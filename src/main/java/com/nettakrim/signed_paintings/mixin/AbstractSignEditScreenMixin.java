@@ -31,8 +31,6 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -305,17 +303,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             if (isWidth) value/=aspectRatio;
             else value*=aspectRatio;
 
-            //silly conversions to try get rid of awkwardly long numbers like 1.499 or 3.002
-            BigDecimal bd = new BigDecimal(value);
-            bd = bd.setScale(3, RoundingMode.HALF_UP);
-            BigDecimal bd2 = bd.setScale(2, RoundingMode.HALF_UP);
-            double difference = Math.abs(bd.subtract(bd2).doubleValue());
-            String s = bd.toString();
-            if ((difference < 0.0011 || s.contains("00")) && !s.endsWith(".667") && !s.endsWith(".334")) {
-                value = bd2.floatValue();
-            } else {
-                value = bd.floatValue();
-            }
+            value = SignedPaintingsClient.roundFloatTo3DP(value);
 
             inputSliders[isWidth ? 1 : 0].setValue(value);
         }

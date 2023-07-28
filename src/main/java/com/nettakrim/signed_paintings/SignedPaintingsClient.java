@@ -36,7 +36,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		imageManager = new ImageManager();
 		paintingRenderer = new PaintingRenderer();
 
-		imageManager.registerURLAlias(new URLAlias("https://i.imgur.com/", new String[]{"imgur.com/","imgur:"}, ".png"));
+		imageManager.registerURLAlias(new URLAlias("https://i.imgur.com/", new String[]{"i.imgur.com/","imgur.com/","imgur:"}, ".png"));
 
 		uploadManager = new UploadManager("c1802a39166b9d0");
 	}
@@ -87,5 +87,19 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		String s1 =  bd.toString();
 		String s2 = Float.toString(d);
 		return s1.length() < s2.length() ? s1 : s2;
+	}
+
+	public static float roundFloatTo3DP(float value) {
+		//various conversions try get rid of awkwardly long numbers like 1.499 or 3.002
+		BigDecimal bd = new BigDecimal(value);
+		bd = bd.setScale(3, RoundingMode.HALF_UP);
+		BigDecimal bd2 = bd.setScale(2, RoundingMode.HALF_UP);
+		double difference = Math.abs(bd.subtract(bd2).doubleValue());
+		String s = bd.toString();
+		if ((difference < 0.0011 || s.contains("00")) && !s.endsWith(".667") && !s.endsWith(".334")) {
+			return bd2.floatValue();
+		} else {
+			return bd.floatValue();
+		}
 	}
 }

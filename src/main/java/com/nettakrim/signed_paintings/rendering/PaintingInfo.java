@@ -68,6 +68,8 @@ public class PaintingInfo {
             this.width /= 2f;
             this.height /= 2f;
         }
+        this.width = SignedPaintingsClient.roundFloatTo3DP(this.width);
+        this.height = SignedPaintingsClient.roundFloatTo3DP(this.height);
         updateCuboid();
     }
 

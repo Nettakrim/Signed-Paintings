@@ -154,13 +154,10 @@ public class ImageManager {
     }
 
     public String getShortestURLInference(String url) {
-        if (!url.contains("://")) {
-            url = "https://"+url;
-        }
+        if (url.startsWith("https://")) url = url.substring(8);
         for (URLAlias urlAlias : urlAliases) {
             url = urlAlias.getShortestAlias(url);
         }
-        if (url.startsWith("https://")) url = url.substring(8);
         return url;
     }
 }
