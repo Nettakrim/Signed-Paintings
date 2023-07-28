@@ -13,6 +13,8 @@ public interface SignBlockEntityAccessor {
 
     void signedPaintings$updatePaintingYOffset(boolean front, float yOffset);
 
+    void signedPaintings$updatePaintingPixelsPerBlock(boolean front, float pixelsPerBlock);
+
     BackType.Type signedPaintings$cyclePaintingBack(boolean front);
 
     boolean signedPaintings$hasSignSideInfo(SignSideInfo info);

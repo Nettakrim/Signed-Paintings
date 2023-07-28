@@ -30,6 +30,8 @@ public class PaintingInfo {
     private Centering.Type xCentering;
     private Centering.Type yCentering;
     private BackType.Type backType;
+    private float pixelsPerBlock;
+    public boolean working;
 
     public PaintingInfo(ImageData image, boolean isFront, SignBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
@@ -98,6 +100,14 @@ public class PaintingInfo {
         return yOffset;
     }
 
+    public void updatePixelsPerBlock(float pixelsPerBlock) {
+        this.pixelsPerBlock = pixelsPerBlock;
+    }
+
+    public float getPixelsPerBlock() {
+        return pixelsPerBlock;
+    }
+
     public void setBackType(BackType.Type backType) {
         this.backType = backType;
         updateBack();
@@ -135,7 +145,11 @@ public class PaintingInfo {
     }
 
     public Identifier getImageIdentifier() {
-        return image.identifier;
+        if (pixelsPerBlock == 0) {
+            return image.getBaseIdentifier();
+        } else {
+            return image.getIdentifier(Math.round(width*pixelsPerBlock), Math.round(height*pixelsPerBlock), working);
+        }
     }
 
     public Sprite getBackSprite() {

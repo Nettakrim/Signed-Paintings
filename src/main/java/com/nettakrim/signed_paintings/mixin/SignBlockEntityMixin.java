@@ -58,6 +58,11 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
     }
 
     @Override
+    public void signedPaintings$updatePaintingPixelsPerBlock(boolean front, float pixelsPerBlock) {
+        (front ? frontInfo : backInfo).updatePaintingPixelsPerBlock(pixelsPerBlock);
+    }
+
+    @Override
     public BackType.Type signedPaintings$cyclePaintingBack(boolean front) {
         return (front ? frontInfo : backInfo).cyclePaintingBack();
     }
@@ -89,7 +94,7 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
             if (SignedPaintingsClient.currentSignEdit != null) {
                 SignedPaintingsClient.currentSignEdit.screen.signedPaintings$setVisibility(false);
             }
-            info.loadPainting(front, entity);
+            info.loadPainting(front, entity, true);
         }
     }
 
@@ -98,7 +103,7 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
         frontInfo.text = frontText;
         backInfo.text = backText;
         SignedPaintingsClient.LOGGER.info("nbt read "+frontText.getMessage(0, false).toString()+" at "+getPos());
-        frontInfo.loadPainting(true, entity);
-        backInfo.loadPainting(false, entity);
+        frontInfo.loadPainting(true, entity, false);
+        backInfo.loadPainting(false, entity, false);
     }
 }

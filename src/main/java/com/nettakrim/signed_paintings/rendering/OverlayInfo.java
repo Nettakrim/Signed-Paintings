@@ -36,6 +36,6 @@ public class OverlayInfo {
     }
 
     public Identifier getImageIdentifier() {
-        return image.identifier;
+        return image.getBaseIdentifier();
     }
 }

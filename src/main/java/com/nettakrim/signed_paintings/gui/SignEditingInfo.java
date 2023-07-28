@@ -35,6 +35,9 @@ public class SignEditingInfo {
         ((SignBlockEntityAccessor)sign).signedPaintings$updatePaintingYOffset(front, offset);
     }
 
+    public void updatePaintingPixelsPerBlock(boolean front, float pixelsPerBlock) {
+        ((SignBlockEntityAccessor)sign).signedPaintings$updatePaintingPixelsPerBlock(front, pixelsPerBlock);
+    }
     public BackType.Type cyclePaintingBack(boolean front) {
         return ((SignBlockEntityAccessor)sign).signedPaintings$cyclePaintingBack(front);
     }

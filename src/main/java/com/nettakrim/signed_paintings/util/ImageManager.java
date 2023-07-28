@@ -58,7 +58,7 @@ public class ImageManager {
     private void onImageLoad(BufferedImage image, String url, ImageData data) {
         Identifier identifier = new Identifier(SignedPaintingsClient.MODID, createIdentifierSafeStringFromURL(url));
         saveBufferedImageAsIdentifier(image, identifier);
-        data.onImageReady(identifier, image);
+        data.onImageReady(image, identifier);
         SignedPaintingsClient.LOGGER.info("Now ready to render image "+url);
     }
 
@@ -74,7 +74,7 @@ public class ImageManager {
         return builder.toString();
     }
 
-    private static void saveBufferedImageAsIdentifier(BufferedImage bufferedImage, Identifier identifier) {
+    public static void saveBufferedImageAsIdentifier(BufferedImage bufferedImage, Identifier identifier) {
         //https://discord.com/channels/507304429255393322/807617488313516032/934395931380576287
         try {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -90,6 +90,10 @@ public class ImageManager {
         } catch (Throwable e) {
             SignedPaintingsClient.LOGGER.info("failed to convert BufferedImage to Identifier");
         }
+    }
+
+    public static void removeImage(Identifier identifier) {
+        MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().getTextureManager().destroyTexture(identifier));
     }
 
     private CompletableFuture<BufferedImage> downloadImageBuffer(String urlStr) {

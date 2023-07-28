@@ -20,11 +20,11 @@ public class SignSideInfo {
         this.paintingInfo = paintingInfo;
     }
 
-    public void loadPainting(boolean isFront, SignBlockEntity blockEntity) {
+    public void loadPainting(boolean isFront, SignBlockEntity blockEntity, boolean working) {
         String[] parts = getParts();
         cache = new PaintingDataCache(parts[0]);
         String url = SignedPaintingsClient.imageManager.applyURLInferences(parts[0]);
-        loadURL(url, parts.length > 1 ? parts[1] : "", isFront, blockEntity);
+        loadURL(url, parts.length > 1 ? parts[1] : "", isFront, blockEntity, working);
     }
 
     private String[] getParts() {
@@ -32,18 +32,19 @@ public class SignSideInfo {
         return combinedText.split("[\\n ]|(\\|)", 2);
     }
 
-    private void loadURL(String url, String afterURL, boolean isFront, SignBlockEntity blockEntity) {
+    private void loadURL(String url, String afterURL, boolean isFront, SignBlockEntity blockEntity, boolean working) {
         if (paintingInfo != null) paintingInfo.invalidateImage();
-        SignedPaintingsClient.imageManager.loadImage(url, (data) -> updateInfo(data, afterURL, isFront, blockEntity));
+        SignedPaintingsClient.imageManager.loadImage(url, (data) -> updateInfo(data, afterURL, isFront, blockEntity, working));
     }
 
-    public void updateInfo(ImageData data, String afterURL, boolean isFront, SignBlockEntity blockEntity) {
-        SignedPaintingsClient.LOGGER.info("updating painting info for "+data.identifier);
+    public void updateInfo(ImageData data, String afterURL, boolean isFront, SignBlockEntity blockEntity, boolean working) {
+        SignedPaintingsClient.LOGGER.info("updating painting info for "+data.getBaseIdentifier());
         if (paintingInfo == null) {
             paintingInfo = new PaintingInfo(data, isFront, blockEntity);
         } else {
             paintingInfo.updateImage(data);
         }
+        paintingInfo.working = working;
 
         cache.initFromImageData(data);
 
@@ -76,6 +77,13 @@ public class SignSideInfo {
         if (paintingInfo == null) return;
         paintingInfo.updateCuboidOffset(0, yOffset, 0);
         cache.yOffset = yOffset;
+        updateSignText();
+    }
+
+    public void updatePaintingPixelsPerBlock(float pixelsPerBlock) {
+        if (paintingInfo == null) return;
+        paintingInfo.updatePixelsPerBlock(pixelsPerBlock);
+        cache.pixelsPerBlock = pixelsPerBlock;
         updateSignText();
     }
 
@@ -120,8 +128,9 @@ public class SignSideInfo {
         private float width;
         private float height;
         private BackType.Type backType = BackType.Type.SIGN;
-        private String extraText;
         private float yOffset;
+        private float pixelsPerBlock;
+        private String extraText;
 
         public PaintingDataCache(String url) {
             this.url = url;
@@ -152,6 +161,8 @@ public class SignSideInfo {
             if (currentIndex < parts.length && tryParseSize(parts[currentIndex])) currentIndex++;
 
             if (currentIndex < parts.length && tryParseOffset(parts[currentIndex])) currentIndex++;
+
+            if (currentIndex < parts.length && tryParsePixelsPerBlock(parts[currentIndex])) currentIndex++;
 
             StringBuilder builder = new StringBuilder();
             for (int i = currentIndex; i < parts.length; i++) {
@@ -186,15 +197,20 @@ public class SignSideInfo {
         }
 
         private boolean tryParseOffset(String s) {
-            if (!s.contains("/") && !s.contains(":")) return false;
-            String[] parts = s.split("[/:]");
-            float[] values = new float[1];
             try {
-                values[0] = MathHelper.clamp(Float.parseFloat(parts[0]), -64f, 64f);
+                this.yOffset = MathHelper.clamp(Float.parseFloat(s), -64f, 64f);
             } catch (NumberFormatException ignored) {
                 return false;
             }
-            this.yOffset = values[0];
+            return true;
+        }
+
+        private boolean tryParsePixelsPerBlock(String s) {
+            try {
+                this.pixelsPerBlock = MathHelper.clamp(Float.parseFloat(s), 0, 1024);
+            } catch (NumberFormatException ignored) {
+                return false;
+            }
             return true;
         }
 
@@ -203,8 +219,9 @@ public class SignSideInfo {
             String widthString = getShortFloatString(width);
             String heightString = getShortFloatString(height);
             String yOffsetString = getShortFloatString(yOffset);
+            String pixelsPerBlockString = getShortFloatString(pixelsPerBlock);
 
-            String text = urlString + '|' + Centering.getName(true, xCentering) + Centering.getName(false, yCentering) + BackType.getName(backType) + '|' + widthString + ':' + heightString + '|' + yOffsetString + '|' + extraText;
+            String text = urlString + '|' + Centering.getName(true, xCentering) + Centering.getName(false, yCentering) + BackType.getName(backType) + '|' + widthString + ':' + heightString + '|' + yOffsetString + '|' + pixelsPerBlockString + '|' + extraText;
 
             SignedPaintingsClient.currentSignEdit.screen.signedPaintings$clear();
             int newSelection = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(text, 0, 0);
