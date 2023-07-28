@@ -4,6 +4,7 @@ import com.nettakrim.signed_paintings.gui.SignEditingInfo;
 import com.nettakrim.signed_paintings.rendering.PaintingRenderer;
 import com.nettakrim.signed_paintings.util.ImageManager;
 import com.nettakrim.signed_paintings.util.URLAlias;
+import com.nettakrim.signed_paintings.util.UploadManager;
 import net.fabricmc.api.ClientModInitializer;
 
 import net.minecraft.block.entity.SignText;
@@ -23,6 +24,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	public static MinecraftClient client;
 
 	public static ImageManager imageManager;
+	public static UploadManager uploadManager;
 	public static PaintingRenderer paintingRenderer;
 
 	public static SignEditingInfo currentSignEdit;
@@ -35,6 +37,8 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		paintingRenderer = new PaintingRenderer();
 
 		imageManager.registerURLAlias(new URLAlias("https://i.imgur.com/", new String[]{"imgur.com/","imgur:"}, ".png"));
+
+		uploadManager = new UploadManager("c1802a39166b9d0");
 	}
 
 	public static String combineSignText(SignText text) {
