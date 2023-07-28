@@ -390,7 +390,6 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         if (ImageManager.isValid(pasteString)) {
             if (textRenderer.getWidth(pasteString) > maxWidthPerLine*2.5) {
-                SignedPaintingsClient.LOGGER.info("link "+pasteString+" is too long");
                 uploadURL = pasteString;
                 uploadButton.visible = true;
             }
@@ -432,13 +431,20 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private void upload(ButtonWidget button) {
         if (uploadURL == null) return;
-        String link = SignedPaintingsClient.uploadManager.uploadToImgur(uploadURL);
+        SignedPaintingsClient.uploadManager.uploadToImgur(uploadURL, this::uploadFinished);
+    }
+
+    @Unique
+    private void uploadFinished(String link) {
+        if (!SignedPaintingsClient.currentSignEdit.sign.equals(blockEntity)) {
+            return;
+        }
         if (link == null) {
-            button.setMessage(Text.translatable(SignedPaintingsClient.MODID+".upload_fail"));
+            uploadButton.setMessage(Text.translatable(SignedPaintingsClient.MODID+".upload_fail"));
             uploadURL = null;
             return;
         }
-        button.visible = false;
+        uploadButton.visible = false;
         signedPaintings$clear();
         signedPaintings$paste(link, 0, 0);
     }

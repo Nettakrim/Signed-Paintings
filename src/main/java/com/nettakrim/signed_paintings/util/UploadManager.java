@@ -15,37 +15,61 @@ import org.apache.http.message.BasicNameValuePair;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class UploadManager {
     private final String clientId;
+    private final HashMap<String, String> urlToImgurCache;
 
     public UploadManager(String clientId) {
         this.clientId = clientId;
+        this.urlToImgurCache = new HashMap<>();
     }
 
-    public String uploadToImgur(String url) {
-        try {
-            HttpClient httpclient = HttpClients.createDefault();
-            HttpPost httppost = new HttpPost("https://api.imgur.com/3/image");
-
-            List<NameValuePair> params = new ArrayList<>(2);
-            params.add(new BasicNameValuePair("image", url));
-            httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
-            httppost.setHeader("Authorization", "Client-ID "+clientId);
-
-            HttpResponse response = httpclient.execute(httppost);
-            HttpEntity entity = response.getEntity();
-
-            if (entity != null) {
-                return getLinkFromImgurResponse(entity.getContent());
+    public void uploadToImgur(String url, Consumer<String> onLoadCallback) {
+        if (urlToImgurCache.containsKey(url)) {
+            if (onLoadCallback != null) onLoadCallback.accept(urlToImgurCache.get(url));
+            return;
+        }
+        upload(url).orTimeout(60, TimeUnit.SECONDS).handleAsync((link, ex) -> {
+            if (link == null || ex != null) {
+                SignedPaintingsClient.LOGGER.info("Failed to upload " + url);
             } else {
+                SignedPaintingsClient.LOGGER.info("Uploaded " + url + " to " + link);
+                urlToImgurCache.put(url, link);
+                if (onLoadCallback != null) onLoadCallback.accept(link);
+            }
+            return null;
+        });
+    }
+
+    private CompletableFuture<String> upload(String url) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                HttpClient httpclient = HttpClients.createDefault();
+                HttpPost httppost = new HttpPost("https://api.imgur.com/3/image");
+
+                List<NameValuePair> params = new ArrayList<>(2);
+                params.add(new BasicNameValuePair("image", url));
+                httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+                httppost.setHeader("Authorization", "Client-ID " + clientId);
+
+                HttpResponse response = httpclient.execute(httppost);
+                HttpEntity entity = response.getEntity();
+
+                if (entity != null) {
+                    return getLinkFromImgurResponse(entity.getContent());
+                } else {
+                    return null;
+                }
+            } catch (IOException e) {
                 return null;
             }
-        } catch (IOException e) {
-            SignedPaintingsClient.LOGGER.info("Failed to upload "+url);
-            return null;
-        }
+        });
     }
 
     public String getLinkFromImgurResponse(InputStream inputStream) throws IOException {
