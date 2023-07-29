@@ -22,27 +22,36 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class ImageManager {
-    private final HashMap<String, ImageData> urlToImageData;
-
-    private final HashMap<String, OverlayInfo> itemNameToOverlay = new HashMap<>();
-
     private final ArrayList<URLAlias> urlAliases;
+    private final HashMap<String, ImageData> urlToImageData;
+    private final HashMap<String, OverlayInfo> itemNameToOverlay;
+    private final HashMap<String, ArrayList<ImageDataLoadInterface>> pendingImageLoads;
 
     public ImageManager() {
-        urlToImageData = new HashMap<>();
         urlAliases = new ArrayList<>();
+        urlToImageData = new HashMap<>();
+        itemNameToOverlay = new HashMap<>();
+        pendingImageLoads = new HashMap<>();
     }
 
     //https://github.com/Patbox/Image2Map/blob/1.20/src/main/java/space/essem/image2map/Image2Map.java
     public void loadImage(String url, ImageDataLoadInterface onLoadCallback) {
-        if (urlToImageData.containsKey(url)) {
-            onLoadCallback.onLoad(urlToImageData.get(url));
+        ImageData imageData = urlToImageData.get(url);
+        if (imageData != null) {
+            if (imageData.ready) {
+                onLoadCallback.onLoad(imageData);
+            } else {
+                pendingImageLoads.get(url).add(onLoadCallback);
+            }
         } else {
-            registerImage(url, onLoadCallback);
+            ArrayList<ImageDataLoadInterface> list = new ArrayList<>();
+            list.add(onLoadCallback);
+            registerImage(url, list);
         }
     }
 
-    private void registerImage(String url, ImageDataLoadInterface onLoadCallback) {
+    private void registerImage(String url, ArrayList<ImageDataLoadInterface> onLoadCallbacks) {
+        pendingImageLoads.put(url, onLoadCallbacks);
         ImageData data = new ImageData();
         urlToImageData.put(url, data);
         SignedPaintingsClient.LOGGER.info("Started loading image from "+url);
@@ -53,7 +62,10 @@ public class ImageManager {
             } else {
                 SignedPaintingsClient.LOGGER.info("Loaded image "+url);
                 onImageLoad(image, url, data);
-                if (onLoadCallback != null) onLoadCallback.onLoad(data);
+                for (ImageDataLoadInterface imageDataLoadInterface : onLoadCallbacks) {
+                    imageDataLoadInterface.onLoad(data);
+                }
+                pendingImageLoads.remove(url);
             }
             return null;
         });
