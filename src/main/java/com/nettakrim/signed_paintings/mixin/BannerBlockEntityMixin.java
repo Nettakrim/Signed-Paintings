@@ -34,4 +34,12 @@ public class BannerBlockEntityMixin implements OverlayInfoAccessor {
     public OverlayInfo signedPaintings$getOverlayInfo() {
         return overlayInfo;
     }
+
+    @Override
+    public void signedPaintings$reloadIfNeeded() {
+        if (overlayInfo != null && overlayInfo.needsReload()) {
+            overlayInfo = new OverlayInfo();
+            overlayInfo.loadOverlay(customName.getString());
+        }
+    }
 }

@@ -34,10 +34,12 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
     @Unique
     protected SignBlockEntity entity;
 
+    @Override
     public PaintingInfo signedPaintings$getFrontPaintingInfo() {
         return frontInfo.paintingInfo;
     }
 
+    @Override
     public PaintingInfo signedPaintings$getBackPaintingInfo() {
         return backInfo.paintingInfo;
     }
@@ -47,8 +49,21 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
         return front ? frontInfo : backInfo;
     }
 
+    @Override
     public boolean signedPaintings$hasSignSideInfo(SignSideInfo info) {
         return frontInfo == info || backInfo == info;
+    }
+
+    @Override
+    public void signedPaintings$reloadIfNeeded() {
+        if (frontInfo.paintingInfo != null && frontInfo.paintingInfo.needsReload()) {
+            frontInfo = new SignSideInfo(frontText, null);
+            frontInfo.loadPainting(true, entity, false);
+        }
+        if (backInfo.paintingInfo != null && backInfo.paintingInfo.needsReload()) {
+            backInfo = new SignSideInfo(backText, null);
+            backInfo.loadPainting(false, entity, false);
+        }
     }
 
     public SignBlockEntityMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {super(type, pos, state);}

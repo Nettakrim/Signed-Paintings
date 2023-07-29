@@ -10,4 +10,6 @@ public interface SignBlockEntityAccessor {
     SignSideInfo signedPaintings$getSideInfo(boolean front);
 
     boolean signedPaintings$hasSignSideInfo(SignSideInfo info);
+
+    void signedPaintings$reloadIfNeeded();
 }

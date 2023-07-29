@@ -1,7 +1,9 @@
 package com.nettakrim.signed_paintings.util;
 
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
+import com.nettakrim.signed_paintings.rendering.OverlayInfo;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
@@ -21,6 +23,8 @@ import java.util.concurrent.TimeUnit;
 
 public class ImageManager {
     private final HashMap<String, ImageData> urlToImageData;
+
+    private final HashMap<String, OverlayInfo> itemNameToOverlay = new HashMap<>();
 
     private final ArrayList<URLAlias> urlAliases;
 
@@ -57,6 +61,7 @@ public class ImageManager {
 
     private void onImageLoad(BufferedImage image, String url, ImageData data) {
         Identifier identifier = new Identifier(SignedPaintingsClient.MODID, createIdentifierSafeStringFromURL(url));
+        SignedPaintingsClient.LOGGER.info(identifier.toString());
         saveBufferedImageAsIdentifier(image, identifier);
         data.onImageReady(image, identifier);
         SignedPaintingsClient.LOGGER.info("Now ready to render image "+url);
@@ -94,6 +99,14 @@ public class ImageManager {
 
     public static void removeImage(Identifier identifier) {
         MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().getTextureManager().destroyTexture(identifier));
+    }
+
+    public static boolean hasImage(Identifier identifier) {
+        return getTexture(identifier) != null;
+    }
+
+    private static AbstractTexture getTexture(Identifier identifier) {
+        return SignedPaintingsClient.client.getTextureManager().getOrDefault(identifier, null);
     }
 
     private CompletableFuture<BufferedImage> downloadImageBuffer(String urlStr) {
@@ -159,5 +172,25 @@ public class ImageManager {
             url = urlAlias.getShortestAlias(url);
         }
         return url;
+    }
+
+    public int clear() {
+        int i = 0;
+        for (ImageData imageData : urlToImageData.values()) {
+            i += imageData.clear();
+        }
+        urlToImageData.clear();
+        itemNameToOverlay.clear();
+        return i;
+    }
+
+    public OverlayInfo getOverlayInfo(String name) {
+        OverlayInfo info = itemNameToOverlay.get(name);
+        if (info == null) {
+            info = new OverlayInfo();
+            info.loadOverlay(name);
+            itemNameToOverlay.put(name, info);
+        }
+        return info;
     }
 }

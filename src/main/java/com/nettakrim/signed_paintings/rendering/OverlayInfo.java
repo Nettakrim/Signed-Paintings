@@ -35,6 +35,10 @@ public class OverlayInfo {
         return image != null && image.ready;
     }
 
+    public boolean needsReload() {
+        return image != null && image.needsReload;
+    }
+
     public Identifier getImageIdentifier() {
         return image.getBaseIdentifier();
     }

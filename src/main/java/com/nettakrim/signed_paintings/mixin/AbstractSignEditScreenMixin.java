@@ -118,6 +118,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             backType = info.getBackType();
             yOffset = info.getYOffset();
             pixelsPerBlock = info.getPixelsPerBlock();
+            info.working = true;
         }
 
         inputSliders[2] = createYOffsetSlider(76, 50, 50, 20, 5, SignedPaintingsClient.MODID+".offset_y", yOffset);

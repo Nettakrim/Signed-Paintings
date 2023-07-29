@@ -56,6 +56,10 @@ public class PaintingInfo {
         return image != null && image.ready;
     }
 
+    public boolean needsReload() {
+        return image != null && image.needsReload;
+    }
+
     private void resetCuboid() {
         this.depth = 1 / 16f;
         this.xCentering = Centering.Type.CENTER;
@@ -155,7 +159,9 @@ public class PaintingInfo {
         if (blockState == null || blockState.isAir()) blockState = this.blockEntity.getCachedState();
 
         ModelIdentifier modelIdentifier = BlockModels.getModelId(blockState);
-        this.back = SignedPaintingsClient.client.getBakedModelManager().getModel(modelIdentifier).getParticleSprite();
+        Sprite back = SignedPaintingsClient.client.getBakedModelManager().getModel(modelIdentifier).getParticleSprite();
+        if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getMissingModel().getParticleSprite();
+        this.back = back;
     }
 
     private BlockPos getSolidWallHang(World world, BlockPos blockPos, Direction direction) {

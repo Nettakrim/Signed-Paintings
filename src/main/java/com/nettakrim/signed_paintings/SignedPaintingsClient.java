@@ -1,5 +1,6 @@
 package com.nettakrim.signed_paintings;
 
+import com.nettakrim.signed_paintings.commands.SignedPaintingsCommands;
 import com.nettakrim.signed_paintings.gui.SignEditingInfo;
 import com.nettakrim.signed_paintings.rendering.PaintingRenderer;
 import com.nettakrim.signed_paintings.util.ImageManager;
@@ -10,7 +11,9 @@ import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextColor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +32,9 @@ public class SignedPaintingsClient implements ClientModInitializer {
 
 	public static SignEditingInfo currentSignEdit;
 
+	private static final TextColor textColor = TextColor.fromRgb(0xAAAAAA);
+	private static final TextColor nameTextColor = TextColor.fromRgb(0x4FC990);
+
 	@Override
 	public void onInitializeClient() {
 		client = MinecraftClient.getInstance();
@@ -39,6 +45,8 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		imageManager.registerURLAlias(new URLAlias("https://i.imgur.com/", new String[]{"i.imgur.com/","imgur.com/","imgur:"}, ".png"));
 
 		uploadManager = new UploadManager("c1802a39166b9d0");
+
+		SignedPaintingsCommands.initialize();
 	}
 
 	public static String combineSignText(SignText text) {
@@ -101,5 +109,11 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		} else {
 			return bd.floatValue();
 		}
+	}
+
+	public static void say(String key, Object... args) {
+		if (client.player == null) return;
+		Text text = Text.translatable(MODID+".say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(Text.translatable(MODID+"."+key, args).setStyle(Style.EMPTY.withColor(textColor)));
+		client.player.sendMessage(text);
 	}
 }

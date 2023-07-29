@@ -1,5 +1,6 @@
 package com.nettakrim.signed_paintings.rendering;
 
+import com.nettakrim.signed_paintings.util.ImageManager;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.RenderLayer;
@@ -7,6 +8,7 @@ import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
 import org.joml.Vector3f;
 
@@ -16,6 +18,9 @@ public class PaintingRenderer {
     }
 
     public void renderPainting(MatrixStack matrices, VertexConsumerProvider vertexConsumers, Model model, PaintingInfo info, int light, float rotationDegrees) {
+        Identifier image = info.getImageIdentifier();
+        if (!ImageManager.hasImage(image)) return;
+
         matrices.push();
         matrices.translate(0.5F, 0.5F, 0.5F);
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotationDegrees));
@@ -49,21 +54,27 @@ public class PaintingRenderer {
     }
 
     public void renderImageOverlay(MatrixStack matrices, VertexConsumerProvider vertexConsumers, OverlayInfo info, ModelPart canvas, int light) {
+        Identifier image = info.getImageIdentifier();
+        if (!ImageManager.hasImage(image)) return;
+
         matrices.push();
         //these numbers are entirely trial and error, I have no idea how to derive them, Z:0.021 is more accurate but severely z-fights at long distances
         matrices.translate(0F, 3.335f, 0.025f);
         canvas.rotate(matrices);
-        VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(info.getImageIdentifier()));
+        VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(image));
         info.cuboid.setupRendering(matrices);
         info.cuboid.renderFace(imageVertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
         matrices.pop();
     }
 
     public void renderItemOverlay(MatrixStack matrices, VertexConsumerProvider vertexConsumers, OverlayInfo info, int light) {
+        Identifier image = info.getImageIdentifier();
+        if (!ImageManager.hasImage(image)) return;
+
         matrices.push();
         matrices.scale(0.75f, -0.75f, -1f);
         matrices.translate(0F, 0.825f, 0.065f);
-        VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(info.getImageIdentifier()));
+        VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(image));
         info.cuboid.setupRendering(matrices);
         info.cuboid.renderFace(imageVertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
         matrices.pop();

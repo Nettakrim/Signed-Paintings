@@ -1,5 +1,6 @@
 package com.nettakrim.signed_paintings.util;
 
+import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import net.minecraft.util.Identifier;
 import org.joml.Vector2i;
 
@@ -13,6 +14,7 @@ public class ImageData {
     private Identifier workingIdentifier;
     private final HashMap<Vector2i, Identifier> images;
     public boolean ready = false;
+    public boolean needsReload = false;
 
     public int width;
     public int height;
@@ -29,6 +31,7 @@ public class ImageData {
         this.width = image.getWidth();
         this.height = image.getHeight();
         this.baseIdentifier = baseIdentifier;
+        SignedPaintingsClient.LOGGER.info(baseIdentifier.toString());
         this.workingIdentifier = baseIdentifier.withSuffixedPath("_working");
         Vector2i d = new Vector2i(width, height);
         images.put(d, baseIdentifier);
@@ -49,7 +52,6 @@ public class ImageData {
                 workingWidth = width;
                 workingHeight = height;
                 ImageManager.saveBufferedImageAsIdentifier(scaleImage(baseImage, width, height), workingIdentifier);
-                images.put(resolution, workingIdentifier);
             }
             return workingIdentifier;
         } else {
@@ -68,5 +70,20 @@ public class ImageData {
         graphics2D.drawImage(referenceImage, 0, 0, width, height, null);
         graphics2D.dispose();
         return resizedImage;
+    }
+
+    public int clear() {
+        ready = false;
+        int i = 0;
+        if (ImageManager.hasImage(workingIdentifier)) i++;
+        ImageManager.removeImage(baseIdentifier);
+        ImageManager.removeImage(workingIdentifier);
+        for (Identifier identifier : images.values()) {
+            ImageManager.removeImage(identifier);
+            i++;
+        }
+        needsReload = true;
+        images.clear();
+        return i;
     }
 }
