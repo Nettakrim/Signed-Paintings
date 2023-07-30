@@ -3,6 +3,10 @@
 
     "signed_paintings.commands.refreshed" : "Cleared %s cached images",
 
+    "signed_paintings.commands.upload" : "Uploading to Imgur...",
+    "signed_paintings.commands.upload.done" : "Imgur link: %s",
+    "signed_paintings.commands.upload.fail" : "Upload failed",
+
     "signed_paintings.align.lt" : "🡤",
     "signed_paintings.align.ct" : "🡡",
     "signed_paintings.align.rt" : "🡥",

@@ -187,6 +187,7 @@ public class ImageManager {
     }
 
     public int clear() {
+        pendingImageLoads.clear();
         int i = 0;
         for (ImageData imageData : urlToImageData.values()) {
             i += imageData.clear();

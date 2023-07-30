@@ -11,6 +11,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
@@ -115,5 +116,11 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		if (client.player == null) return;
 		Text text = Text.translatable(MODID+".say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(Text.translatable(MODID+"."+key, args).setStyle(Style.EMPTY.withColor(textColor)));
 		client.player.sendMessage(text);
+	}
+
+	public static void say(MutableText text) {
+		if (client.player == null) return;
+		Text newText = Text.translatable(MODID+".say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(text.setStyle(text.getStyle().withColor(textColor)));
+		client.player.sendMessage(newText);
 	}
 }
