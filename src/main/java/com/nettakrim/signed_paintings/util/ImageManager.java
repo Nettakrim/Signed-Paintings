@@ -1,5 +1,6 @@
 package com.nettakrim.signed_paintings.util;
 
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.rendering.OverlayInfo;
 import net.minecraft.client.MinecraftClient;
@@ -186,7 +187,7 @@ public class ImageManager {
         return url;
     }
 
-    public int clear() {
+    public int clearAll() {
         pendingImageLoads.clear();
         int i = 0;
         for (ImageData imageData : urlToImageData.values()) {
@@ -197,9 +198,23 @@ public class ImageManager {
         return i;
     }
 
+    public int clearUrl(String url) {
+        ImageData imageData = urlToImageData.remove(url);
+        if (imageData != null) {
+            return imageData.clear();
+        }
+        return 0;
+    }
+
+    public void getUrlSuggestions(SuggestionsBuilder builder) {
+        for (String url : urlToImageData.keySet()) {
+            builder.suggest(url);
+        }
+    }
+
     public OverlayInfo getOverlayInfo(String name) {
         OverlayInfo info = itemNameToOverlay.get(name);
-        if (info == null) {
+        if (info == null || info.needsReload()) {
             info = new OverlayInfo();
             info.loadOverlay(name);
             itemNameToOverlay.put(name, info);
