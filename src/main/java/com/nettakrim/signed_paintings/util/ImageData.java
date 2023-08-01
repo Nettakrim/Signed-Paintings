@@ -75,7 +75,7 @@ public class ImageData {
         return resizedImage;
     }
 
-    public int clear() {
+    public int reload() {
         ready = false;
         int i = 0;
         if (ImageManager.hasImage(workingIdentifier)) i++;

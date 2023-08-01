@@ -37,7 +37,6 @@ public class ToggleCommand {
         toggleNode.addChild(signNode);
         toggleNode.addChild(bannersNode);
         toggleNode.addChild(shieldsNode);
-
         return toggleNode;
     }
 

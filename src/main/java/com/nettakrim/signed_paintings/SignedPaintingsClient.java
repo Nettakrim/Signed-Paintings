@@ -45,17 +45,16 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		client = MinecraftClient.getInstance();
 
 		imageManager = new ImageManager();
-		paintingRenderer = new PaintingRenderer();
-
 		imageManager.registerURLAlias(new URLAlias("https://i.imgur.com/", new String[]{"i.imgur.com/","imgur.com/","imgur:"}, ".png"));
+
+		paintingRenderer = new PaintingRenderer();
+		renderSigns = true;
+		renderBanners = true;
+		renderShields = true;
 
 		uploadManager = new UploadManager("c1802a39166b9d0");
 
 		SignedPaintingsCommands.initialize();
-
-		renderSigns = true;
-		renderBanners = true;
-		renderShields = true;
 	}
 
 	public static String combineSignText(SignText text) {
@@ -123,6 +122,12 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	public static void say(String key, Object... args) {
 		if (client.player == null) return;
 		Text text = Text.translatable(MODID+".say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(Text.translatable(MODID+"."+key, args).setStyle(Style.EMPTY.withColor(textColor)));
+		client.player.sendMessage(text);
+	}
+
+	public static void sayStyled(String key, Style style, Object... args) {
+		if (client.player == null) return;
+		Text text = Text.translatable(MODID+".say").setStyle(style.withColor(nameTextColor)).append(Text.translatable(MODID+"."+key, args).setStyle(Style.EMPTY.withColor(textColor)));
 		client.player.sendMessage(text);
 	}
 

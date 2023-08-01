@@ -19,6 +19,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -27,16 +28,19 @@ public class ImageManager {
     private final HashMap<String, ImageData> urlToImageData;
     private final HashMap<String, OverlayInfo> itemNameToOverlay;
     private final HashMap<String, ArrayList<ImageDataLoadInterface>> pendingImageLoads;
+    public final ArrayList<String> blockedURLs;
 
     public ImageManager() {
         urlAliases = new ArrayList<>();
         urlToImageData = new HashMap<>();
         itemNameToOverlay = new HashMap<>();
         pendingImageLoads = new HashMap<>();
+        blockedURLs = new ArrayList<>();
     }
 
     //https://github.com/Patbox/Image2Map/blob/1.20/src/main/java/space/essem/image2map/Image2Map.java
     public void loadImage(String url, ImageDataLoadInterface onLoadCallback) {
+        if (blockedURLs.contains(url)) return;
         ImageData imageData = urlToImageData.get(url);
         if (imageData != null) {
             if (imageData.ready) {
@@ -187,21 +191,21 @@ public class ImageManager {
         return url;
     }
 
-    public int clearAll() {
+    public int reloadAll() {
         pendingImageLoads.clear();
         int i = 0;
         for (ImageData imageData : urlToImageData.values()) {
-            i += imageData.clear();
+            i += imageData.reload();
         }
         urlToImageData.clear();
         itemNameToOverlay.clear();
         return i;
     }
 
-    public int clearUrl(String url) {
+    public int reloadUrl(String url) {
         ImageData imageData = urlToImageData.remove(url);
         if (imageData != null) {
-            return imageData.clear();
+            return imageData.reload();
         }
         return 0;
     }
@@ -225,6 +229,10 @@ public class ImageManager {
             builder.suggest(url);
         }
         return urlToImageData.size();
+    }
+
+    public Set<String> getUrls() {
+        return urlToImageData.keySet();
     }
 
     public OverlayInfo getOverlayInfo(String name) {

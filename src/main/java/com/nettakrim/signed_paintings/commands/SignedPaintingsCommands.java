@@ -20,7 +20,8 @@ public class SignedPaintingsCommands {
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
             RootCommandNode<FabricClientCommandSource> root = dispatcher.getRoot();
 
-            root.addChild(RefreshCommand.getCommandNode());
+            root.addChild(BlockCommand.getCommandNode());
+            root.addChild(ReloadCommand.getCommandNode());
             root.addChild(StatusCommand.getCommandNode());
             root.addChild(ToggleCommand.getCommandNode());
             root.addChild(UploadCommand.getCommandNode());

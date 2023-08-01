@@ -25,6 +25,14 @@
     "signed_paintings.commands.toggle.shields.on" : "Shield image rendering enabled",
     "signed_paintings.commands.toggle.shields.off" : "Shield image rendering disabled",
 
+    "signed_paintings.commands.block.add" : "Added %s to block list",
+    "signed_paintings.commands.block.add.all" : "\nAdding all loaded images to block list:",
+    "signed_paintings.commands.block.remove" : "Removed %s from block list",
+    "signed_paintings.commands.block.remove.all" : "Removed all images from block list",
+    "signed_paintings.commands.block.list.start" : "\nBlock list contains the following:",
+    "signed_paintings.commands.block.list" : "\n- %s",
+    "signed_paintings.commands.block.list.none" : "\nNone",
+
     "signed_paintings.align.lt" : "🡤",
     "signed_paintings.align.ct" : "🡡",
     "signed_paintings.align.rt" : "🡥",
