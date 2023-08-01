@@ -16,6 +16,15 @@
     "signed_paintings.commands.status.size.default" : "\n%sKB - (%s)",
     "signed_paintings.commands.status.size.scaled" : "\n%sKB - %s",
 
+    "signed_paintings.commands.toggle.all.on" : "All image rendering enabled",
+    "signed_paintings.commands.toggle.all.off" : "All image rendering disabled",
+    "signed_paintings.commands.toggle.signs.on" : "Sign image rendering enabled",
+    "signed_paintings.commands.toggle.signs.off" : "Sign image rendering disabled",
+    "signed_paintings.commands.toggle.banners.on" : "Banner image rendering enabled",
+    "signed_paintings.commands.toggle.banners.off" : "Banner image rendering disabled",
+    "signed_paintings.commands.toggle.shields.on" : "Shield image rendering enabled",
+    "signed_paintings.commands.toggle.shields.off" : "Shield image rendering disabled",
+
     "signed_paintings.align.lt" : "🡤",
     "signed_paintings.align.ct" : "🡡",
     "signed_paintings.align.rt" : "🡥",

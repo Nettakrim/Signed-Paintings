@@ -13,6 +13,11 @@ public class ToggleCommand {
                 .executes(ToggleCommand::toggleAll)
                 .build();
 
+        LiteralCommandNode<FabricClientCommandSource> allNode = ClientCommandManager
+                .literal("all")
+                .executes(ToggleCommand::toggleAll)
+                .build();
+
         LiteralCommandNode<FabricClientCommandSource> signNode = ClientCommandManager
                 .literal("signs")
                 .executes(ToggleCommand::toggleSigns)
@@ -28,6 +33,7 @@ public class ToggleCommand {
                 .executes(ToggleCommand::toggleShields)
                 .build();
 
+        toggleNode.addChild(allNode);
         toggleNode.addChild(signNode);
         toggleNode.addChild(bannersNode);
         toggleNode.addChild(shieldsNode);
@@ -40,21 +46,29 @@ public class ToggleCommand {
         SignedPaintingsClient.renderSigns = value;
         SignedPaintingsClient.renderBanners = value;
         SignedPaintingsClient.renderShields = value;
+        sayMessage("all", value);
         return 1;
     }
 
     private static int toggleSigns(CommandContext<FabricClientCommandSource> context) {
         SignedPaintingsClient.renderSigns = !SignedPaintingsClient.renderSigns;
+        sayMessage("signs", SignedPaintingsClient.renderSigns);
         return 1;
     }
 
     private static int toggleBanners(CommandContext<FabricClientCommandSource> context) {
         SignedPaintingsClient.renderBanners = !SignedPaintingsClient.renderBanners;
+        sayMessage("banners", SignedPaintingsClient.renderBanners);
         return 1;
     }
 
     private static int toggleShields(CommandContext<FabricClientCommandSource> context) {
         SignedPaintingsClient.renderShields = !SignedPaintingsClient.renderShields;
+        sayMessage("shields", SignedPaintingsClient.renderShields);
         return 1;
+    }
+
+    private static void sayMessage(String key, boolean isOn) {
+        SignedPaintingsClient.say("commands.toggle."+key+(isOn ? ".on" : ".off"));
     }
 }
