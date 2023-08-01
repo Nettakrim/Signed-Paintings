@@ -1,11 +1,20 @@
 {
     "signed_paintings.say" : "[Signed Paintings] ",
+    "signed_paintings.long_say" : "- [Signed Paintings] -",
 
     "signed_paintings.commands.refreshed" : "Cleared %s cached images",
 
     "signed_paintings.commands.upload" : "Uploading to Imgur...",
     "signed_paintings.commands.upload.done" : "Imgur link: %s",
     "signed_paintings.commands.upload.fail" : "Upload failed",
+
+    "signed_paintings.commands.status.unique" : "\nUnique Images: %s",
+    "signed_paintings.commands.status.resolutions" : "\nResolutions: %s",
+    "signed_paintings.commands.status.total_size" : "\nTotal Size: %sKB",
+    "signed_paintings.commands.status.link" : "\nLink: %s",
+    "signed_paintings.commands.status.size.link" : "\n%sKB - %s",
+    "signed_paintings.commands.status.size.default" : "\n%sKB - (%s)",
+    "signed_paintings.commands.status.size.scaled" : "\n%sKB - %s",
 
     "signed_paintings.align.lt" : "🡤",
     "signed_paintings.align.ct" : "🡡",

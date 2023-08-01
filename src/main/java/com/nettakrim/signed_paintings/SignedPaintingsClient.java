@@ -131,4 +131,10 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		Text newText = Text.translatable(MODID+".say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(text.setStyle(text.getStyle().withColor(textColor)));
 		client.player.sendMessage(newText);
 	}
+
+	public static void longSay(MutableText text) {
+		if (client.player == null) return;
+		Text newText = Text.translatable(MODID+".long_say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(text.setStyle(text.getStyle().withColor(textColor)));
+		client.player.sendMessage(newText);
+	}
 }

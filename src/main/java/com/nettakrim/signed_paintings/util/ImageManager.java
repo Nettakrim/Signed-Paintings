@@ -118,7 +118,7 @@ public class ImageManager {
         return getTexture(identifier) != null;
     }
 
-    private static AbstractTexture getTexture(Identifier identifier) {
+    public static AbstractTexture getTexture(Identifier identifier) {
         return SignedPaintingsClient.client.getTextureManager().getOrDefault(identifier, null);
     }
 
@@ -206,10 +206,25 @@ public class ImageManager {
         return 0;
     }
 
-    public void getUrlSuggestions(SuggestionsBuilder builder) {
+    public ArrayList<ImageStatus> getAllStatus() {
+        ArrayList<ImageStatus> imageStatuses = new ArrayList<>();
+        urlToImageData.forEach((url, imageData) -> imageStatuses.add(imageData.getStatus().setUrl(url)));
+        return imageStatuses;
+    }
+
+    public ImageStatus getUrlStatus(String url) {
+        ImageData imageData = urlToImageData.get(url);
+        if (imageData != null) {
+            return imageData.getStatus().setUrl(url);
+        }
+        return null;
+    }
+
+    public int getUrlSuggestions(SuggestionsBuilder builder) {
         for (String url : urlToImageData.keySet()) {
             builder.suggest(url);
         }
+        return urlToImageData.size();
     }
 
     public OverlayInfo getOverlayInfo(String name) {

@@ -1,12 +1,15 @@
 package com.nettakrim.signed_paintings.util;
 
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
+import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
 import org.joml.Vector2i;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class ImageData {
     private BufferedImage baseImage;
@@ -85,5 +88,16 @@ public class ImageData {
         needsReload = true;
         images.clear();
         return i;
+    }
+
+    public ImageStatus getStatus() {
+        ImageStatus imageStatus = new ImageStatus();
+        images.forEach((key, value) -> imageStatus.addResolution(key, getBytes(Objects.requireNonNull(((NativeImageBackedTexture) ImageManager.getTexture(value)).getImage())), value != baseIdentifier));
+        return imageStatus;
+    }
+
+    private long getBytes(NativeImage image) {
+        long bytesPerPixel = image.getFormat().getChannelCount();
+        return image.getWidth()*image.getHeight()*bytesPerPixel;
     }
 }
