@@ -23,6 +23,7 @@ public class BannerBlockEntityRendererMixin {
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/math/MatrixStack;pop()V", ordinal = 1), method = "render(Lnet/minecraft/block/entity/BannerBlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;II)V")
     private void onRender(BannerBlockEntity bannerBlockEntity, float f, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, int j, CallbackInfo ci) {
+        if (!SignedPaintingsClient.renderBanners) return;
         OverlayInfoAccessor accessor = (OverlayInfoAccessor)bannerBlockEntity;
         accessor.signedPaintings$reloadIfNeeded();
         OverlayInfo overlayInfo = accessor.signedPaintings$getOverlayInfo();

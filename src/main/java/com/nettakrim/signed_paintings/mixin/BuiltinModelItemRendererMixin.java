@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class BuiltinModelItemRendererMixin {
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/math/MatrixStack;pop()V", ordinal = 0), method = "render")
     private void onShieldRender(ItemStack stack, ModelTransformationMode mode, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, CallbackInfo ci) {
-        if (!stack.hasCustomName()) return;
+        if (!(SignedPaintingsClient.renderShields && stack.hasCustomName())) return;
         OverlayInfo info = SignedPaintingsClient.imageManager.getOverlayInfo(stack.getName().getString());
 
         if (info.isReady()) {

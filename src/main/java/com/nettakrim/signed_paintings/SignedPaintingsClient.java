@@ -36,6 +36,10 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	private static final TextColor textColor = TextColor.fromRgb(0xAAAAAA);
 	private static final TextColor nameTextColor = TextColor.fromRgb(0x4FC990);
 
+	public static boolean renderSigns;
+	public static boolean renderBanners;
+	public static boolean renderShields;
+
 	@Override
 	public void onInitializeClient() {
 		client = MinecraftClient.getInstance();
@@ -48,6 +52,10 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		uploadManager = new UploadManager("c1802a39166b9d0");
 
 		SignedPaintingsCommands.initialize();
+
+		renderSigns = true;
+		renderBanners = true;
+		renderShields = true;
 	}
 
 	public static String combineSignText(SignText text) {

@@ -26,6 +26,7 @@ public abstract class SignBlockEntityRendererMixin {
             cancellable = true
     )
     private void onRender(SignBlockEntity entity, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, BlockState state, AbstractSignBlock block, WoodType woodType, Model model, CallbackInfo ci) {
+        if (!SignedPaintingsClient.renderSigns) return;
         boolean success = false;
         SignBlockEntityAccessor accessor = (SignBlockEntityAccessor)entity;
         accessor.signedPaintings$reloadIfNeeded();
