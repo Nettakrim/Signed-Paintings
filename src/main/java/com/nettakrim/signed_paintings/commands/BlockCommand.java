@@ -74,6 +74,7 @@ public class BlockCommand {
             SignedPaintingsClient.imageManager.reloadUrl(url);
             SignedPaintingsClient.sayStyled("commands.block.add", Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url)), url);
         }
+        SignedPaintingsClient.imageManager.makeChange();
         return 1;
     }
 
@@ -89,6 +90,7 @@ public class BlockCommand {
             SignedPaintingsClient.imageManager.reloadUrl(url);
             SignedPaintingsClient.sayStyled("commands.block.remove", Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url)), url);
         }
+        if (success) SignedPaintingsClient.imageManager.makeChange();
         return success ? 1 : 0;
     }
 

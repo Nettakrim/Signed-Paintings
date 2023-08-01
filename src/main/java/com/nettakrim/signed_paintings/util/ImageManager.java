@@ -13,22 +13,25 @@ import org.lwjgl.BufferUtils;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class ImageManager {
+    private final File data;
     private final ArrayList<URLAlias> urlAliases;
     private final HashMap<String, ImageData> urlToImageData;
     private final HashMap<String, OverlayInfo> itemNameToOverlay;
     private final HashMap<String, ArrayList<ImageDataLoadInterface>> pendingImageLoads;
     public final ArrayList<String> blockedURLs;
+
+    private boolean changesMade = false;
 
     public ImageManager() {
         urlAliases = new ArrayList<>();
@@ -36,14 +39,46 @@ public class ImageManager {
         itemNameToOverlay = new HashMap<>();
         pendingImageLoads = new HashMap<>();
         blockedURLs = new ArrayList<>();
+
+        data = new File(SignedPaintingsClient.client.runDirectory+"/signed_paintings.txt");
+        try {
+            if (data.exists()) {
+                Scanner scanner = new Scanner(data);
+                if (scanner.hasNextLine()) scanner.nextLine();
+                while (scanner.hasNextLine()) {
+                    String s = scanner.nextLine();
+                    blockedURLs.add(s);
+                }
+                scanner.close();
+            }
+        } catch (IOException e) {
+            SignedPaintingsClient.LOGGER.info("Failed to load data");
+        }
+    }
+
+    public void save() {
+        if (!changesMade) return;
+        try {
+            if (!data.exists()) data.createNewFile();
+            FileWriter writer = new FileWriter(data);
+            StringBuilder s = new StringBuilder("- Blocked Painting URLs -");
+            for (String url : blockedURLs) {
+                s.append("\n").append(url);
+            }
+            writer.write(s.toString());
+            writer.close();
+            changesMade = false;
+        } catch (IOException e) {
+            SignedPaintingsClient.LOGGER.info("Failed to save data");
+        }
     }
 
     //https://github.com/Patbox/Image2Map/blob/1.20/src/main/java/space/essem/image2map/Image2Map.java
     public void loadImage(String url, ImageDataLoadInterface onLoadCallback) {
-        if (blockedURLs.contains(url)) return;
         ImageData imageData = urlToImageData.get(url);
+        boolean blocked = blockedURLs.contains(url);
         if (imageData != null) {
-            if (imageData.ready) {
+            if (imageData.ready || blocked) {
                 onLoadCallback.onLoad(imageData);
             } else {
                 pendingImageLoads.get(url).add(onLoadCallback);
@@ -51,14 +86,20 @@ public class ImageManager {
         } else {
             ArrayList<ImageDataLoadInterface> list = new ArrayList<>();
             list.add(onLoadCallback);
-            registerImage(url, list);
+            registerImage(url, list, blocked);
         }
     }
 
-    private void registerImage(String url, ArrayList<ImageDataLoadInterface> onLoadCallbacks) {
-        pendingImageLoads.put(url, onLoadCallbacks);
+    private void registerImage(String url, ArrayList<ImageDataLoadInterface> onLoadCallbacks, boolean blocked) {
         ImageData data = new ImageData();
         urlToImageData.put(url, data);
+        if (blocked) {
+            for (ImageDataLoadInterface imageDataLoadInterface : onLoadCallbacks) {
+                imageDataLoadInterface.onLoad(data);
+            }
+            return;
+        }
+        pendingImageLoads.put(url, onLoadCallbacks);
         SignedPaintingsClient.LOGGER.info("Started loading image from "+url);
         downloadImageBuffer(url).orTimeout(60, TimeUnit.SECONDS).handleAsync((image, ex) -> {
             if (image == null || ex != null) {
@@ -243,5 +284,9 @@ public class ImageManager {
             itemNameToOverlay.put(name, info);
         }
         return info;
+    }
+
+    public void makeChange() {
+        changesMade = true;
     }
 }
