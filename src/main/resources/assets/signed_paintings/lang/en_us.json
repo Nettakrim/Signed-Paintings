@@ -32,6 +32,11 @@
     "signed_paintings.commands.block.list.start" : "\nBlock list contains the following:",
     "signed_paintings.commands.block.list" : "\n- %s",
     "signed_paintings.commands.block.list.none" : "\nNone",
+    "signed_paintings.commands.block.auto.on" : "\nAutomatic blocking enabled:\n- any newly loading links will be automatically blocked\n- run again or relog to disable\n- use \"/paintings:reload all\" to quickly block all nearby links",
+    "signed_paintings.commands.block.auto.off" : "Automatic blocking disabled",
+    "signed_paintings.commands.block.notify.base" : "[%s]",
+    "signed_paintings.commands.block.notify.text" : "blocked %s",
+
 
     "signed_paintings.align.lt" : "🡤",
     "signed_paintings.align.ct" : "🡡",

@@ -7,6 +7,9 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.lwjgl.BufferUtils;
 
@@ -30,6 +33,7 @@ public class ImageManager {
     private final HashMap<String, OverlayInfo> itemNameToOverlay;
     private final HashMap<String, ArrayList<ImageDataLoadInterface>> pendingImageLoads;
     public final ArrayList<String> blockedURLs;
+    public boolean autoBlockNew = false;
 
     private boolean changesMade = false;
 
@@ -77,6 +81,17 @@ public class ImageManager {
     public void loadImage(String url, ImageDataLoadInterface onLoadCallback) {
         ImageData imageData = urlToImageData.get(url);
         boolean blocked = blockedURLs.contains(url);
+        if (!blocked && autoBlockNew) {
+            SignedPaintingsClient.sayRaw(
+                    Text.translatable(SignedPaintingsClient.MODID+".commands.block.notify.base",
+                            Text.translatable(SignedPaintingsClient.MODID+".commands.block.notify.text", url)
+                                    .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.textColor).withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/paintings:block remove "+url)))
+                            )
+                            .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.nameTextColor))
+            );
+            blockedURLs.add(url);
+            blocked = true;
+        }
         if (imageData != null) {
             if (imageData.ready || blocked) {
                 onLoadCallback.onLoad(imageData);

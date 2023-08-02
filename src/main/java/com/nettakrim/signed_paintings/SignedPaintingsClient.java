@@ -33,8 +33,8 @@ public class SignedPaintingsClient implements ClientModInitializer {
 
 	public static SignEditingInfo currentSignEdit;
 
-	private static final TextColor textColor = TextColor.fromRgb(0xAAAAAA);
-	private static final TextColor nameTextColor = TextColor.fromRgb(0x4FC990);
+	public static final TextColor textColor = TextColor.fromRgb(0xAAAAAA);
+	public static final TextColor nameTextColor = TextColor.fromRgb(0x4FC990);
 
 	public static boolean renderSigns;
 	public static boolean renderBanners;
@@ -135,6 +135,11 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		if (client.player == null) return;
 		Text newText = Text.translatable(MODID+".say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(text.setStyle(text.getStyle().withColor(textColor)));
 		client.player.sendMessage(newText);
+	}
+
+	public static void sayRaw(MutableText text) {
+		if (client.player == null) return;
+		client.player.sendMessage(text);
 	}
 
 	public static void longSay(MutableText text) {

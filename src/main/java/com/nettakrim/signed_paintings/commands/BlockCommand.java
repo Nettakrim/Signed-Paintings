@@ -53,9 +53,15 @@ public class BlockCommand {
                 .executes(BlockCommand::list)
                 .build();
 
+        LiteralCommandNode<FabricClientCommandSource> autoNode = ClientCommandManager
+                .literal("auto")
+                .executes(BlockCommand::auto)
+                .build();
+
         blockNode.addChild(addNode);
         blockNode.addChild(removeNode);
         blockNode.addChild(listNode);
+        blockNode.addChild(autoNode);
         return blockNode;
     }
 
@@ -81,6 +87,7 @@ public class BlockCommand {
     private static int unblock(CommandContext<FabricClientCommandSource> context) {
         String url = StringArgumentType.getString(context, "url");
         boolean success = true;
+        if (SignedPaintingsClient.imageManager.autoBlockNew) auto(context);
         if (url.equals("all")) {
             SignedPaintingsClient.imageManager.blockedURLs.clear();
             SignedPaintingsClient.imageManager.reloadAll();
@@ -103,6 +110,16 @@ public class BlockCommand {
             text.append(Text.translatable(SignedPaintingsClient.MODID+".commands.block.list.none"));
         }
         SignedPaintingsClient.longSay(text);
+        return 1;
+    }
+
+    private static int auto(CommandContext<FabricClientCommandSource> context) {
+        SignedPaintingsClient.imageManager.autoBlockNew = !SignedPaintingsClient.imageManager.autoBlockNew;
+        if (SignedPaintingsClient.imageManager.autoBlockNew) {
+            SignedPaintingsClient.longSay(Text.translatable(SignedPaintingsClient.MODID+".commands.block.auto.on"));
+        } else {
+            SignedPaintingsClient.say("commands.block.auto.off");
+        }
         return 1;
     }
 }
