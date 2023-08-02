@@ -27,7 +27,7 @@ public class BannerBlockEntityMixin implements OverlayInfoAccessor {
 
     @Inject(at = @At("TAIL"), method = "readNbt")
     private void onNBTRead(NbtCompound nbt, CallbackInfo ci) {
-        overlayInfo.loadOverlay(customName.getString());
+        if (customName != null) overlayInfo.loadOverlay(customName.getString());
     }
 
     @Override

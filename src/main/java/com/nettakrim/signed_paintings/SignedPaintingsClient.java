@@ -59,11 +59,12 @@ public class SignedPaintingsClient implements ClientModInitializer {
 
 	public static String combineSignText(SignText text) {
 		Text[] layers = text.getMessages(false);
-		String combined = layers[0].getString();
-		combined += layers[1].getString();
-		combined += layers[2].getString();
-		combined += layers[3].getString();
-		return combined;
+		if (layers == null) return "";
+		StringBuilder combined = new StringBuilder();
+		for (Text line : layers) {
+			if (line != null) combined.append(line.getString());
+		}
+		return combined.toString();
 	}
 
 	public static int getMaxFittingIndex(String reference, int budgetWidth, TextRenderer textRenderer) {
