@@ -34,7 +34,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	public static SignEditingInfo currentSignEdit;
 
 	public static final TextColor textColor = TextColor.fromRgb(0xAAAAAA);
-	public static final TextColor nameTextColor = TextColor.fromRgb(0x4FC990);
+	public static final TextColor nameTextColor = TextColor.fromRgb(0x4BCCA3);
 
 	public static boolean renderSigns;
 	public static boolean renderBanners;
