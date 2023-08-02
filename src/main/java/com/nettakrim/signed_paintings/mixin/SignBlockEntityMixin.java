@@ -97,7 +97,7 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
     private void onNBTRead(NbtCompound nbt, CallbackInfo ci) {
         frontInfo.text = frontText;
         backInfo.text = backText;
-        SignedPaintingsClient.LOGGER.info("nbt read "+frontText.getMessage(0, false).toString()+" at "+getPos());
+        SignedPaintingsClient.info("nbt read "+frontText.getMessage(0, false).toString()+" at "+getPos(), false);
         frontInfo.loadPainting(true, entity, false);
         backInfo.loadPainting(false, entity, false);
     }

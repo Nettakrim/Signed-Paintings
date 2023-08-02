@@ -23,7 +23,7 @@ import java.math.RoundingMode;
 
 public class SignedPaintingsClient implements ClientModInitializer {
 	public static final String MODID = "signed_paintings";
-    public static final Logger LOGGER = LoggerFactory.getLogger(MODID);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MODID);
 
 	public static MinecraftClient client;
 
@@ -39,6 +39,8 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	public static boolean renderSigns;
 	public static boolean renderBanners;
 	public static boolean renderShields;
+
+	private static boolean loggingEnabled = false;
 
 	@Override
 	public void onInitializeClient() {
@@ -147,5 +149,9 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		if (client.player == null) return;
 		Text newText = Text.translatable(MODID+".long_say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(text.setStyle(text.getStyle().withColor(textColor)));
 		client.player.sendMessage(newText);
+	}
+
+	public static void info(String s, boolean force) {
+		if (loggingEnabled || force) LOGGER.info(s);
 	}
 }

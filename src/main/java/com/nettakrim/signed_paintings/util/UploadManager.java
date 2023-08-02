@@ -37,9 +37,9 @@ public class UploadManager {
         }
         upload(url).orTimeout(60, TimeUnit.SECONDS).handleAsync((link, ex) -> {
             if (link == null || ex != null) {
-                SignedPaintingsClient.LOGGER.info("Failed to upload " + url);
+                SignedPaintingsClient.info("Failed to upload " + url, true);
             } else {
-                SignedPaintingsClient.LOGGER.info("Uploaded " + url + " to " + link);
+                SignedPaintingsClient.info("Uploaded " + url + " to " + link, false);
                 urlToImgurCache.put(url, link);
             }
             if (onLoadCallback != null) onLoadCallback.accept(link);
@@ -89,7 +89,7 @@ public class UploadManager {
             }
         }
 
-        SignedPaintingsClient.LOGGER.info("Failed to read json: "+text);
+        SignedPaintingsClient.info("Failed to read json: "+text, true);
         return null;
     }
 }

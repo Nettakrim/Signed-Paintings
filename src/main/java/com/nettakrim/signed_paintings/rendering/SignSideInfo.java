@@ -38,7 +38,7 @@ public class SignSideInfo {
     }
 
     public void updateInfo(ImageData data, String afterURL, boolean isFront, SignBlockEntity blockEntity, boolean working) {
-        SignedPaintingsClient.LOGGER.info("updating painting info for "+data.getBaseIdentifier());
+        SignedPaintingsClient.info("updating painting info for "+data.getBaseIdentifier(), false);
         if (paintingInfo == null) {
             paintingInfo = new PaintingInfo(data, isFront, blockEntity);
         } else {
@@ -48,7 +48,7 @@ public class SignSideInfo {
 
         cache.init(paintingInfo);
 
-        SignedPaintingsClient.LOGGER.info("loading extra data \""+afterURL+"\"");
+        SignedPaintingsClient.info("loading extra data \""+afterURL+"\"", false);
         updateCache(afterURL);
 
         if (data.ready && SignedPaintingsClient.currentSignEdit != null && ((SignBlockEntityAccessor)SignedPaintingsClient.currentSignEdit.sign).signedPaintings$hasSignSideInfo(this)) {

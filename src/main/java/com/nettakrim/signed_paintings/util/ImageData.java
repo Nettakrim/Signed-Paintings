@@ -34,7 +34,7 @@ public class ImageData {
         this.width = image.getWidth();
         this.height = image.getHeight();
         this.baseIdentifier = baseIdentifier;
-        SignedPaintingsClient.LOGGER.info(baseIdentifier.toString());
+        SignedPaintingsClient.info(baseIdentifier.toString(), false);
         this.workingIdentifier = baseIdentifier.withSuffixedPath("_working");
         Vector2i d = new Vector2i(width, height);
         images.put(d, baseIdentifier);

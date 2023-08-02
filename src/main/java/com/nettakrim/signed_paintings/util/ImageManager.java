@@ -56,7 +56,7 @@ public class ImageManager {
                 scanner.close();
             }
         } catch (IOException e) {
-            SignedPaintingsClient.LOGGER.info("Failed to load data");
+            SignedPaintingsClient.info("Failed to load data", true);
         }
     }
 
@@ -73,12 +73,13 @@ public class ImageManager {
             writer.close();
             changesMade = false;
         } catch (IOException e) {
-            SignedPaintingsClient.LOGGER.info("Failed to save data");
+            SignedPaintingsClient.info("Failed to save data", true);
         }
     }
 
     //https://github.com/Patbox/Image2Map/blob/1.20/src/main/java/space/essem/image2map/Image2Map.java
     public void loadImage(String url, ImageDataLoadInterface onLoadCallback) {
+        if (url.equals("https://")) return;
         ImageData imageData = urlToImageData.get(url);
         boolean blocked = blockedURLs.contains(url);
         if (!blocked && autoBlockNew) {
@@ -115,13 +116,13 @@ public class ImageManager {
             return;
         }
         pendingImageLoads.put(url, onLoadCallbacks);
-        SignedPaintingsClient.LOGGER.info("Started loading image from "+url);
+        SignedPaintingsClient.info("Started loading image from "+url, false);
         downloadImageBuffer(url).orTimeout(60, TimeUnit.SECONDS).handleAsync((image, ex) -> {
             if (image == null || ex != null) {
                 urlToImageData.remove(url);
-                SignedPaintingsClient.LOGGER.info("Couldn't load image "+url);
+                SignedPaintingsClient.info("Couldn't load image "+url, false);
             } else {
-                SignedPaintingsClient.LOGGER.info("Loaded image "+url);
+                SignedPaintingsClient.info("Loaded image "+url, false);
                 onImageLoad(image, url, data);
                 for (ImageDataLoadInterface imageDataLoadInterface : onLoadCallbacks) {
                     imageDataLoadInterface.onLoad(data);
@@ -134,10 +135,9 @@ public class ImageManager {
 
     private void onImageLoad(BufferedImage image, String url, ImageData data) {
         Identifier identifier = new Identifier(SignedPaintingsClient.MODID, createIdentifierSafeStringFromURL(url));
-        SignedPaintingsClient.LOGGER.info(identifier.toString());
         saveBufferedImageAsIdentifier(image, identifier);
         data.onImageReady(image, identifier);
-        SignedPaintingsClient.LOGGER.info("Now ready to render image "+url);
+        SignedPaintingsClient.info("Ready to render Image "+url, true);
     }
 
     private String createIdentifierSafeStringFromURL(String url) {
@@ -166,7 +166,7 @@ public class ImageManager {
 
             MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, texture));
         } catch (Throwable e) {
-            SignedPaintingsClient.LOGGER.info("failed to convert BufferedImage to Identifier");
+            SignedPaintingsClient.info("failed to convert BufferedImage \""+bufferedImage+"\" to Identifier \""+identifier+"\"", true);
         }
     }
 
