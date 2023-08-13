@@ -49,16 +49,16 @@ I use a high-re texture pack, does the pixel filter support this?
 
 Do I need to be connected to the internet to use the mod?
 
-> Yes, the mod downloads images from the Internet so a connection is a must! (loaded images will cache for your current session)
+> Yes, the mod downloads images from the Internet so a connection is a must! (loaded images will be cached for your current session, instead of redownloading for every individual sign)
 
 Will my friends see the custom painting?
 
-> Aslong as your friends have the mod they will see exactly the same thing you do!
+> As long as your friends have the mod they will see exactly the same thing you do!
 
 What if my friends don't have the mod?
 
-> They will see a sign with a URL and some text for the settings. You can hide this sign underground with some settings however.
+> They will see a sign with a URL and some text for the settings. However, you can hide the sign underground then shift the painting up using the offset slider
 
-Fabric? Forge? Quilt?
+Fabric? Forge? Quilt? Backports?
 
-> The mod is developed for Fabric, and while untested should work for Quilt - Forge is currently unsupported.
+> The mod is developed for Fabric, and while untested for Quilt it should work - Forge is currently unsupported.
