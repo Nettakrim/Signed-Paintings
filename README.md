@@ -8,8 +8,7 @@ The mod can automatically scale the images to make them pixel consistent with Mi
 
 Avoid having to make map art!
 
-
-![Gif showing the positioning and sizing of an image](https://cdn.modrinth.com/data/zn26DYtG/images/0d5e08887f5b9b687bc14da9211af9b2bd54d9d7.gif)
+![Gif showing the positioning and sizing of an image](images/gif.gif)
 
 ## Features
 
@@ -19,6 +18,8 @@ Avoid having to make map art!
 - Frame options using any block texture
 - In-game Imgur upload if the link is too long
 - Tweak sizing, alignment and offset
+
+![Showcase showing the main features of the mod](images/combined.png)
 
 ## Commands:
 
@@ -40,14 +41,7 @@ if someone is being annoying, you can stop specific links from rendering:
 
 `/paintings:block auto` - automatically blocks newly loading links
 
-
-![Images](https://cdn.modrinth.com/data/zn26DYtG/images/a1797c4a8a7c5a033d6fff4d61dd5792533e2e38.png)
-
-
-
 ## FAQ
-
-
 
 I use a high-re texture pack, does the pixel filter support this?
 
