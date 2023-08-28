@@ -177,7 +177,7 @@ public class PaintingInfo {
     }
 
     public Sprite getBackSprite() {
-        if (needsBackUpdate) updateBack();
+        if (needsBackUpdate || back == null) updateBack();
         return back;
     }
 
