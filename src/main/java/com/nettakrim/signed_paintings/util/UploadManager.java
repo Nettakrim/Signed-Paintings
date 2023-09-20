@@ -25,24 +25,25 @@ import java.util.function.Supplier;
 
 public class UploadManager {
     private final String clientId;
-    private final HashMap<String, String> urlToImgurCache;
+    private final HashMap<String, String> imgurCache;
 
     public UploadManager(String clientId) {
         this.clientId = clientId;
-        this.urlToImgurCache = new HashMap<>();
+        this.imgurCache = new HashMap<>();
     }
 
     public void uploadUrlToImgur(String url, Consumer<String> onLoadCallback) {
-        if (urlToImgurCache.containsKey(url)) {
-            if (onLoadCallback != null) onLoadCallback.accept(urlToImgurCache.get(url));
+        if (imgurCache.containsKey(url)) {
+            if (onLoadCallback != null) onLoadCallback.accept(imgurCache.get(url));
             return;
         }
         upload(() -> uploadUrl(url)).orTimeout(60, TimeUnit.SECONDS).handleAsync((link, ex) -> {
             if (link == null || ex != null) {
-                SignedPaintingsClient.info("Failed to upload " + url+"\n"+ex.toString(), true);
+                SignedPaintingsClient.info("Failed to upload " + url, true);
+                if (ex != null) SignedPaintingsClient.info(ex.toString(), true);
             } else {
                 SignedPaintingsClient.info("Uploaded " + url + " to " + link, false);
-                urlToImgurCache.put(url, link);
+                imgurCache.put(url, link);
             }
             if (onLoadCallback != null) onLoadCallback.accept(link);
             return null;
@@ -50,11 +51,17 @@ public class UploadManager {
     }
 
     public void uploadFileToImgur(File file, Consumer<String> onLoadCallback) {
+        if (imgurCache.containsKey(file.getPath())) {
+            if (onLoadCallback != null) onLoadCallback.accept(imgurCache.get(file.getPath()));
+            return;
+        }
         upload(() -> uploadFile(file)).orTimeout(60, TimeUnit.SECONDS).handleAsync((link, ex) -> {
             if (link == null || ex != null) {
-                SignedPaintingsClient.info("Failed to upload "+file.toPath()+"\n"+ex.toString(), true);
+                SignedPaintingsClient.info("Failed to upload "+file.toPath(), true);
+                if (ex != null) SignedPaintingsClient.info(ex.toString(), true);
             } else {
                 SignedPaintingsClient.info("Uploaded "+file.toPath()+" to " + link, false);
+                imgurCache.put(file.getPath(), link);
             }
             if (onLoadCallback != null) onLoadCallback.accept(link);
             return null;
@@ -72,8 +79,8 @@ public class UploadManager {
     }
 
     private HttpEntity uploadFile(File file) {
-        if (file.length() > 1000000L) {
-            SignedPaintingsClient.info("uploaded file is too large to upload to imgur", true);
+        if (file.length() > 10000000L) {
+            SignedPaintingsClient.info("uploaded file is too large to upload to imgur: "+file.length(), true);
             return null;
         }
         return EntityBuilder.create().setFile(file).build();
@@ -82,10 +89,14 @@ public class UploadManager {
     private CompletableFuture<String> upload(Supplier<HttpEntity> createEntity) {
         return CompletableFuture.supplyAsync(() -> {
             try {
+                HttpEntity httpEntity = createEntity.get();
+                if (httpEntity == null) {
+                    return null;
+                }
+
                 HttpClient httpclient = HttpClients.createDefault();
                 HttpPost httppost = new HttpPost("https://api.imgur.com/3/image");
-
-                httppost.setEntity(createEntity.get());
+                httppost.setEntity(httpEntity);
                 httppost.setHeader("Authorization", "Client-ID " + clientId);
 
                 HttpResponse response = httpclient.execute(httppost);

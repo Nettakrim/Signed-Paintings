@@ -7,6 +7,7 @@
     "signed_paintings.commands.upload" : "Uploading to Imgur...",
     "signed_paintings.commands.upload.done" : "Imgur link: %s",
     "signed_paintings.commands.upload.fail" : "Upload failed",
+    "signed_paintings.commands.upload.no_file" : "No File \"%s\" exists",
 
     "signed_paintings.commands.status.unique" : "\nUnique Images: %s",
     "signed_paintings.commands.status.resolutions" : "\nResolutions: %s",

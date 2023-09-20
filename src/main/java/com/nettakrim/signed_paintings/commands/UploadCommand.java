@@ -33,8 +33,17 @@ public class UploadCommand {
                 )
                 .build();
 
+        LiteralCommandNode<FabricClientCommandSource> fileNode = ClientCommandManager
+                .literal("file")
+                .then(
+                        ClientCommandManager.argument("file", StringArgumentType.greedyString())
+                        .executes(UploadCommand::uploadFile)
+                )
+                .build();
+
         uploadNode.addChild(urlNode);
         uploadNode.addChild(screenshotNode);
+        uploadNode.addChild(fileNode);
         return uploadNode;
     }
 
@@ -53,12 +62,22 @@ public class UploadCommand {
         return uploadFile(SignedPaintingsClient.getScreenshotDirectory()+filename);
     }
 
+    private static int uploadFile(CommandContext<FabricClientCommandSource> context) {
+        String filename = StringArgumentType.getString(context, "file");
+        return uploadFile(filename);
+    }
+
     private static int uploadFile(String filename) {
+        File file = new File(filename);
+        if (!file.exists()) {
+            SignedPaintingsClient.say(SignedPaintingsClient.MODID+".commands.upload.no_file", filename);
+            return -1;
+        }
         MutableText text = Text.translatable(SignedPaintingsClient.MODID+".commands.upload", filename).setStyle(Style.EMPTY
                 .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, filename))
         );
         SignedPaintingsClient.say(text);
-        SignedPaintingsClient.uploadManager.uploadFileToImgur(new File(filename), UploadCommand::onLoad);
+        SignedPaintingsClient.uploadManager.uploadFileToImgur(file, UploadCommand::onLoad);
         return 1;
     }
 
