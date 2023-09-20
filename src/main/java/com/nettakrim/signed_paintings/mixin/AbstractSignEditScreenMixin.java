@@ -390,8 +390,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         int cursor = selectionStart+pasteString.length();
 
         if (ImageManager.isValid(pasteString)) {
-            if (SignedPaintingsClient.imageManager.DomainBlocked(pasteString) || textRenderer.getWidth(pasteString) > maxWidthPerLine*2.5) {
-                uploadURL = pasteString;
+            String url = SignedPaintingsClient.imageManager.applyURLInferences(pasteString);
+            if (SignedPaintingsClient.imageManager.DomainBlocked(url) || (textRenderer.getWidth(SignedPaintingsClient.imageManager.getShortestURLInference(url)) > maxWidthPerLine*2.5)) {
+                uploadURL = url;
                 uploadButton.visible = true;
             }
         }
