@@ -313,8 +313,10 @@ public class ImageManager {
     }
 
     public int getUrlSuggestions(SuggestionsBuilder builder) {
-        for (String url : urlToImageData.keySet()) {
-            builder.suggest(url);
+        for (Map.Entry<String, ImageData> entry : urlToImageData.entrySet()) {
+            if (entry.getValue().ready) {
+                builder.suggest(entry.getKey());
+            }
         }
         return urlToImageData.size();
     }
