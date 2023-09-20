@@ -48,6 +48,10 @@ public class SignedPaintingsClient implements ClientModInitializer {
 
 		imageManager = new ImageManager();
 		imageManager.registerURLAlias(new URLAlias("https://i.imgur.com/", new String[]{"i.imgur.com/","imgur.com/","imgur:"}, ".png"));
+		imageManager.registerURLAlias(new URLAlias("https://iili.io/", new String[]{"freeimage.host/i/", "iili:"}, ".png"));
+		imageManager.registerAllowedDomain("https://i.imgur.com/");
+		imageManager.registerAllowedDomain("https://iili.io/");
+		imageManager.registerAllowedDomain("https://i.ibb.co/");
 
 		paintingRenderer = new PaintingRenderer();
 		renderSigns = true;

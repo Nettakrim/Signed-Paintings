@@ -191,7 +191,7 @@ public class SignSideInfo {
             try {
                 values[0] = MathHelper.clamp(Float.parseFloat(parts[0]), 1f/32f, 64f);
                 values[1] = MathHelper.clamp(Float.parseFloat(parts[1]), 1f/32f, 64f);
-            } catch (NumberFormatException ignored) {
+            } catch (Exception ignored) {
                 return false;
             }
             this.width = values[0];
@@ -202,7 +202,7 @@ public class SignSideInfo {
         private boolean tryParseOffset(String s) {
             try {
                 this.yOffset = MathHelper.clamp(Float.parseFloat(s), -64f, 64f);
-            } catch (NumberFormatException ignored) {
+            } catch (Exception ignored) {
                 return false;
             }
             return true;
@@ -211,7 +211,7 @@ public class SignSideInfo {
         private boolean tryParsePixelsPerBlock(String s) {
             try {
                 this.pixelsPerBlock = MathHelper.clamp(Float.parseFloat(s), 0, 1024);
-            } catch (NumberFormatException ignored) {
+            } catch (Exception ignored) {
                 return false;
             }
             return true;

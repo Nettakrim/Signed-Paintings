@@ -62,6 +62,6 @@
 
     "signed_paintings.pixels_per_block" : "Pixels",
 
-    "signed_paintings.upload_prompt" : "Link too large: Upload to Imgur",
+    "signed_paintings.upload_prompt" : "Upload to Imgur",
     "signed_paintings.upload_fail" : "Upload Failed"
 }

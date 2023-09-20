@@ -33,6 +33,7 @@ public class ImageManager {
     private final HashMap<String, OverlayInfo> itemNameToOverlay;
     private final HashMap<String, ArrayList<ImageDataLoadInterface>> pendingImageLoads;
     public final ArrayList<String> blockedURLs;
+    public final ArrayList<String> allowedDomains;
     public boolean autoBlockNew = false;
 
     private boolean changesMade = false;
@@ -43,15 +44,22 @@ public class ImageManager {
         itemNameToOverlay = new HashMap<>();
         pendingImageLoads = new HashMap<>();
         blockedURLs = new ArrayList<>();
+        allowedDomains = new ArrayList<>();
 
         data = new File(SignedPaintingsClient.client.runDirectory+"/signed_paintings.txt");
         try {
             if (data.exists()) {
                 Scanner scanner = new Scanner(data);
                 if (scanner.hasNextLine()) scanner.nextLine();
+                int phase = 0;
                 while (scanner.hasNextLine()) {
                     String s = scanner.nextLine();
-                    blockedURLs.add(s);
+                    if (s.startsWith("-")) phase++;
+                    else if (phase == 0) {
+                        blockedURLs.add(s);
+                    } else if (phase == 1) {
+                        allowedDomains.add(s);
+                    }
                 }
                 scanner.close();
             }
@@ -65,10 +73,17 @@ public class ImageManager {
         try {
             if (!data.exists()) data.createNewFile();
             FileWriter writer = new FileWriter(data);
+
             StringBuilder s = new StringBuilder("- Blocked Painting URLs -");
             for (String url : blockedURLs) {
                 s.append("\n").append(url);
             }
+
+            s.append("\n- Allowed URL Domains -");
+            for (String url : allowedDomains) {
+                s.append("\n").append(url);
+            }
+
             writer.write(s.toString());
             writer.close();
             changesMade = false;
@@ -81,18 +96,21 @@ public class ImageManager {
     public void loadImage(String url, ImageDataLoadInterface onLoadCallback) {
         if (url.equals("https://")) return;
         ImageData imageData = urlToImageData.get(url);
-        boolean blocked = blockedURLs.contains(url);
+        boolean blocked = blockedURLs.contains(url) || DomainBlocked(url);
+
         if (!blocked && autoBlockNew) {
             SignedPaintingsClient.sayRaw(
-                    Text.translatable(SignedPaintingsClient.MODID+".commands.block.notify.base",
-                            Text.translatable(SignedPaintingsClient.MODID+".commands.block.notify.text", url)
-                                    .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.textColor).withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/paintings:block remove "+url)))
-                            )
-                            .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.nameTextColor))
+                Text.translatable(SignedPaintingsClient.MODID+".commands.block.notify.base",
+                    Text.translatable(SignedPaintingsClient.MODID+".commands.block.notify.text", url)
+                        .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.textColor).withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/paintings:block remove "+url)))
+                    )
+                    .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.nameTextColor)
+                )
             );
             blockedURLs.add(url);
             blocked = true;
         }
+
         if (imageData != null) {
             if (imageData.ready || blocked) {
                 onLoadCallback.onLoad(imageData);
@@ -120,7 +138,7 @@ public class ImageManager {
         downloadImageBuffer(url).orTimeout(60, TimeUnit.SECONDS).handleAsync((image, ex) -> {
             if (image == null || ex != null) {
                 urlToImageData.remove(url);
-                SignedPaintingsClient.info("Couldn't load image "+url, false);
+                SignedPaintingsClient.info("Couldn't load image "+url+"\n"+ex.toString(), true);
             } else {
                 SignedPaintingsClient.info("Loaded image "+url, false);
                 onImageLoad(image, url, data);
@@ -211,6 +229,20 @@ public class ImageManager {
 
     public void registerURLAlias(URLAlias urlAlias) {
         urlAliases.add(urlAlias);
+    }
+
+    public void registerAllowedDomain(String url) {
+        if (allowedDomains.contains(url)) return;
+        allowedDomains.add(url);
+    }
+
+    public boolean DomainBlocked(String url) {
+        for (String allowed : allowedDomains) {
+            if (url.startsWith(allowed)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public String applyURLInferences(String text) {
