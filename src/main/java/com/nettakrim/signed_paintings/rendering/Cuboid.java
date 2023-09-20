@@ -100,9 +100,9 @@ public class Cuboid {
                 float scaledMaxY = (maxY/relevantSize.y)-0.5f;
 
                 float newMaxU = minU+((maxU-minU)*(maxX-minX));
-                float newMaxV = minV+((maxV-minV)*(maxY-minY));
+                float newMinV = maxV-((maxV-minV)*(maxY-minY));
 
-                renderQuad(vertexConsumer, scaledMinX, scaledMaxX, scaledMinY, scaledMaxY, 0.5f, rotation, minU, newMaxU, minV, newMaxV, normal, light);
+                renderQuad(vertexConsumer, scaledMinX, scaledMaxX, scaledMinY, scaledMaxY, 0.5f, rotation, minU, newMaxU, newMinV, maxV, normal, light);
             }
         }
     }
