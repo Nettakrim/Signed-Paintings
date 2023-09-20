@@ -433,7 +433,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private void upload(ButtonWidget button) {
         if (uploadURL == null) return;
-        SignedPaintingsClient.uploadManager.uploadToImgur(uploadURL, this::uploadFinished);
+        SignedPaintingsClient.uploadManager.uploadUrlToImgur(uploadURL, this::uploadFinished);
     }
 
     @Unique

@@ -7,6 +7,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.EntityBuilder;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClients;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class UploadManager {
     private final String clientId;
@@ -30,12 +32,12 @@ public class UploadManager {
         this.urlToImgurCache = new HashMap<>();
     }
 
-    public void uploadToImgur(String url, Consumer<String> onLoadCallback) {
+    public void uploadUrlToImgur(String url, Consumer<String> onLoadCallback) {
         if (urlToImgurCache.containsKey(url)) {
             if (onLoadCallback != null) onLoadCallback.accept(urlToImgurCache.get(url));
             return;
         }
-        upload(url).orTimeout(60, TimeUnit.SECONDS).handleAsync((link, ex) -> {
+        upload(() -> uploadUrl(url)).orTimeout(60, TimeUnit.SECONDS).handleAsync((link, ex) -> {
             if (link == null || ex != null) {
                 SignedPaintingsClient.info("Failed to upload " + url+"\n"+ex.toString(), true);
             } else {
@@ -47,15 +49,43 @@ public class UploadManager {
         });
     }
 
-    private CompletableFuture<String> upload(String url) {
+    public void uploadFileToImgur(File file, Consumer<String> onLoadCallback) {
+        upload(() -> uploadFile(file)).orTimeout(60, TimeUnit.SECONDS).handleAsync((link, ex) -> {
+            if (link == null || ex != null) {
+                SignedPaintingsClient.info("Failed to upload "+file.toPath()+"\n"+ex.toString(), true);
+            } else {
+                SignedPaintingsClient.info("Uploaded "+file.toPath()+" to " + link, false);
+            }
+            if (onLoadCallback != null) onLoadCallback.accept(link);
+            return null;
+        });
+    }
+
+    private HttpEntity uploadUrl(String url) {
+        try {
+            List<NameValuePair> params = new ArrayList<>(1);
+            params.add(new BasicNameValuePair("image", url));
+            return new UrlEncodedFormEntity(params, "UTF-8");
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private HttpEntity uploadFile(File file) {
+        if (file.length() > 1000000L) {
+            SignedPaintingsClient.info("uploaded file is too large to upload to imgur", true);
+            return null;
+        }
+        return EntityBuilder.create().setFile(file).build();
+    }
+
+    private CompletableFuture<String> upload(Supplier<HttpEntity> createEntity) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 HttpClient httpclient = HttpClients.createDefault();
                 HttpPost httppost = new HttpPost("https://api.imgur.com/3/image");
 
-                List<NameValuePair> params = new ArrayList<>(2);
-                params.add(new BasicNameValuePair("image", url));
-                httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+                httppost.setEntity(createEntity.get());
                 httppost.setHeader("Authorization", "Client-ID " + clientId);
 
                 HttpResponse response = httpclient.execute(httppost);

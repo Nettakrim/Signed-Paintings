@@ -13,6 +13,7 @@
     "BuiltinModelItemRendererMixin",
     "FabricationFixMixin",
     "MinecraftClientMixin",
+    "ScreenshotRecorderMixin",
     "SelectionManagerMixin",
     "SignBlockEntityMixin",
     "SignBlockEntityRendererMixin"

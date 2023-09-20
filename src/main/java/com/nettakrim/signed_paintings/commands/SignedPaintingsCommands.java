@@ -6,6 +6,7 @@ import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 public class SignedPaintingsCommands {
@@ -16,7 +17,17 @@ public class SignedPaintingsCommands {
         return CompletableFuture.completedFuture(builder.build());
     };
 
+    public static ArrayList<String> recentScreenshots;
+    public static final SuggestionProvider<FabricClientCommandSource> screenshots = (context, builder) -> {
+        for (String screenshot : recentScreenshots) {
+            builder.suggest(screenshot);
+        }
+        return CompletableFuture.completedFuture(builder.build());
+    };
+
     public static void initialize() {
+        recentScreenshots = new ArrayList<>();
+
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
             RootCommandNode<FabricClientCommandSource> root = dispatcher.getRoot();
 

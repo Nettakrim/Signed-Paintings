@@ -8,26 +8,57 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.text.*;
 
+import java.io.File;
+
 public class UploadCommand {
     public static LiteralCommandNode<FabricClientCommandSource> getCommandNode() {
         LiteralCommandNode<FabricClientCommandSource> uploadNode = ClientCommandManager
                 .literal("paintings:upload")
+                .build();
+
+        LiteralCommandNode<FabricClientCommandSource> urlNode = ClientCommandManager
+                .literal("url")
                 .then(
                         ClientCommandManager.argument("url", StringArgumentType.greedyString())
-                        .executes(UploadCommand::upload)
+                        .executes(UploadCommand::uploadUrl)
                 )
                 .build();
 
+        LiteralCommandNode<FabricClientCommandSource> screenshotNode = ClientCommandManager
+                .literal("screenshot")
+                .then(
+                        ClientCommandManager.argument("file", StringArgumentType.greedyString())
+                        .suggests(SignedPaintingsCommands.screenshots)
+                        .executes(UploadCommand::uploadScreenshot)
+                )
+                .build();
+
+        uploadNode.addChild(urlNode);
+        uploadNode.addChild(screenshotNode);
         return uploadNode;
     }
 
-    private static int upload(CommandContext<FabricClientCommandSource> context) {
+    private static int uploadUrl(CommandContext<FabricClientCommandSource> context) {
         String url = StringArgumentType.getString(context, "url");
         MutableText text = Text.translatable(SignedPaintingsClient.MODID+".commands.upload", url).setStyle(Style.EMPTY
                 .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url))
         );
         SignedPaintingsClient.say(text);
-        SignedPaintingsClient.uploadManager.uploadToImgur(url, UploadCommand::onLoad);
+        SignedPaintingsClient.uploadManager.uploadUrlToImgur(url, UploadCommand::onLoad);
+        return 1;
+    }
+
+    private static int uploadScreenshot(CommandContext<FabricClientCommandSource> context) {
+        String filename = StringArgumentType.getString(context, "file");
+        return uploadFile(SignedPaintingsClient.getScreenshotDirectory()+filename);
+    }
+
+    private static int uploadFile(String filename) {
+        MutableText text = Text.translatable(SignedPaintingsClient.MODID+".commands.upload", filename).setStyle(Style.EMPTY
+                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, filename))
+        );
+        SignedPaintingsClient.say(text);
+        SignedPaintingsClient.uploadManager.uploadFileToImgur(new File(filename), UploadCommand::onLoad);
         return 1;
     }
 

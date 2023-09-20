@@ -11,6 +11,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.util.ScreenshotRecorder;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -153,6 +154,10 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		if (client.player == null) return;
 		Text newText = Text.translatable(MODID+".long_say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(text.setStyle(text.getStyle().withColor(textColor)));
 		client.player.sendMessage(newText);
+	}
+
+	public static String getScreenshotDirectory() {
+		return SignedPaintingsClient.client.runDirectory+"\\"+ ScreenshotRecorder.SCREENSHOTS_DIRECTORY+"\\";
 	}
 
 	public static void info(String s, boolean force) {
