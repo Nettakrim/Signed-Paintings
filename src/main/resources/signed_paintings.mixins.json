@@ -2,19 +2,20 @@
   "required": true,
   "package": "com.nettakrim.signed_paintings.mixin",
   "compatibilityLevel": "JAVA_17",
-  "mixins": [
+  "plugin": "com.nettakrim.signed_paintings.SignedPaintingsMixinPlugin",
+  "mixins": [],
+  "client": [
     "AbstractSignEditScreenMixin",
     "BannerBlockEntityMixin",
+    "BannerBlockEntityRendererMixin",
+    "BuiltinModelItemRendererMixin",
+    "FabricationFixMixin",
+    "MinecraftClientMixin",
     "SelectionManagerMixin",
     "SignBlockEntityMixin",
     "SignBlockEntityRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "client": [
-    "BannerBlockEntityRendererMixin",
-    "BuiltinModelItemRendererMixin",
-    "MinecraftClientMixin"
-  ]
+  }
 }

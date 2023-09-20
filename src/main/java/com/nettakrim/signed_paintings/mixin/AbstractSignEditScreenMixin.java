@@ -334,7 +334,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Inject(at = @At("HEAD"), method = "keyPressed", cancellable = true)
     private void onKeyPress(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
         for (InputSlider slider : inputSliders) {
-            if (slider.isFocused() && slider.keyPressed(keyCode, scanCode, modifiers)) {
+            if (slider != null && slider.isFocused() && slider.keyPressed(keyCode, scanCode, modifiers)) {
                 cir.setReturnValue(true);
                 cir.cancel();
                 return;
@@ -345,7 +345,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Inject(at = @At("HEAD"), method = "charTyped", cancellable = true)
     private void onCharType(char chr, int modifiers, CallbackInfoReturnable<Boolean> cir) {
         for (InputSlider slider : inputSliders) {
-            if (slider.isFocused() && slider.charTyped(chr, modifiers)) {
+            if (slider != null && slider.isFocused() && slider.charTyped(chr, modifiers)) {
                 cir.setReturnValue(true);
                 cir.cancel();
                 return;
@@ -356,7 +356,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @ModifyVariable(at = @At("STORE"), method = "renderSignText", ordinal = 0)
     private boolean stopTextCaret(boolean bl) {
         for (InputSlider slider : inputSliders) {
-            if (slider.isFocused()) {
+            if (slider != null && slider.isFocused()) {
                 selectionManager.setSelectionEnd(selectionManager.getSelectionStart());
                 return false;
             }
