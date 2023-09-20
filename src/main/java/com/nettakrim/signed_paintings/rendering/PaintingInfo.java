@@ -158,8 +158,13 @@ public class PaintingInfo {
 
         if (blockState == null || blockState.isAir()) blockState = this.blockEntity.getCachedState();
 
+        Sprite back = null;
+        if (this.backType == BackType.Type.SIGN) {
+            String name = ((AbstractSignBlock)this.blockEntity.getCachedState().getBlock()).getWoodType().name();
+            back = SignedPaintingsClient.client.getSpriteAtlas(new Identifier("minecraft", "textures/atlas/blocks.png")).apply(new Identifier("minecraft", "block/"+name+"_planks"));
+        }
         ModelIdentifier modelIdentifier = BlockModels.getModelId(blockState);
-        Sprite back = SignedPaintingsClient.client.getBakedModelManager().getModel(modelIdentifier).getParticleSprite();
+        if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getModel(modelIdentifier).getParticleSprite();
         if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getMissingModel().getParticleSprite();
         this.back = back;
     }
