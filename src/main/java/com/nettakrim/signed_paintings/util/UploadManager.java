@@ -37,7 +37,7 @@ public class UploadManager {
         }
         upload(url).orTimeout(60, TimeUnit.SECONDS).handleAsync((link, ex) -> {
             if (link == null || ex != null) {
-                SignedPaintingsClient.info("Failed to upload " + url, true);
+                SignedPaintingsClient.info("Failed to upload " + url+"\n"+ex.toString(), true);
             } else {
                 SignedPaintingsClient.info("Uploaded " + url + " to " + link, false);
                 urlToImgurCache.put(url, link);

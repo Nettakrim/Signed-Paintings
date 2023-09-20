@@ -72,8 +72,9 @@ public class PaintingRenderer {
         if (!ImageManager.hasImage(image)) return;
 
         matrices.push();
+        //these are also trial and error
         matrices.scale(0.75f, -0.75f, -1f);
-        matrices.translate(0F, 0.825f, 0.065f);
+        matrices.translate(0F, 0.833f, 0.065f);
         VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(image));
         info.cuboid.setupRendering(matrices);
         info.cuboid.renderFace(imageVertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
