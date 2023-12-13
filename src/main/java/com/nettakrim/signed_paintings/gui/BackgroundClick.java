@@ -14,7 +14,7 @@ public class BackgroundClick extends ClickableWidget {
     }
 
     @Override
-    protected void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {}
+    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {}
 
     @Override
     protected void appendClickableNarrations(NarrationMessageBuilder builder) {}
