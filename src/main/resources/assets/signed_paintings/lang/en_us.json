@@ -16,6 +16,7 @@
     "signed_paintings.commands.status.size.link" : "\n%sKB - %s",
     "signed_paintings.commands.status.size.default" : "\n%sKB - (%s)",
     "signed_paintings.commands.status.size.scaled" : "\n%sKB - %s",
+    "signed_paintings.commands.status.none" : "No image \"%s\" has been loaded",
 
     "signed_paintings.commands.toggle.all.on" : "All image rendering enabled",
     "signed_paintings.commands.toggle.all.off" : "All image rendering disabled",

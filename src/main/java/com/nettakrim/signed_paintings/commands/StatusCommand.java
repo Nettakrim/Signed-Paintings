@@ -41,9 +41,11 @@ public class StatusCommand {
         MutableText text = getStatusText("unique", Integer.toString(statuses.size()));
         text.append(getStatusText("total_size", getKBString(totalSize)));
         for (ImageStatus status : statuses) {
-            MutableText linkText = getStatusText("size.link", getKBString(status.getTotalSize()), status.url);
-            linkText.setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, status.url)));
-            text.append(linkText);
+            if (status.ready) {
+                MutableText linkText = getStatusText("size.link", getKBString(status.getTotalSize()), status.url);
+                linkText.setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, status.url)));
+                text.append(linkText);
+            }
         }
 
         SignedPaintingsClient.longSay(text);
@@ -54,6 +56,10 @@ public class StatusCommand {
         String url = StringArgumentType.getString(context, "url");
         if (url.equals("all")) return statusAll(context);
         ImageStatus status = SignedPaintingsClient.imageManager.getUrlStatus(url);
+        if (status == null || !status.ready) {
+            SignedPaintingsClient.say("commands.status.none", url);
+            return 0;
+        }
 
         MutableText text = Text.literal("").append(getStatusText("link", status.url).setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, status.url))));
         text.append(getStatusText("resolutions", Integer.toString(status.getResolutionsCount())));

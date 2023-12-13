@@ -9,6 +9,8 @@ public class ImageStatus implements Comparable<ImageStatus> {
 
     public String url;
 
+    public boolean ready;
+
     public ImageStatus() {
         resolutionStatuses = new ArrayList<>();
     }

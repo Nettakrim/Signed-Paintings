@@ -66,6 +66,8 @@ public class ImageData {
     }
 
     private BufferedImage scaleImage(BufferedImage referenceImage, int width, int height) {
+        width = Math.max(width, 1);
+        height = Math.max(height, 1);
         BufferedImage resizedImage = new BufferedImage(width, height, referenceImage.getType());
         Graphics2D graphics2D = resizedImage.createGraphics();
         // refer to https://docs.oracle.com/javase/tutorial/2d/advanced/quality.html
@@ -93,6 +95,7 @@ public class ImageData {
     public ImageStatus getStatus() {
         ImageStatus imageStatus = new ImageStatus();
         images.forEach((key, value) -> imageStatus.addResolution(key, getBytes(Objects.requireNonNull(((NativeImageBackedTexture) ImageManager.getTexture(value)).getImage())), value != baseIdentifier));
+        imageStatus.ready = ready;
         return imageStatus;
     }
 
