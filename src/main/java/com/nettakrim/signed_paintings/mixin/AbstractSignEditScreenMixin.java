@@ -365,17 +365,19 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Override
-    public void signedPaintings$clear() {
+    public void signedPaintings$clear(boolean setText) {
         for (int i = 0; i < messages.length; i++) {
             this.messages[i] = "";
-            this.text = this.text.withMessage(i, Text.literal("message"));
+            this.text = this.text.withMessage(i, Text.literal(""));
         }
-        this.blockEntity.setText(this.text, this.front);
+        if (setText) {
+            this.blockEntity.setText(this.text, this.front);
+        }
         this.currentRow = 0;
     }
 
     @Override
-    public int signedPaintings$paste(String pasteString, int selectionStart, int selectionEnd) {
+    public int signedPaintings$paste(String pasteString, int selectionStart, int selectionEnd, boolean setText) {
         String[] newMessages = new String[messages.length];
         System.arraycopy(messages, 0, newMessages, 0, messages.length);
 
@@ -424,7 +426,10 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             this.messages[i] = newMessages[i];
             this.text = this.text.withMessage(i, Text.literal(this.messages[i]));
         }
-        this.blockEntity.setText(this.text, this.front);
+
+        if (setText) {
+            this.blockEntity.setText(this.text, this.front);
+        }
 
         currentRow = cursorRow;
         return cursor;
@@ -447,8 +452,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             return;
         }
         uploadButton.visible = false;
-        signedPaintings$clear();
-        signedPaintings$paste(link, 0, 0);
+        signedPaintings$clear(false);
+        signedPaintings$paste(link, 0, 0, false);
+        ((SignBlockEntityAccessor)this.blockEntity).signedPaintings$getSideInfo(this.front).loadPainting(this.front, this.blockEntity, true);
     }
 
     @Override
@@ -463,5 +469,14 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         inputSliders[0].setValue(width);
         inputSliders[1].setValue(height);
         aspectRatio = width / height;
+    }
+
+    @Override
+    public String signedPaintings$getText() {
+        StringBuilder s = new StringBuilder();
+        for (String message : messages) {
+            s.append(message);
+        }
+        return s.toString();
     }
 }

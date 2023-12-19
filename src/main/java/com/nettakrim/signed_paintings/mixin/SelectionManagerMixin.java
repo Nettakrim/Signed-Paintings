@@ -22,7 +22,7 @@ public class SelectionManagerMixin {
     @Inject(at = @At("HEAD"), method = "paste", cancellable = true)
     private void onPaste(CallbackInfo ci) {
         if (SignedPaintingsClient.currentSignEdit == null) return;
-        selectionStart = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(this.clipboardGetter.get(), selectionStart, selectionEnd);
+        selectionStart = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(this.clipboardGetter.get(), selectionStart, selectionEnd, true);
         selectionEnd = selectionStart;
         ci.cancel();
     }

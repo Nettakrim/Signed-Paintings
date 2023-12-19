@@ -45,7 +45,13 @@ public class UploadManager {
                 SignedPaintingsClient.info("Uploaded " + url + " to " + link, false);
                 imgurCache.put(url, link);
             }
-            if (onLoadCallback != null) onLoadCallback.accept(link);
+            if (onLoadCallback != null) {
+                try {
+                    onLoadCallback.accept(link);
+                } catch (Exception e) {
+                    SignedPaintingsClient.info("Error in onLoadCallback:\n"+e, true);
+                }
+            }
             return null;
         });
     }
@@ -63,7 +69,13 @@ public class UploadManager {
                 SignedPaintingsClient.info("Uploaded "+file.toPath()+" to " + link, false);
                 imgurCache.put(file.getPath(), link);
             }
-            if (onLoadCallback != null) onLoadCallback.accept(link);
+            if (onLoadCallback != null) {
+                try {
+                    onLoadCallback.accept(link);
+                } catch (Exception e) {
+                    SignedPaintingsClient.info("Error in onLoadCallback:\n"+e, true);
+                }
+            }
             return null;
         });
     }

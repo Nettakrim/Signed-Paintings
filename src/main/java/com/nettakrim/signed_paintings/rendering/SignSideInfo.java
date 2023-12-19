@@ -28,7 +28,7 @@ public class SignSideInfo {
     }
 
     private String[] getParts() {
-        String combinedText = SignedPaintingsClient.combineSignText(text);
+        String combinedText = SignedPaintingsClient.currentSignEdit == null ? SignedPaintingsClient.combineSignText(text) : SignedPaintingsClient.currentSignEdit.screen.signedPaintings$getText();
         return combinedText.split("[\\n ]|(\\|)", 2);
     }
 
@@ -226,8 +226,8 @@ public class SignSideInfo {
 
             String text = urlString + '|' + Centering.getName(true, xCentering) + Centering.getName(false, yCentering) + BackType.getName(backType) + '|' + widthString + ':' + heightString + '|' + yOffsetString + '|' + pixelsPerBlockString + '|' + extraText;
 
-            SignedPaintingsClient.currentSignEdit.screen.signedPaintings$clear();
-            int newSelection = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(text, 0, 0);
+            SignedPaintingsClient.currentSignEdit.screen.signedPaintings$clear(false);
+            int newSelection = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(text, 0, 0, true);
             SignedPaintingsClient.currentSignEdit.selectionManager.setSelection(newSelection, newSelection);
         }
 
