@@ -21,7 +21,7 @@ public class BannerBlockEntityMixin implements OverlayInfoAccessor {
     @Unique
     private OverlayInfo overlayInfo;
 
-    @Inject(at = @At("TAIL"), method = "<init>*")
+    @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/DyeColor;)V")
     private void init(CallbackInfo ci) {
         overlayInfo = new OverlayInfo();
     }
