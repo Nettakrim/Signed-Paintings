@@ -60,9 +60,10 @@ public class PaintingRenderer {
         if (!ImageManager.hasImage(image)) return;
 
         matrices.push();
-        //these numbers are entirely trial and error, I have no idea how to derive them, Z:0.021 is more accurate but severely z-fights at long distances
-        matrices.translate(0F, 3.335f, 0.025f);
+        //these numbers are entirely trial and error, I have no idea how to derive them
         canvas.rotate(matrices);
+        matrices.scale(1.5f, -1.5f, 1f);
+        matrices.translate(0, 0, -0.2f);
         VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(image));
         info.cuboid.setupRendering(matrices);
         info.cuboid.renderFace(imageVertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
