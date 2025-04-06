@@ -17,21 +17,29 @@ import net.minecraft.world.World;
 import org.joml.Vector3f;
 
 public class PaintingInfo {
-    public BlockEntity blockEntity;
-    public Cuboid cuboid;
+    public final BlockEntity blockEntity;
+    public final boolean isFront;
+    public final SignType.Type signType;
+
     private ImageData image;
+    public Cuboid cuboid;
     private Sprite back;
-    public SignType.Type signType;
-    public Vector3f rotationVec;
-    public Vector3f offsetVec;
+
+    public Vector3f rotationVec = zero;
+    public Vector3f offsetVec = zero;
+
     private float width;
     private float height;
     private float depth;
-    private Centering.Type xCentering;
-    private Centering.Type yCentering;
-    private BackType.Type backType;
+
+    private Centering.Type xCentering = Centering.Type.CENTER;
+    private Centering.Type yCentering = Centering.Type.CENTER;
+
+    private BackType.Type backType = BackType.Type.SIGN;
+
     private float pixelsPerBlock;
-    public boolean isFront;
+
+    private static final Vector3f zero = new Vector3f(0,0,0);
 
     public boolean working;
     private boolean needsBackUpdate = false;
