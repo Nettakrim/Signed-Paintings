@@ -138,7 +138,7 @@ public class ImageManager {
             SignedPaintingsClient.sayRaw(
                 Text.translatable(SignedPaintingsClient.MODID+".commands.block.notify.base",
                     Text.translatable(SignedPaintingsClient.MODID+".commands.block.notify.text", url)
-                        .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.textColor).withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/paintings:block remove "+url)))
+                        .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.textColor).withClickEvent(new ClickEvent.SuggestCommand("/paintings:block remove "+url)))
                     )
                     .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.nameTextColor)
                 )
@@ -215,10 +215,16 @@ public class ImageManager {
 
             ByteBuffer data = BufferUtils.createByteBuffer(bytes.length).put(bytes);
             data.flip();
-            NativeImage img = NativeImage.read(data);
-            NativeImageBackedTexture texture = new NativeImageBackedTexture(img);
 
-            MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, texture));
+            MinecraftClient.getInstance().execute(() -> {
+                try {
+                    NativeImage img = NativeImage.read(data);
+                    NativeImageBackedTexture texture = new NativeImageBackedTexture(identifier::toString, img);
+                    MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, texture);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         } catch (Throwable e) {
             SignedPaintingsClient.info("failed to convert BufferedImage \""+bufferedImage+"\" to Identifier \""+identifier+"\"", true);
         }

@@ -61,7 +61,7 @@ public class PaintingRenderer {
 
         matrices.push();
         //these numbers are entirely trial and error, I have no idea how to derive them
-        canvas.rotate(matrices);
+        canvas.applyTransform(matrices);
         matrices.scale(1.5f, -1.5f, 1f);
         matrices.translate(0, 0, -0.2f);
         VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(image));

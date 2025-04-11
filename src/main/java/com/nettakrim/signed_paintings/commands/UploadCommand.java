@@ -49,9 +49,7 @@ public class UploadCommand {
 
     private static int uploadUrl(CommandContext<FabricClientCommandSource> context) {
         String url = StringArgumentType.getString(context, "url");
-        MutableText text = Text.translatable(SignedPaintingsClient.MODID+".commands.upload", url).setStyle(Style.EMPTY
-                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url))
-        );
+        MutableText text = Text.translatable(SignedPaintingsClient.MODID+".commands.upload", url).setStyle(SignedPaintingsClient.getUrlButton(url));
         SignedPaintingsClient.say(text);
         SignedPaintingsClient.uploadManager.uploadUrlToImgur(SignedPaintingsClient.imageManager.applyURLInferences(url), UploadCommand::onLoad);
         return 1;
@@ -73,9 +71,7 @@ public class UploadCommand {
             SignedPaintingsClient.say(SignedPaintingsClient.MODID+".commands.upload.no_file", filename);
             return -1;
         }
-        MutableText text = Text.translatable(SignedPaintingsClient.MODID+".commands.upload", filename).setStyle(Style.EMPTY
-                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, filename))
-        );
+        MutableText text = Text.translatable(SignedPaintingsClient.MODID+".commands.upload", filename).setStyle(SignedPaintingsClient.getUrlButton(filename));
         SignedPaintingsClient.say(text);
         SignedPaintingsClient.uploadManager.uploadFileToImgur(file, UploadCommand::onLoad);
         return 1;
@@ -83,9 +79,7 @@ public class UploadCommand {
 
     private static void onLoad(String link) {
         if (link != null) {
-            MutableText text = Text.translatable(SignedPaintingsClient.MODID+".commands.upload.done", link).setStyle(Style.EMPTY
-                    .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, link))
-            );
+            MutableText text = Text.translatable(SignedPaintingsClient.MODID+".commands.upload.done", link).setStyle(SignedPaintingsClient.getUrlButton(link));
             SignedPaintingsClient.say(text);
         } else {
             SignedPaintingsClient.say("commands.upload.fail");

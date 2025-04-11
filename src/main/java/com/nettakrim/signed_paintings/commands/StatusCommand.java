@@ -7,9 +7,7 @@ import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.util.ImageStatus;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.text.ClickEvent;
 import net.minecraft.text.MutableText;
-import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 
 import java.util.ArrayList;
@@ -43,7 +41,7 @@ public class StatusCommand {
         for (ImageStatus status : statuses) {
             if (status.ready) {
                 MutableText linkText = getStatusText("size.link", getKBString(status.getTotalSize()), status.url);
-                linkText.setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, status.url)));
+                linkText.setStyle(SignedPaintingsClient.getUrlButton(status.url));
                 text.append(linkText);
             }
         }
@@ -61,7 +59,7 @@ public class StatusCommand {
             return 0;
         }
 
-        MutableText text = Text.literal("").append(getStatusText("link", status.url).setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, status.url))));
+        MutableText text = Text.literal("").append(getStatusText("link", status.url).setStyle(SignedPaintingsClient.getUrlButton(status.url)));
         text.append(getStatusText("resolutions", Integer.toString(status.getResolutionsCount())));
         text.append(getStatusText("total_size", getKBString(status.getTotalSize())));
 
