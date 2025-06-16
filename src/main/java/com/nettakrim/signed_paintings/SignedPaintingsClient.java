@@ -5,7 +5,7 @@ import com.nettakrim.signed_paintings.gui.SignEditingInfo;
 import com.nettakrim.signed_paintings.rendering.PaintingRenderer;
 import com.nettakrim.signed_paintings.util.*;
 import net.fabricmc.api.ClientModInitializer;
-
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -16,6 +16,8 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.render.VertexConsumerProvider;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -63,6 +65,13 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		renderBanners = true;
 		renderShields = true;
 		reduceCulling = false;
+
+		WorldRenderEvents.AFTER_TRANSLUCENT.register((context) -> {
+			MatrixStack matrices = context.matrixStack();
+			VertexConsumerProvider vertexConsumers = context.consumers();
+
+			SignedPaintingsClient.paintingRenderer.renderTranslucentQueue(matrices, vertexConsumers);
+		});
 
 		uploadManager = new UploadManager("c1802a39166b9d0");
 

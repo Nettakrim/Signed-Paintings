@@ -11,6 +11,15 @@ public class OverlayInfo {
     public OverlayInfo() {
 
     }
+    
+    public boolean hasPartialTransparency() {
+        Identifier id = this.getImageIdentifier();
+
+        if (SignedPaintingsClient.imageManager != null && id != null) {
+            return SignedPaintingsClient.imageManager.hasPartialTransparency(id);
+        }
+        return false;
+    }
 
     public void loadOverlay(String text) {
         invalidateImage();

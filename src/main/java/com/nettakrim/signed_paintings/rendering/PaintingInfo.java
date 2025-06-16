@@ -9,7 +9,6 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.client.render.block.BlockModels;
 import net.minecraft.client.texture.Sprite;
-import net.minecraft.client.util.ModelIdentifier;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -50,6 +49,15 @@ public class PaintingInfo {
         this.signType = SignType.getType(blockEntity.getCachedState().getBlock());
         this.isFront = isFront;
         resetCuboid();
+    }
+
+    public boolean hasPartialTransparency() {
+        Identifier id = this.getImageIdentifier();
+
+        if (SignedPaintingsClient.imageManager != null && id != null) {
+            return SignedPaintingsClient.imageManager.hasPartialTransparency(id);
+        }
+        return false;
     }
 
     public void updateImage(ImageData image) {
@@ -173,8 +181,7 @@ public class PaintingInfo {
                 back = SignedPaintingsClient.client.getSpriteAtlas(Identifier.of("minecraft", "textures/atlas/blocks.png")).apply(Identifier.of("minecraft", "block/" + name + "_planks"));
             } catch (Exception ignored) {}
         }
-        ModelIdentifier modelIdentifier = BlockModels.getModelId(blockState);
-        if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getModel(modelIdentifier).getParticleSprite();
+        if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getModel(BlockModels.getModelId(blockState)).getParticleSprite();
         if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getMissingBlockModel().getParticleSprite();
         this.back = back;
     }

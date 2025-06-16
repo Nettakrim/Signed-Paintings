@@ -14,6 +14,8 @@ import net.minecraft.text.ClickEvent;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import java.util.Map;
+import java.util.HashMap;
 import org.lwjgl.BufferUtils;
 
 import javax.imageio.ImageIO;
@@ -29,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 public class ImageManager {
     private final File data;
     private final ArrayList<URLAlias> urlAliases;
+    private final Map<Identifier, Boolean> transparencyCache = new HashMap<>();
     private final HashMap<String, ImageData> urlToImageData;
     private final HashMap<String, OverlayInfo> itemNameToOverlay;
     private final HashMap<String, ArrayList<ImageDataLoadInterface>> pendingImageLoads;
@@ -37,6 +40,46 @@ public class ImageManager {
     public boolean autoBlockNew = false;
 
     private boolean changesMade = false;
+    public boolean hasPartialTransparency(Identifier id) {
+        return transparencyCache.getOrDefault(id, false);
+    }
+
+    private void checkAndCacheTransparency(Identifier id, BufferedImage bufferedImage) {
+        if (bufferedImage == null) {
+            transparencyCache.put(id, false);
+            SignedPaintingsClient.info("Cannot check transparency for null BufferedImage: " + id, false);
+            return;
+        }
+
+        if (transparencyCache.containsKey(id)) {
+            return;
+        }
+
+        boolean hasPartial = false;
+        int width = bufferedImage.getWidth();
+        int height = bufferedImage.getHeight();
+
+        try {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int color = bufferedImage.getRGB(x, y);
+                    int alpha = (color >> 24) & 0xFF;
+
+                    if (alpha > 0 && alpha < 255) {
+                        hasPartial = true;
+                        break; 
+                    }
+                }
+                if (hasPartial) {
+                    break; 
+                }
+            }
+        } catch (Exception e) {
+            SignedPaintingsClient.info("Error checking transparency for " + id + ": " + e.getMessage(), true);
+        }
+
+        transparencyCache.put(id, hasPartial);
+    }
 
     public ImageManager() {
         urlAliases = new ArrayList<>();
@@ -207,22 +250,37 @@ public class ImageManager {
     }
 
     public static void saveBufferedImageAsIdentifier(BufferedImage bufferedImage, Identifier identifier) {
-        //https://discord.com/channels/507304429255393322/807617488313516032/934395931380576287
+        // https://discord.com/channels/507304429255393322/807617488313516032/934395931380576287
+        NativeImage img = null;
         try {
+            if (SignedPaintingsClient.imageManager != null) {
+                 SignedPaintingsClient.imageManager.checkAndCacheTransparency(identifier, bufferedImage);
+            } else {
+                 SignedPaintingsClient.info("ImageManager instance not available for transparency check: " + identifier, true);
+            }
+
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             ImageIO.write(bufferedImage, "png", stream);
             byte[] bytes = stream.toByteArray();
 
             ByteBuffer data = BufferUtils.createByteBuffer(bytes.length).put(bytes);
             data.flip();
-            NativeImage img = NativeImage.read(data);
+            img = NativeImage.read(data);
             NativeImageBackedTexture texture = new NativeImageBackedTexture(img);
 
             MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, texture));
+
         } catch (Throwable e) {
-            SignedPaintingsClient.info("failed to convert BufferedImage \""+bufferedImage+"\" to Identifier \""+identifier+"\"", true);
+            SignedPaintingsClient.info("Failed to convert/register BufferedImage for identifier \"" + identifier + "\": " + e.getMessage(), true);
+            if (img != null) {
+                MinecraftClient.getInstance().execute(img::close);
+            }
+            if (SignedPaintingsClient.imageManager != null) {
+                 SignedPaintingsClient.imageManager.transparencyCache.put(identifier, false);
+            }
         }
     }
+
 
     public static void removeImage(Identifier identifier) {
         MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().getTextureManager().destroyTexture(identifier));

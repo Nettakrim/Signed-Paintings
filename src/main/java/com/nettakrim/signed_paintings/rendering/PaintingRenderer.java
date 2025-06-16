@@ -11,13 +11,41 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
 import org.joml.Vector3f;
+import java.util.List;
+import java.util.ArrayList;
 
 public class PaintingRenderer {
     public PaintingRenderer() {
 
     }
+    private record TranslucentRenderData(MatrixStack.Entry matrixEntry, Model model, PaintingInfo info, int light, float rotationDegrees) {}
 
-    public void renderPainting(MatrixStack matrices, VertexConsumerProvider vertexConsumers, Model model, PaintingInfo info, int light, float rotationDegrees) {
+
+    private static final List<TranslucentRenderData> translucentQueue = new ArrayList<>();
+
+    private static void queueTranslucentRender(MatrixStack.Entry capturedEntry, Model model, PaintingInfo info, int light, float rotationDegrees) {
+        translucentQueue.add(new TranslucentRenderData(capturedEntry, model, info, light, rotationDegrees));
+    }
+
+    private void renderTranslucentPaintingImmediately(MatrixStack matrices, VertexConsumerProvider consumers, TranslucentRenderData data) {
+        Identifier image = data.info.getImageIdentifier();
+        if (!ImageManager.hasImage(image)) return;
+
+        matrices.push();
+        matrices.multiplyPositionMatrix(data.matrixEntry.getPositionMatrix());
+        renderPainting(consumers, data.info, data.light, RenderLayer.getEntityTranslucent(image));
+        matrices.pop(); 
+    }
+
+
+    public void renderTranslucentQueue(MatrixStack matrices, VertexConsumerProvider vertexConsumers) {
+        for (TranslucentRenderData data : translucentQueue) {
+            renderTranslucentPaintingImmediately(matrices, vertexConsumers, data);
+        }
+        translucentQueue.clear();
+    }
+
+    public void renderOrQueuePainting(MatrixStack matrices, VertexConsumerProvider vertexConsumers, Model model, PaintingInfo info, int light, float rotationDegrees) {
         Identifier image = info.getImageIdentifier();
         if (!ImageManager.hasImage(image)) return;
 
@@ -29,16 +57,23 @@ public class PaintingRenderer {
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(info.rotationVec.x));
         info.cuboid.setupRendering(matrices);
 
-        VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(model.getLayer(info.getImageIdentifier()));
+        if (info.hasPartialTransparency()) {
+            queueTranslucentRender(matrices.peek().copy(), model, info, light, rotationDegrees);
+        } else {
+            renderPainting(vertexConsumers, info, light, RenderLayer.getEntityCutout(info.getImageIdentifier()));
+        }
+        matrices.pop();
+    }
+
+    private void renderPainting(VertexConsumerProvider vertexConsumers, PaintingInfo info, int light, RenderLayer renderLayer) {
+        VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(renderLayer);
         renderImage(imageVertexConsumer, info, light);
 
         if (info.getBackType() != BackType.Type.NONE) {
             Sprite sprite = info.getBackSprite();
-            VertexConsumer backVertexConsumer = sprite.getTextureSpecificVertexConsumer(vertexConsumers.getBuffer(model.getLayer(sprite.getAtlasId())));
+            VertexConsumer backVertexConsumer = sprite.getTextureSpecificVertexConsumer(vertexConsumers.getBuffer(RenderLayer.getEntityCutout(sprite.getAtlasId())));
             renderBack(backVertexConsumer, sprite, info, light);
         }
-
-        matrices.pop();
     }
 
     private void renderImage(VertexConsumer vertexConsumer, PaintingInfo info, int light) {
@@ -59,26 +94,31 @@ public class PaintingRenderer {
         Identifier image = info.getImageIdentifier();
         if (!ImageManager.hasImage(image)) return;
 
+        RenderLayer layer = info.hasPartialTransparency() ? RenderLayer.getEntityTranslucent(image) : RenderLayer.getEntityCutout(image);
+        VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(layer);
+
         matrices.push();
         //these numbers are entirely trial and error, I have no idea how to derive them
         canvas.rotate(matrices);
         matrices.scale(1.5f, -1.5f, 1f);
         matrices.translate(0, 0, -0.2f);
-        VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(image));
         info.cuboid.setupRendering(matrices);
         info.cuboid.renderFace(imageVertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
         matrices.pop();
     }
 
+
     public void renderItemOverlay(MatrixStack matrices, VertexConsumerProvider vertexConsumers, OverlayInfo info, int light) {
         Identifier image = info.getImageIdentifier();
         if (!ImageManager.hasImage(image)) return;
+
+        RenderLayer layer = info.hasPartialTransparency() ? RenderLayer.getEntityTranslucent(image) : RenderLayer.getEntityCutout(image);
+        VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(layer);
 
         matrices.push();
         //these are also trial and error
         matrices.scale(0.75f, -0.75f, -1f);
         matrices.translate(0F, 0.833f, 0.065f);
-        VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(image));
         info.cuboid.setupRendering(matrices);
         info.cuboid.renderFace(imageVertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
         matrices.pop();

@@ -65,7 +65,7 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
     @Unique
     private boolean renderPaintingInfo(PaintingInfo info, MatrixStack matrices, VertexConsumerProvider vertexConsumers, Model model, int light, AbstractSignBlock block, BlockState state) {
         if (info != null && info.isReady()) {
-            SignedPaintingsClient.paintingRenderer.renderPainting(matrices, vertexConsumers, model, info, light, -block.getRotationDegrees(state));
+            SignedPaintingsClient.paintingRenderer.renderOrQueuePainting(matrices, vertexConsumers, model, info, light, -block.getRotationDegrees(state));
             return true;
         }
         return false;
