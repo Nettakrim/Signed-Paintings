@@ -223,15 +223,15 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             String encoded = DiscordAlias.encode(url);
             url = DiscordAlias.decode(encoded);
             // webp never works
-            if (encoded.split("\\?")[0].endsWith(".webp")) {
+            if (encoded.split("\\?")[0].endsWith(".webp") && SignedPaintingsClient.imageManager.getUrlStatus(url) == null) {
                 uploadURL = url;
                 uploadButton.visible = true;
             } else {
                 pasteString = encoded;
             }
-        // otherwise, prompt upload if its blocked or too long
+            // otherwise, prompt upload if its blocked or too long
         } else if (ImageManager.isValid(pasteString)) {
-            if (SignedPaintingsClient.imageManager.domainBlocked(url) || (textRenderer.getWidth(SignedPaintingsClient.imageManager.getShortestURLInference(url)) > maxWidthPerLine * 2.5)) {
+            if ((SignedPaintingsClient.imageManager.domainBlocked(url) || (textRenderer.getWidth(SignedPaintingsClient.imageManager.getShortestURLInference(url)) > maxWidthPerLine * 2.5) && SignedPaintingsClient.imageManager.getUrlStatus(url) == null)) {
                 uploadURL = url;
                 uploadButton.visible = true;
             } else {
@@ -239,7 +239,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             }
         }
 
-        if (!uploadButton.visible && !SignedPaintingsClient.imageManager.domainBlocked(url) && textRenderer.getWidth(url) > maxWidthPerLine * 3.5) {
+        if (!uploadButton.visible && !SignedPaintingsClient.imageManager.domainBlocked(url) && !SignedPaintingsClient.imageManager.blockedURLs.contains(url) && textRenderer.getWidth(url) > maxWidthPerLine * 3.5) {
             pasteString = SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(url));
         }
 

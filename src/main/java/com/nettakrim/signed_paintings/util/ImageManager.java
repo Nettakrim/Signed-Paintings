@@ -333,7 +333,7 @@ public class ImageManager {
     public static boolean isValid(String url) {
         try {
             //noinspection ResultOfMethodCallIgnored (throws for malformed urls)
-            URI.create(url);
+            URI.create(url).toURL();
             return true;
         } catch (Exception e) {
             return false;
