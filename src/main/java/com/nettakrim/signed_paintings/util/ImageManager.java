@@ -14,6 +14,8 @@ import net.minecraft.text.ClickEvent;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+
+import java.net.URI;
 import java.util.Map;
 import java.util.HashMap;
 import org.lwjgl.BufferUtils;
@@ -21,7 +23,6 @@ import org.lwjgl.BufferUtils;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.URL;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -37,6 +38,7 @@ public class ImageManager {
     private final HashMap<String, ArrayList<ImageDataLoadInterface>> pendingImageLoads;
     public final ArrayList<String> blockedURLs;
     public final ArrayList<String> allowedDomains;
+    public final ArrayList<String> imgurApiKeys;
     public boolean autoBlockNew = false;
 
     private boolean changesMade = false;
@@ -88,6 +90,7 @@ public class ImageManager {
         pendingImageLoads = new HashMap<>();
         blockedURLs = new ArrayList<>();
         allowedDomains = new ArrayList<>();
+        imgurApiKeys = new ArrayList<>();
 
         data = FabricLoader.getInstance().getConfigDir().resolve("signed_paintings.txt").toFile();
         try {
@@ -126,6 +129,8 @@ public class ImageManager {
                             case 4:
                                 UIHelper.setBackgroundEnabled(active);
                         }
+                    } else if (phase == 4) {
+                        imgurApiKeys.add(s);
                     }
                 }
                 scanner.close();
@@ -135,10 +140,15 @@ public class ImageManager {
         } catch (IOException e) {
             SignedPaintingsClient.info("Failed to load data", true);
         }
+
+        if (imgurApiKeys.isEmpty()) {
+            imgurApiKeys.add("274478faed23e08");
+            imgurApiKeys.add("c1802a39166b9d0");
+        }
     }
 
     public void save() {
-        if (!changesMade) return;
+        if (data.exists() && !changesMade) return;
         try {
             if (!data.exists()) data.createNewFile();
             FileWriter writer = new FileWriter(data);
@@ -162,6 +172,11 @@ public class ImageManager {
             s.append("\n").append(SignedPaintingsClient.renderShields ? "true" : "false");
             s.append("\n").append(SignedPaintingsClient.reduceCulling ? "true" : "false");
             s.append("\n").append(UIHelper.isBackgroundEnabled() ? "true" : "false");
+
+            s.append("\n- Imgur API Keys (get your own at https://api.imgur.com/oauth2/addclient) -");
+            for (String key : imgurApiKeys) {
+                s.append("\n").append(key);
+            }
 
             writer.write(s.toString());
             writer.close();
@@ -298,8 +313,7 @@ public class ImageManager {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 if (isValid(urlStr)) {
-                    URL url = new URL(urlStr);
-                    URLConnection connection = url.openConnection();
+                    URLConnection connection = URI.create(urlStr).toURL().openConnection();
                     connection.setRequestProperty("User-Agent", "Signed Paintings mod");
                     connection.setRequestProperty("Sec-Fetch-Site", "same-site");
                     connection.setRequestProperty("Referer", "https://imgur.com/");
@@ -318,7 +332,8 @@ public class ImageManager {
 
     public static boolean isValid(String url) {
         try {
-            new URL(url).toURI();
+            //noinspection ResultOfMethodCallIgnored (throws for malformed urls)
+            URI.create(url);
             return true;
         } catch (Exception e) {
             return false;

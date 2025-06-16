@@ -24,11 +24,9 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class UploadManager {
-    private final String clientId;
     private final HashMap<String, String> imgurCache;
 
-    public UploadManager(String clientId) {
-        this.clientId = clientId;
+    public UploadManager() {
         this.imgurCache = new HashMap<>();
     }
 
@@ -119,16 +117,25 @@ public class UploadManager {
                 HttpClient httpclient = HttpClients.createDefault();
                 HttpPost httppost = new HttpPost("https://api.imgur.com/3/image");
                 httppost.setEntity(httpEntity);
-                httppost.setHeader("Authorization", "Client-ID " + clientId);
 
-                HttpResponse response = httpclient.execute(httppost);
-                HttpEntity entity = response.getEntity();
+                for (String key : SignedPaintingsClient.imageManager.imgurApiKeys) {
+                    httppost.setHeader("Authorization", "Client-ID " + key);
 
-                if (entity != null) {
-                    return getLinkFromImgurResponse(entity.getContent());
-                } else {
-                    return null;
+                    HttpResponse response = httpclient.execute(httppost);
+                    HttpEntity entity = response.getEntity();
+
+                    if (response.getStatusLine().getStatusCode() == 429) {
+                        SignedPaintingsClient.info("client id "+key+" has had too many requests", true);
+                        continue;
+                    }
+
+                    if (entity != null) {
+                        return getLinkFromImgurResponse(entity.getContent());
+                    } else {
+                        return null;
+                    }
                 }
+                return null;
             } catch (IOException e) {
                 return null;
             }

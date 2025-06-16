@@ -73,7 +73,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 			SignedPaintingsClient.paintingRenderer.renderTranslucentQueue(matrices, vertexConsumers);
 		});
 
-		uploadManager = new UploadManager("c1802a39166b9d0");
+		uploadManager = new UploadManager();
 
 		SignedPaintingsCommands.initialize();
 	}
