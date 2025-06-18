@@ -102,8 +102,13 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		int high = reference.length();
 		int index = Integer.MAX_VALUE;
 
+		//limit to 80 characters, since paper(?) additionally limits character count
+		if (high > 80 && !MinecraftClient.getInstance().isInSingleplayer()) {
+			high = 80;
+		}
+
 		while (low <= high) {
-			int mid = low  + ((high - low) / 2);
+			int mid = low + ((high - low) / 2);
 			int currentWidth = textRenderer.getWidth(reference.substring(0, mid));
 			if (currentWidth < budgetWidth) {
 				low = mid + 1;
