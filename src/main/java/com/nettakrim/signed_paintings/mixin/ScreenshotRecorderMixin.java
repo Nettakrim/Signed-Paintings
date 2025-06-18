@@ -14,8 +14,8 @@ import java.util.function.Consumer;
 
 @Mixin(ScreenshotRecorder.class)
 public class ScreenshotRecorderMixin {
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/texture/NativeImage;writeTo(Ljava/io/File;)V"), method = "method_1661")
-    private static void onScreenshot(NativeImage nativeImage, File file, Consumer consumer, CallbackInfo ci) {
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/texture/NativeImage;writeTo(Ljava/io/File;)V"), method = "method_22691")
+    private static void onScreenshot(NativeImage nativeImage, File file, Consumer<?> consumer, CallbackInfo ci) {
         String filename = file.getPath().replace(SignedPaintingsClient.getScreenshotDirectory(), "");
         SignedPaintingsCommands.recentScreenshots.add(filename);
     }

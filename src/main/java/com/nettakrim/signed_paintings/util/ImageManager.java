@@ -196,7 +196,7 @@ public class ImageManager {
             SignedPaintingsClient.sayRaw(
                 Text.translatable(SignedPaintingsClient.MODID+".commands.block.notify.base",
                     Text.translatable(SignedPaintingsClient.MODID+".commands.block.notify.text", url)
-                        .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.textColor).withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/paintings:block remove "+url)))
+                        .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.textColor).withClickEvent(new ClickEvent.SuggestCommand("/paintings:block remove "+url)))
                     )
                     .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.nameTextColor)
                 )
@@ -266,7 +266,6 @@ public class ImageManager {
 
     public static void saveBufferedImageAsIdentifier(BufferedImage bufferedImage, Identifier identifier) {
         // https://discord.com/channels/507304429255393322/807617488313516032/934395931380576287
-        NativeImage img = null;
         try {
             if (SignedPaintingsClient.imageManager != null) {
                  SignedPaintingsClient.imageManager.checkAndCacheTransparency(identifier, bufferedImage);
@@ -280,16 +279,19 @@ public class ImageManager {
 
             ByteBuffer data = BufferUtils.createByteBuffer(bytes.length).put(bytes);
             data.flip();
-            img = NativeImage.read(data);
-            NativeImageBackedTexture texture = new NativeImageBackedTexture(img);
 
-            MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, texture));
+            MinecraftClient.getInstance().execute(() -> {
+                try {
+                    NativeImage img = NativeImage.read(data);
+                    NativeImageBackedTexture texture = new NativeImageBackedTexture(identifier::toString, img);
+                    MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, texture);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
 
         } catch (Throwable e) {
             SignedPaintingsClient.info("Failed to convert/register BufferedImage for identifier \"" + identifier + "\": " + e.getMessage(), true);
-            if (img != null) {
-                MinecraftClient.getInstance().execute(img::close);
-            }
             if (SignedPaintingsClient.imageManager != null) {
                  SignedPaintingsClient.imageManager.transparencyCache.put(identifier, false);
             }

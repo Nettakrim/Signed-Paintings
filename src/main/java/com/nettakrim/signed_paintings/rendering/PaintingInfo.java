@@ -7,7 +7,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.SignBlockEntity;
-import net.minecraft.client.render.block.BlockModels;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -181,8 +180,8 @@ public class PaintingInfo {
                 back = SignedPaintingsClient.client.getSpriteAtlas(Identifier.of("minecraft", "textures/atlas/blocks.png")).apply(Identifier.of("minecraft", "block/" + name + "_planks"));
             } catch (Exception ignored) {}
         }
-        if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getModel(BlockModels.getModelId(blockState)).getParticleSprite();
-        if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getMissingBlockModel().getParticleSprite();
+        if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getBlockModels().getModelParticleSprite(blockState);
+        if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getMissingModel().particleSprite();
         this.back = back;
     }
 
