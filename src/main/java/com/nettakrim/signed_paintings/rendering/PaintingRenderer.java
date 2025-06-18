@@ -33,6 +33,7 @@ public class PaintingRenderer {
 
         matrices.push();
         matrices.multiplyPositionMatrix(data.matrixEntry.getPositionMatrix());
+        data.info.cuboid.setupRendering(matrices.peek());
         renderPainting(consumers, data.info, data.light, RenderLayer.getEntityTranslucent(image));
         matrices.pop(); 
     }
@@ -55,11 +56,11 @@ public class PaintingRenderer {
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotationDegrees + info.rotationVec.y + (info.isFront ? 0 : 180)));
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(info.rotationVec.z));
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(info.rotationVec.x));
-        info.cuboid.setupRendering(matrices);
 
         if (info.hasPartialTransparency()) {
             queueTranslucentRender(matrices.peek().copy(), model, info, light, rotationDegrees);
         } else {
+            info.cuboid.setupRendering(matrices.peek());
             renderPainting(vertexConsumers, info, light, RenderLayer.getEntityCutout(info.getImageIdentifier()));
         }
         matrices.pop();
@@ -102,7 +103,7 @@ public class PaintingRenderer {
         canvas.applyTransform(matrices);
         matrices.scale(1.5f, -1.5f, 1f);
         matrices.translate(0, 0, -0.2f);
-        info.cuboid.setupRendering(matrices);
+        info.cuboid.setupRendering(matrices.peek());
         info.cuboid.renderFace(imageVertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
         matrices.pop();
     }
@@ -119,7 +120,7 @@ public class PaintingRenderer {
         //these are also trial and error
         matrices.scale(0.75f, -0.75f, -1f);
         matrices.translate(0F, 0.833f, 0.065f);
-        info.cuboid.setupRendering(matrices);
+        info.cuboid.setupRendering(matrices.peek());
         info.cuboid.renderFace(imageVertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
         matrices.pop();
     }
