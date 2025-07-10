@@ -75,8 +75,13 @@
 
     "signed_paintings.pixels_per_block" : "Pixels",
 
-    "signed_paintings.upload_prompt" : "Upload to Imgur",
-    "signed_paintings.upload_fail" : "Upload Failed",
     "signed_paintings.copy_url" : "\uD83D\uDDD0 Url",
-    "signed_paintings.copy_data" : "\uD83D\uDDD0 Data"
+    "signed_paintings.copy_data" : "\uD83D\uDDD0 Data",
+
+    "signed_paintings.upload_prompt" : "Upload to Imgur",
+    "signed_paintings.upload_shared" : "Upload with shared Imgur Key (gets rate limited)",
+    "signed_paintings.key_prompt" : "Get your own Imgur Key",
+    "signed_paintings.key_sign_in" : "Sign In to Imgur",
+    "signed_paintings.key_register" : "Register an Application",
+    "signed_paintings.key_paste" : "paste Client ID"
 }

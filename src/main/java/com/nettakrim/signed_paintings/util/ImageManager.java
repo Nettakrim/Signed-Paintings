@@ -143,6 +143,8 @@ public class ImageManager {
 
         if (imgurApiKeys.isEmpty()) {
             imgurApiKeys.add("274478faed23e08");
+            imgurApiKeys.add("0a74b33065e56a7");
+            imgurApiKeys.add("2b12ffa92e72e63");
             imgurApiKeys.add("c1802a39166b9d0");
         }
     }
@@ -379,11 +381,6 @@ public class ImageManager {
         if (!url.contains("://")) {
             url = "https://"+url;
         }
-
-        if (url.startsWith("https://images-ext-1.discordapp.net/external/")) {
-            url = "https://"+url.replaceAll(".*https/", "");
-        }
-
         return url;
     }
 

@@ -12,6 +12,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -26,25 +27,36 @@ import java.util.function.Supplier;
 public class UploadManager {
     private final HashMap<String, String> imgurCache;
 
+    public static boolean lastUploadRateLimited;
+
     public UploadManager() {
         this.imgurCache = new HashMap<>();
     }
 
-    public void uploadUrlToImgur(String url2, Consumer<String> onLoadCallback) {
-        String url = discordSillyness(url2);
+    @Nullable
+    public String getImgurCache(String url2) {
+        String url = fixDiscord(url2);
 
         if (SignedPaintingsClient.imageManager.getShortestURLInference(url).startsWith("imgur:")) {
             SignedPaintingsClient.info(url+" is already an imgur link", false);
-            if (onLoadCallback != null) onLoadCallback.accept(url);
-            return;
+            return url;
         }
 
         if (imgurCache.containsKey(url)) {
             SignedPaintingsClient.info(url + " already in cache", false);
-            if (onLoadCallback != null) onLoadCallback.accept(imgurCache.get(url));
+            return imgurCache.get(url);
+        }
+        return null;
+    }
+
+    public void uploadUrlToImgur(String url2, Consumer<String> onLoadCallback) {
+        String cache = getImgurCache(url2);
+        if (cache != null) {
+            onLoadCallback.accept(cache);
             return;
         }
 
+        String url = fixDiscord(url2);
         upload(() -> uploadUrl(url)).orTimeout(60, TimeUnit.SECONDS).handleAsync((link, ex) -> {
             if (link == null || ex != null) {
                 SignedPaintingsClient.info("Failed to upload " + url, true);
@@ -126,8 +138,10 @@ public class UploadManager {
 
                     if (response.getStatusLine().getStatusCode() == 429) {
                         SignedPaintingsClient.info("client id "+key+" has had too many requests", true);
+                        lastUploadRateLimited = true;
                         continue;
                     }
+                    lastUploadRateLimited = false;
 
                     if (entity != null) {
                         return getLinkFromImgurResponse(entity.getContent());
@@ -163,8 +177,12 @@ public class UploadManager {
         return null;
     }
 
-    private String discordSillyness(String url) {
+    public String fixDiscord(String url) {
+        if (url.startsWith("https://images-ext-1.discordapp.net/external/")) {
+            return url.substring(url.substring(45).indexOf('/')+46).replaceFirst("/","://");
+        }
+
         if (!url.startsWith("https://media.discordapp.net/attachments/")) return url;
-        return url.replace("&format=webp","");
+        return url.replace("&format=webp","").replace("?format=webp","?");
     }
 }
