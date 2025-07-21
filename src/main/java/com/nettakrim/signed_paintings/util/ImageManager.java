@@ -210,7 +210,7 @@ public class ImageManager {
         if (imageData != null) {
             if (imageData.ready || blocked) {
                 onLoadCallback.onLoad(imageData);
-            } else {
+            } else if (pendingImageLoads.containsKey(url)) {
                 pendingImageLoads.get(url).add(onLoadCallback);
             }
         } else {
@@ -351,6 +351,10 @@ public class ImageManager {
         allowedDomains.add(url);
     }
 
+    public void removeAllowedDomain(String url) {
+        allowedDomains.remove(url);
+    }
+
     public boolean domainBlocked(String url) {
         for (String allowed : allowedDomains) {
             if (url.startsWith(allowed)) {
@@ -408,6 +412,20 @@ public class ImageManager {
         }
         urlToImageData.clear();
         itemNameToOverlay.clear();
+        return i;
+    }
+
+    public int reloadDomain(String domain) {
+        if (domain.equals("https://")) {
+            return reloadAll();
+        }
+
+        int i = 0;
+        for (Map.Entry<String, ImageData> imageData : urlToImageData.entrySet()) {
+            if (imageData.getKey().startsWith(domain)) {
+                i += imageData.getValue().reload();
+            }
+        }
         return i;
     }
 

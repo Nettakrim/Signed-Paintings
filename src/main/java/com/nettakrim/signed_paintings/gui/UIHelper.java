@@ -1,6 +1,7 @@
 package com.nettakrim.signed_paintings.gui;
 
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
+import com.nettakrim.signed_paintings.access.AbstractSignEditScreenAccessor;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import com.nettakrim.signed_paintings.rendering.BackType;
 import com.nettakrim.signed_paintings.rendering.Centering;
@@ -18,6 +19,7 @@ import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.function.Consumer;
 
 public class UIHelper {
 
@@ -52,7 +54,7 @@ public class UIHelper {
 
     private static ButtonWidget uploadButton;
 
-    public static void init(boolean isFront, Screen screen, SignBlockEntityAccessor blockEntity, ButtonWidget.PressAction upload) {
+    public static void init(boolean isFront, Screen screen, SignBlockEntityAccessor blockEntity, Consumer<String> upload) {
         UIHelper.front = isFront;
         UIHelper.screenWidth = screen.width;
         UIHelper.screen = screen;
@@ -84,6 +86,7 @@ public class UIHelper {
 
         // LEFT
         createCenteringButtons();
+        createButton(PADDING + BUTTON_WIDTH - BUTTON_HEIGHT, Y_OFF-PADDING-BUTTON_HEIGHT, BUTTON_HEIGHT, Text.translatable(SignedPaintingsClient.MODID + ".upload_settings"), button -> ((AbstractSignEditScreenAccessor)screen).signedPaintings$uploadSettings(getSideInfo().getUrl()));
         createButton(PADDING, Y_OFF, (BUTTON_WIDTH - SPACING_X) / 2, Text.translatable(SignedPaintingsClient.MODID + ".copy_url"), UIHelper::copyURL);
         createButton(MathHelper.ceil(PADDING + (BUTTON_WIDTH + SPACING_X) / 2f), Y_OFF, (BUTTON_WIDTH - SPACING_X) / 2, Text.translatable(SignedPaintingsClient.MODID + ".copy_data"), UIHelper::copyData);
 
@@ -115,7 +118,7 @@ public class UIHelper {
         inputSliders[2] = createInputSlider(-PADDING, getYPosition(0, 4.25f), SignedPaintingsClient.MODID + ".pixels_per_block", 0, 64, 16, 0, 1024, pixelsPerBlock);
         inputSliders[2].setOnValueChanged(UIHelper::onPixelSliderChanged);
 
-        uploadButton = createButton(-PADDING, getYPosition(Y_OFF, 4.5f), BUTTON_WIDTH, Text.translatable(SignedPaintingsClient.MODID + ".upload_prompt"), upload);
+        uploadButton = createButton(-PADDING, getYPosition(Y_OFF, 4.5f), BUTTON_WIDTH, Text.translatable(SignedPaintingsClient.MODID + ".upload_prompt"), button -> upload.accept(getSideInfo().getUrl()));
         createButton(-PADDING, getYPosition(Y_OFF, 5.5f), BUTTON_WIDTH, getBackgroundText(isBackgroundEnabled), UIHelper::cycleBackground);
         createButton(-PADDING, getYPosition(Y_OFF, 6.5f), BUTTON_WIDTH, ScreenTexts.DONE, (ButtonWidget a) -> screen.close());
     }
@@ -136,7 +139,7 @@ public class UIHelper {
         int xPos = getCenteringButtonPosition(AREA_SIZE, xCentering, BUTTON_HEIGHT, 0) + (AREA_SIZE / 2) + (BUTTON_HEIGHT / 2) + PADDING;
         int yPos = -getCenteringButtonPosition(AREA_SIZE, yCentering, BUTTON_HEIGHT, 0) + (AREA_SIZE / 2) - (BUTTON_HEIGHT / 2) + PADDING;
         ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".align." + id),
-                        button -> SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingCentering(xCentering, yCentering))
+                        button -> getSideInfo().updatePaintingCentering(xCentering, yCentering))
                 .position(xPos, yPos)
                 .size(BUTTON_HEIGHT, BUTTON_HEIGHT)
                 .build();
@@ -185,7 +188,7 @@ public class UIHelper {
     }
 
     private static void resetSize(ButtonWidget button) {
-        SignSideInfo info = SignedPaintingsClient.currentSignEdit.getSideInfo(front);
+        SignSideInfo info = getSideInfo();
         info.resetSize();
         inputSliders[0].setValue(info.paintingInfo.getWidth());
         inputSliders[1].setValue(info.paintingInfo.getHeight());
@@ -205,7 +208,7 @@ public class UIHelper {
     }
 
     private static void cyclePaintingBack(ButtonWidget button) {
-        BackType.Type newType = SignedPaintingsClient.currentSignEdit.getSideInfo(front).cyclePaintingBack();
+        BackType.Type newType = getSideInfo().cyclePaintingBack();
         button.setMessage(getBackTypeText(newType));
     }
 
@@ -229,50 +232,50 @@ public class UIHelper {
 
             inputSliders[isWidth ? 1 : 0].setValue(value);
         }
-        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingSize(inputSliders[0].getValue(), inputSliders[1].getValue());
+        getSideInfo().updatePaintingSize(inputSliders[0].getValue(), inputSliders[1].getValue());
     }
 
     private static void onXOffsetSliderChanged(float value) {
         offsetVec.x = value;
-        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingOffset(offsetVec);
+        getSideInfo().updatePaintingOffset(offsetVec);
     }
 
     private static void onYOffsetSliderChanged(float value) {
         offsetVec.y = value;
-        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingOffset(offsetVec);
+        getSideInfo().updatePaintingOffset(offsetVec);
     }
 
     private static void onZOffsetSliderChanged(float value) {
         offsetVec.z = value;
-        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingOffset(offsetVec);
+        getSideInfo().updatePaintingOffset(offsetVec);
     }
 
     private static void onXRotationSliderChanged(float value) {
         rotationVec.x = value;
-        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updateRotatingVector(rotationVec);
+        getSideInfo().updateRotatingVector(rotationVec);
     }
 
     private static void onYRotationSliderChanged(float value) {
         rotationVec.y = value;
-        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updateRotatingVector(rotationVec);
+        getSideInfo().updateRotatingVector(rotationVec);
     }
 
     private static void onZRotationSliderChanged(float value) {
         rotationVec.z = value;
-        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updateRotatingVector(rotationVec);
+        getSideInfo().updateRotatingVector(rotationVec);
     }
 
     private static void onPixelSliderChanged(float value) {
-        SignedPaintingsClient.currentSignEdit.getSideInfo(front).updatePaintingPixelsPerBlock(value);
+        getSideInfo().updatePaintingPixelsPerBlock(value);
     }
 
     private static void copyURL(ButtonWidget button) {
-        copyToClipboard(SignedPaintingsClient.currentSignEdit.getSideInfo(front).getUrl());
+        copyToClipboard(getSideInfo().getUrl());
         screen.close();
     }
 
     private static void copyData(ButtonWidget button) {
-        copyToClipboard(SignedPaintingsClient.currentSignEdit.getSideInfo(front).getData());
+        copyToClipboard(getSideInfo().getData());
         screen.close();
     }
 
@@ -325,5 +328,9 @@ public class UIHelper {
 
     public static void setUploadVisibility(boolean to) {
         uploadButton.visible = to;
+    }
+
+    private static SignSideInfo getSideInfo() {
+        return SignedPaintingsClient.currentSignEdit.getSideInfo(front);
     }
 }

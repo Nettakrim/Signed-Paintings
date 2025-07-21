@@ -20,7 +20,10 @@ import java.util.function.Consumer;
 public class UploadScreen extends Screen {
     private final Screen previous;
     private final String url;
-    private final Consumer<String> onSuccess;
+    private final Consumer<String> onUpload;
+
+    private final String domain;
+    private final Text info;
 
     private ClickableWidget globalButton;
 
@@ -35,12 +38,23 @@ public class UploadScreen extends Screen {
 
     private boolean isGuide = false;
 
-    public UploadScreen(Screen previous, String url, Consumer<String> onSuccess) {
+    public UploadScreen(Screen previous, String url, Consumer<String> onUpload) {
         super(Text.empty());
 
         this.previous = previous;
         this.url = url;
-        this.onSuccess = onSuccess;
+        this.onUpload = onUpload;
+
+        int start = url.indexOf('/')+2;
+        domain = url.substring(0, url.substring(start).indexOf('/')+start+1);
+
+        Text separator = Text.literal("\n\n");
+        info = Text.empty()
+                .append(Text.translatable(SignedPaintingsClient.MODID + ".info_upload")).append(separator)
+                .append(Text.translatable(SignedPaintingsClient.MODID + ".info_allow_domain")).append(separator)
+                .append(Text.translatable(SignedPaintingsClient.MODID + ".info_allow_all")).append(separator)
+                .append(Text.translatable(SignedPaintingsClient.MODID + ".info_domain", domain).append(separator))
+                .append(Text.translatable(SignedPaintingsClient.MODID + ".info_url", ".../"+url.substring(domain.length())));
     }
 
     @Override
@@ -48,24 +62,38 @@ public class UploadScreen extends Screen {
         main.clear();
         guide.clear();
 
-        globalButton = ButtonWidget.builder(Text.translatable("signed_paintings.upload_shared"), this::upload).dimensions(this.width / 2 - 100, 20, 200, 20).build();
-        main.add(addDrawableChild(globalButton));
-        main.add(this.addDrawableChild(ButtonWidget.builder(Text.translatable("signed_paintings.key_prompt"), (b) -> switchMode(true)).dimensions(this.width / 2 - 100, 50, 200, 20).build()));
-        main.add(this.addDrawableChild(ButtonWidget.builder(ScreenTexts.BACK, (b) -> close()).dimensions(this.width / 2 - 100, this.height / 4 + 144, 200, 20).build()));
+        int x = width/2 + 5;
+        int w = width/2 - 10;
 
+        globalButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".upload_shared"), this::upload).dimensions(x, 5, w, 20).build();
+        main.add(addDrawableChild(globalButton));
+
+        boolean hasAll = hasDomain("https://");
+
+        ButtonWidget domainButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".allow_domain_" + (hasDomain(domain) ? "off": "on")), (b) -> toggleDomain(domain)).dimensions(x, 35, w, 20).build();
+        ButtonWidget allButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".allow_all_" + (hasAll ? "off": "on")), (b) -> toggleDomain("https://")).dimensions(x, 65, w, 20).build();
+        main.add(this.addDrawableChild(domainButton));
+        main.add(this.addDrawableChild(allButton));
+
+        domainButton.active = !hasAll;
+
+        // disabled, but partially implemented in case imgur fixes itself
+        //main.add(this.addDrawableChild(ButtonWidget.builder(Text.translatable("signed_paintings.key_prompt"), (b) -> switchMode(true)).dimensions(this.width / 2 - 100, 50, 200, 20).build()));
+
+        main.add(this.addDrawableChild(ButtonWidget.builder(ScreenTexts.BACK, (b) -> close()).dimensions(this.width / 2 - 100, this.height / 4 + 144, 200, 20).build()));
 
         float margin = width/27f;
         float f = (width - margin)/3f;
         float edge = margin/4f;
         int width = Math.round(f - margin + edge*2);
 
-        guide.add(this.addDrawableChild(ButtonWidget.builder(Text.translatable("signed_paintings.key_sign_in"), (b) -> openURL("https://imgur.com/")).dimensions(
+        guide.add(this.addDrawableChild(ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".key_sign_in"), (b) -> openURL("https://imgur.com/")).dimensions(
                 Math.round(margin-edge),       10, width, 20).build())
         );
-        guide.add(this.addDrawableChild(ButtonWidget.builder(Text.translatable("signed_paintings.key_register"), (b) -> openURL("https://api.imgur.com/oauth2/addclient")).dimensions(
+        guide.add(this.addDrawableChild(ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".key_register"), (b) -> openURL("https://api.imgur.com/oauth2/addclient")).dimensions(
                 Math.round(f + margin-edge),   10, width, 20).build())
         );
-        TextFieldWidget textFieldWidget = this.addDrawableChild(new ClientIDWidget(MinecraftClient.getInstance().textRenderer, Text.translatable("signed_paintings.key_paste"),
+        TextFieldWidget textFieldWidget = this.addDrawableChild(new ClientIDWidget(MinecraftClient.getInstance().textRenderer, Text.translatable(SignedPaintingsClient.MODID + ".key_paste"),
                 Math.round(f*2 + margin-edge), 10, width, 20)
         );
         guide.add(textFieldWidget);
@@ -91,9 +119,23 @@ public class UploadScreen extends Screen {
             for (int i = 0; i < 3; i++) {
                 context.drawGuiTexture(RenderLayer::getGuiTextured, Identifier.of(SignedPaintingsClient.MODID, "guide"+(i+1)), Math.round(f*i + margin), 40, Math.round(f-margin), Math.round((f-margin)*ratios[i]), -1);
             }
+        } else {
+            context.drawWrappedText(MinecraftClient.getInstance().textRenderer, info, 5, 5, width/2 - 10, -1, true);
         }
 
         super.render(context, mouseX, mouseY, delta);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!super.mouseClicked(mouseX, mouseY, button)) {
+            if (mouseX < width/2f - 5) {
+                openURL(url);
+                return true;
+            }
+            return false;
+        }
+        return true;
     }
 
     private void upload(ButtonWidget buttonWidget) {
@@ -102,16 +144,17 @@ public class UploadScreen extends Screen {
 
     private void uploadFinished(String link) {
         if (link == null) {
+            // TODO: translation
             if (UploadManager.lastUploadRateLimited) {
                 globalButton.setMessage(Text.literal("ratelimited"));
             } else {
                 globalButton.setMessage(Text.literal("upload failed"));
             }
-            return;
+        } else {
+            close();
         }
 
-        onSuccess.accept(link);
-        close();
+        onUpload.accept(link);
     }
 
     private void switchMode(boolean to) {
@@ -132,5 +175,20 @@ public class UploadScreen extends Screen {
 
     private void openURL(String url) {
         Util.getOperatingSystem().open(url);
+    }
+
+    private void toggleDomain(String domain) {
+        if (hasDomain(domain)) {
+            SignedPaintingsClient.imageManager.removeAllowedDomain(domain);
+        } else {
+            SignedPaintingsClient.imageManager.registerAllowedDomain(domain);
+            onUpload.accept(url);
+        }
+        SignedPaintingsClient.imageManager.reloadDomain(domain);
+        close();
+    }
+
+    private boolean hasDomain(String domain) {
+        return SignedPaintingsClient.imageManager.allowedDomains.contains(domain);
     }
 }
