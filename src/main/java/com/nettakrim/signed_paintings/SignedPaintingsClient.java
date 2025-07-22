@@ -94,30 +94,37 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		//  return index;
 		//should function identically
 
-		int low = 0;
-		int high = reference.length();
-		int index = Integer.MAX_VALUE;
-
 		//limit to 80 characters, since paper(?) additionally limits character count
-		if (high > 80 && !MinecraftClient.getInstance().isInSingleplayer()) {
-			high = 80;
+		int charLength = reference.length();
+		if (charLength > 80 && !MinecraftClient.getInstance().isInSingleplayer()) {
+			charLength = 80;
 		}
+
+		int low = 0;
+		int high = reference.codePointCount(0, charLength);
+		int index = Integer.MAX_VALUE;
 
 		while (low <= high) {
 			int mid = low + ((high - low) / 2);
-			int currentWidth = textRenderer.getWidth(reference.substring(0, mid));
+			int currentWidth = textRenderer.getWidth(codePointSubstring(reference, mid));
 			if (currentWidth < budgetWidth) {
 				low = mid + 1;
 			} else if (currentWidth > budgetWidth) {
 				high = mid - 1;
-			} else if (currentWidth == budgetWidth) {
+			} else {
 				return mid;
 			}
 			index = mid;
 		}
+
 		//length was not directly achievable, so use the next smallest length instead
-		if (textRenderer.getWidth(reference.substring(0, index)) > budgetWidth) index--;
-		return index;
+		if (textRenderer.getWidth(codePointSubstring(reference, index)) > budgetWidth) index--;
+		return reference.offsetByCodePoints(0, index);
+	}
+
+	private static String codePointSubstring(String s, int end) {
+		int a = s.offsetByCodePoints(0, 0);
+		return s.substring(a, s.offsetByCodePoints(a, end));
 	}
 
 	public static String floatToStringDP(float d, int decimalPlace) {
