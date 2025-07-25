@@ -3,8 +3,7 @@ package com.nettakrim.signed_paintings.mixin;
 import com.nettakrim.signed_paintings.access.OverlayInfoAccessor;
 import com.nettakrim.signed_paintings.rendering.OverlayInfo;
 import net.minecraft.block.entity.BannerBlockEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.storage.ReadView;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,8 +25,8 @@ public class BannerBlockEntityMixin implements OverlayInfoAccessor {
         overlayInfo = new OverlayInfo();
     }
 
-    @Inject(at = @At("TAIL"), method = "readNbt")
-    private void onNBTRead(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup, CallbackInfo ci) {
+    @Inject(at = @At("TAIL"), method = "readData")
+    private void onNBTRead(ReadView view, CallbackInfo ci) {
         if (customName != null) overlayInfo.loadOverlay(customName.getString());
     }
 

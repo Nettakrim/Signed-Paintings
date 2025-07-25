@@ -1,0 +1,26 @@
+package com.nettakrim.signed_paintings.mixin;
+
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.nettakrim.signed_paintings.access.AbstractSignEditScreenAccessor;
+import net.minecraft.block.WoodType;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.ingame.SignEditScreen;
+import net.minecraft.client.model.Model;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+
+@Mixin(SignEditScreen.class)
+public class SignEditScreenMixin {
+    @WrapOperation(method = "renderSignBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;addSign(Lnet/minecraft/client/model/Model;FLnet/minecraft/block/WoodType;IIII)V"))
+    private void offsetSign(DrawContext instance, Model signModel, float scale, WoodType woodType, int x1, int y1, int x2, int y2, Operation<Void> original) {
+        int state = ((AbstractSignEditScreenAccessor)this).signedPaintings$internalRenderState();
+        if (state == 0) {
+            original.call(instance, signModel, scale, woodType, x1, y1, x2, y2);
+            return;
+        }
+        int x = 38;
+        int y = -25 + state;
+        original.call(instance, signModel, scale * 0.5f, woodType, x, y, (x2 - x1) + x, (y2 - y1) + y);
+    }
+}

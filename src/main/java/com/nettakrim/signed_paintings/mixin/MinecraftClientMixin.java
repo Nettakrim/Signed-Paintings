@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MinecraftClient.class)
 public class MinecraftClientMixin {
-    @Inject(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V", at = @At("RETURN"))
+    @Inject(method = "disconnect", at = @At("RETURN"))
     private void disconnect(CallbackInfo ci) {
         SignedPaintingsClient.imageManager.save();
         SignedPaintingsClient.imageManager.autoBlockNew = false;
