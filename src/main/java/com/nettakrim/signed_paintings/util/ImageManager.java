@@ -142,6 +142,7 @@ public class ImageManager {
         }
 
         if (imgurApiKeys.isEmpty()) {
+            imgurApiKeys.add("0a74b33065e56a7");
             imgurApiKeys.add("274478faed23e08");
             imgurApiKeys.add("c1802a39166b9d0");
         }

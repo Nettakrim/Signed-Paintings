@@ -55,10 +55,8 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		imageManager.registerAllowedDomain("https://i.imgur.com/");
 		imageManager.registerAllowedDomain("https://iili.io/");
 		imageManager.registerAllowedDomain("https://i.ibb.co/");
-
-		imageManager.registerURLAlias(new DiscordAlias());
-		imageManager.registerAllowedDomain("https://media.discordapp.net/attachments/");
-		imageManager.registerAllowedDomain("https://cdn.discordapp.com/attachments/");
+		imageManager.registerAllowedDomain("https://i.ibb.co/");
+		imageManager.registerAllowedDomain("https://upload.wikimedia.org/");
 
 		paintingRenderer = new PaintingRenderer();
 		renderSigns = true;

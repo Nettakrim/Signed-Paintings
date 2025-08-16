@@ -12,7 +12,6 @@ import com.nettakrim.signed_paintings.gui.SignEditingInfo;
 import com.nettakrim.signed_paintings.gui.UIHelper;
 import com.nettakrim.signed_paintings.rendering.PaintingInfo;
 import com.nettakrim.signed_paintings.rendering.SignSideInfo;
-import com.nettakrim.signed_paintings.util.DiscordAlias;
 import com.nettakrim.signed_paintings.util.ImageManager;
 import com.nettakrim.signed_paintings.util.SignByteMapper;
 import net.minecraft.block.BlockState;
@@ -218,19 +217,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         String url = SignedPaintingsClient.imageManager.applyURLInferences(pasteString);
 
-        // special edge case for discord, since the discord alias is so specific, and is needed to reformat from media.discordapp to cdn.discordapp
-        if (DiscordAlias.isDiscord(url)) {
-            String encoded = DiscordAlias.encode(url);
-            url = DiscordAlias.decode(encoded);
-            // webp never works
-            if (encoded.split("\\?")[0].endsWith(".webp") && SignedPaintingsClient.imageManager.getUrlStatus(url) == null) {
-                uploadURL = url;
-                uploadButton.visible = true;
-            } else {
-                pasteString = encoded;
-            }
-            // otherwise, prompt upload if its blocked or too long
-        } else if (ImageManager.isValid(pasteString)) {
+        if (ImageManager.isValid(pasteString)) {
             if ((SignedPaintingsClient.imageManager.domainBlocked(url) || (textRenderer.getWidth(SignedPaintingsClient.imageManager.getShortestURLInference(url)) > maxWidthPerLine * 2.5) && SignedPaintingsClient.imageManager.getUrlStatus(url) == null)) {
                 uploadURL = url;
                 uploadButton.visible = true;
