@@ -11,7 +11,6 @@ import com.nettakrim.signed_paintings.rendering.PaintingInfo;
 import com.nettakrim.signed_paintings.rendering.SignSideInfo;
 import com.nettakrim.signed_paintings.util.ImageManager;
 import com.nettakrim.signed_paintings.util.SignByteMapper;
-import com.nettakrim.signed_paintings.util.UploadManager;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SignBlock;
 import net.minecraft.block.entity.SignBlockEntity;
@@ -21,6 +20,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.AbstractSignEditScreen;
 import net.minecraft.client.gui.screen.ingame.SignEditScreen;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.util.SelectionManager;
@@ -65,10 +65,13 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private SelectionManager selectionManager;
 
     @Unique
-    private String uploadURL = null;
+    private String url = null;
 
     @Unique
-    private ClickableWidget[] uploadButton;
+    private String domain = null;
+
+    @Unique
+    private ClickableWidget uploadButton;
 
     @Unique
     private ClickableWidget doneButton;
@@ -132,21 +135,16 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private void init(CallbackInfo ci) {
         doneButton = (ClickableWidget)this.children().get(0);
 
-        UIHelper.init(front, this, (SignBlockEntityAccessor) blockEntity, this::upload);
+        UIHelper.init(front, this, (SignBlockEntityAccessor) blockEntity);
         ArrayList<ClickableWidget> uiButtons = UIHelper.getButtons();
         for (ClickableWidget widget : uiButtons) {
             addDrawableChild(widget);
             addSelectableChild(widget);
         }
 
-        uploadButton = new ClickableWidget[2];
-        uploadButton[0] = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".upload_prompt"), button -> this.upload(uploadURL)).dimensions(this.width / 2 - 100, (this.height / 4 + 144)-25, 175, 20).build();
-        addDrawableChild(uploadButton[0]);
-        addSelectableChild(uploadButton[0]);
-
-        uploadButton[1] = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".upload_settings"), button -> this.signedPaintings$uploadSettings(uploadURL)).dimensions(this.width / 2 + 80, (this.height / 4 + 144)-25, 20, 20).build();
-        addDrawableChild(uploadButton[1]);
-        addSelectableChild(uploadButton[1]);
+        uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".create_prompt"), button -> this.createPainting()).dimensions(this.width / 2 - 100, (this.height / 4 + 144)-25, 200, 20).build();
+        addDrawableChild(uploadButton);
+        addSelectableChild(uploadButton);
 
         BackgroundClick backgroundClick = new BackgroundClick(UIHelper.getInputSliders());
         addSelectableChild(backgroundClick);
@@ -218,20 +216,23 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         int maxWidthPerLine = this.blockEntity.getMaxTextWidth();
         TextRenderer textRenderer = SignedPaintingsClient.client.textRenderer;
 
-        String url = SignedPaintingsClient.imageManager.applyURLInferences(pasteString);
+        String pasteURL = SignedPaintingsClient.imageManager.applyURLInferences(pasteString);
 
         if (ImageManager.isValid(pasteString)) {
-            if ((SignedPaintingsClient.imageManager.domainBlocked(url) || (textRenderer.getWidth(SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(url))) > maxWidthPerLine * 2.5) && SignedPaintingsClient.imageManager.getUrlStatus(url) == null)) {
-                uploadURL = url;
-                uploadButton[0].visible = true;
-                uploadButton[1].visible = true;
+            if (SignedPaintingsClient.imageManager.domainBlocked(pasteURL) || (textRenderer.getWidth(SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(pasteURL))) > maxWidthPerLine * 2.5) && SignedPaintingsClient.imageManager.getUrlStatus(pasteURL) == null && !url.startsWith("https://media.discordapp.net/attachments/")) {
+                url = pasteURL;
+                uploadButton.visible = true;
+
+                int start = url.indexOf('/')+2;
+                domain = url.substring(0, url.substring(start).indexOf('/')+start+1);
+                uploadButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + ".create_info", domain)));
             } else {
-                pasteString = url;
+                pasteString = pasteURL;
             }
         }
 
-        if (!uploadButton[0].visible && !SignedPaintingsClient.imageManager.domainBlocked(url) && !SignedPaintingsClient.imageManager.blockedURLs.contains(url) && textRenderer.getWidth(url) > maxWidthPerLine * 3.5) {
-            pasteString = SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(url));
+        if (!uploadButton.visible && !SignedPaintingsClient.imageManager.domainBlocked(pasteURL) && !SignedPaintingsClient.imageManager.blockedURLs.contains(pasteURL) && textRenderer.getWidth(pasteURL) > maxWidthPerLine * 3.5) {
+            pasteString = SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(pasteURL));
         }
 
         String[] newMessages = new String[messages.length];
@@ -286,47 +287,24 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
-    private void upload(String url) {
+    private void createPainting() {
         if (url == null) return;
 
-        // if the image is cached, skip directly to having the image
-        String cache = SignedPaintingsClient.uploadManager.getImgurCache(url);
-        if (cache != null) {
-            uploadFinished(cache);
-        } else {
-            SignedPaintingsClient.uploadManager.uploadUrlToImgur(url, this::uploadFinished);
-        }
-    }
-
-    @Override
-    public void signedPaintings$uploadSettings(String url) {
-        if (url == null) return;
-        assert client != null;
-
-        client.setScreen(new UploadScreen(this, url, this::uploadFinished));
-    }
-
-    @Unique
-    private void uploadFinished(String link) {
-        if (link == null) {
-            if (UploadManager.lastUploadRateLimited) {
-                uploadButton[0].setMessage(Text.literal("ratelimited"));
-            } else {
-                uploadButton[0].setMessage(Text.literal("upload failed"));
-            }
-            return;
+        if (url.startsWith("https://images-ext-1.discordapp.net/external/")) {
+            url = url.substring(url.substring(45).indexOf('/')+46).replaceFirst("/","://");
         }
 
-        if (!SignedPaintingsClient.currentSignEdit.sign.equals(blockEntity)) {
-            return;
+        if (!SignedPaintingsClient.imageManager.allowedDomains.contains(domain)) {
+            SignedPaintingsClient.imageManager.registerAllowedDomain(domain);
+            SignedPaintingsClient.imageManager.reloadDomain(domain);
         }
 
-        uploadURL = null;
-        uploadButton[0].visible = false;
-        uploadButton[1].visible = false;
+        uploadButton.visible = false;
         signedPaintings$clear(false);
-        signedPaintings$paste(link, 0, 0, false);
+        signedPaintings$paste(url, 0, 0, false);
         ((SignBlockEntityAccessor) this.blockEntity).signedPaintings$getSideInfo(this.front).loadPainting(this.front, this.blockEntity, true);
+
+        url = null;
     }
 
     @Override
@@ -340,10 +318,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             doneButton.visible = !to;
         }
         if (uploadButton != null) {
-            uploadButton[0].visible = uploadURL != null && !to;
-            uploadButton[1].visible = uploadButton[0].visible;
-            // TODO: this button needs to work properly
-            UIHelper.setUploadVisibility(uploadURL != null && to);
+            uploadButton.visible = url != null && !to;
         }
     }
 

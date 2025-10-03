@@ -29,7 +29,6 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	public static MinecraftClient client;
 
 	public static ImageManager imageManager;
-	public static UploadManager uploadManager;
 	public static PaintingRenderer paintingRenderer;
 
 	public static SignEditingInfo currentSignEdit;
@@ -68,8 +67,6 @@ public class SignedPaintingsClient implements ClientModInitializer {
 
 			SignedPaintingsClient.paintingRenderer.renderTranslucentQueue(matrices, vertexConsumers);
 		});
-
-		uploadManager = new UploadManager();
 
 		SignedPaintingsCommands.initialize();
 	}

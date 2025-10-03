@@ -19,7 +19,6 @@ import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.Locale;
-import java.util.function.Consumer;
 
 public class UIHelper {
 
@@ -52,9 +51,7 @@ public class UIHelper {
     private static Vector3f offsetVec;
     private static Vector3f rotationVec;
 
-    private static ButtonWidget uploadButton;
-
-    public static void init(boolean isFront, Screen screen, SignBlockEntityAccessor blockEntity, Consumer<String> upload) {
+    public static void init(boolean isFront, Screen screen, SignBlockEntityAccessor blockEntity) {
         UIHelper.front = isFront;
         UIHelper.screenWidth = screen.width;
         UIHelper.screen = screen;
@@ -118,7 +115,6 @@ public class UIHelper {
         inputSliders[2] = createInputSlider(-PADDING, getYPosition(0, 4.25f), SignedPaintingsClient.MODID + ".pixels_per_block", 0, 64, 16, 0, 1024, pixelsPerBlock);
         inputSliders[2].setOnValueChanged(UIHelper::onPixelSliderChanged);
 
-        uploadButton = createButton(-PADDING, getYPosition(Y_OFF, 4.5f), BUTTON_WIDTH, Text.translatable(SignedPaintingsClient.MODID + ".upload_prompt"), button -> upload.accept(getSideInfo().getUrl()));
         createButton(-PADDING, getYPosition(Y_OFF, 5.5f), BUTTON_WIDTH, getBackgroundText(isBackgroundEnabled), UIHelper::cycleBackground);
         createButton(-PADDING, getYPosition(Y_OFF, 6.5f), BUTTON_WIDTH, ScreenTexts.DONE, (ButtonWidget a) -> screen.close());
     }
@@ -324,10 +320,6 @@ public class UIHelper {
 
     public static void addButton(BackgroundClick backgroundClick) {
         buttons.add(backgroundClick);
-    }
-
-    public static void setUploadVisibility(boolean to) {
-        uploadButton.visible = to;
     }
 
     private static SignSideInfo getSideInfo() {

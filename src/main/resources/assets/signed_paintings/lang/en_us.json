@@ -77,22 +77,7 @@
 
     "signed_paintings.copy_url" : "\uD83D\uDDD0 Url",
     "signed_paintings.copy_data" : "\uD83D\uDDD0 Data",
-    "signed_paintings.upload_settings": "⚙",
 
-    "signed_paintings.upload_prompt" : "Upload to Imgur",
-    "signed_paintings.upload_shared" : "Upload with shared Imgur Key",
-    "signed_paintings.allow_domain_on": "Allow Domain",
-    "signed_paintings.allow_domain_off": "Disallow Domain",
-    "signed_paintings.allow_all_on": "Allow all URLs",
-    "signed_paintings.allow_all_off": "Disallow all URLs",
-    "signed_paintings.key_prompt" : "Get your own Imgur Key",
-    "signed_paintings.key_sign_in" : "Sign In to Imgur",
-    "signed_paintings.key_register" : "Register an Application",
-    "signed_paintings.key_paste" : "paste Client ID",
-
-    "signed_paintings.info_url" : "Current URL: %s",
-    "signed_paintings.info_domain" : "Domain: %s",
-    "signed_paintings.info_upload": "Uploading will often get rate limited by Imgur.",
-    "signed_paintings.info_allow_domain": "Other people will also need to allow the domain to see the image, which they can do with /paintings:domain",
-    "signed_paintings.info_allow_all": "Allowing all URLs is convenient, but it means the mod will think anything in a sign could be a URL. This could make signs act weirdly, or introduce security issues from loading unknown URLs."
+    "signed_paintings.create_prompt" : "Make Painting",
+    "signed_paintings.create_info" : "%s"
 }
