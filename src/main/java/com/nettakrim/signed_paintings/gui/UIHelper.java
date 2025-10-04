@@ -1,7 +1,6 @@
 package com.nettakrim.signed_paintings.gui;
 
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
-import com.nettakrim.signed_paintings.access.AbstractSignEditScreenAccessor;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import com.nettakrim.signed_paintings.rendering.BackType;
 import com.nettakrim.signed_paintings.rendering.Centering;
@@ -83,7 +82,6 @@ public class UIHelper {
 
         // LEFT
         createCenteringButtons();
-        createButton(PADDING + BUTTON_WIDTH - BUTTON_HEIGHT, Y_OFF-PADDING-BUTTON_HEIGHT, BUTTON_HEIGHT, Text.translatable(SignedPaintingsClient.MODID + ".upload_settings"), button -> ((AbstractSignEditScreenAccessor)screen).signedPaintings$uploadSettings(getSideInfo().getUrl()));
         createButton(PADDING, Y_OFF, (BUTTON_WIDTH - SPACING_X) / 2, Text.translatable(SignedPaintingsClient.MODID + ".copy_url"), UIHelper::copyURL);
         createButton(MathHelper.ceil(PADDING + (BUTTON_WIDTH + SPACING_X) / 2f), Y_OFF, (BUTTON_WIDTH - SPACING_X) / 2, Text.translatable(SignedPaintingsClient.MODID + ".copy_data"), UIHelper::copyData);
 

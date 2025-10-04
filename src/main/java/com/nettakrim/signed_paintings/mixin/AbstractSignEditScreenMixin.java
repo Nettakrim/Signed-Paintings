@@ -153,6 +153,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         SignedPaintingsClient.currentSignEdit.setSelectionManager(selectionManager);
 
         signedPaintings$setVisibility(isInfoCorrect());
+        uploadButton.visible = false;
     }
 
 
@@ -218,21 +219,13 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         String pasteURL = SignedPaintingsClient.imageManager.applyURLInferences(pasteString);
 
-        if (ImageManager.isValid(pasteString)) {
-            if (SignedPaintingsClient.imageManager.domainBlocked(pasteURL) || (textRenderer.getWidth(SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(pasteURL))) > maxWidthPerLine * 2.5) && SignedPaintingsClient.imageManager.getUrlStatus(pasteURL) == null && !url.startsWith("https://media.discordapp.net/attachments/")) {
-                url = pasteURL;
-                uploadButton.visible = true;
+        if (ImageManager.isValid(pasteString) || pasteString.matches(".*([/:\\\\]).*\\|$")) {
+            url = pasteURL;
+            uploadButton.visible = true;
 
-                int start = url.indexOf('/')+2;
-                domain = url.substring(0, url.substring(start).indexOf('/')+start+1);
-                uploadButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + ".create_info", domain)));
-            } else {
-                pasteString = pasteURL;
-            }
-        }
-
-        if (!uploadButton.visible && !SignedPaintingsClient.imageManager.domainBlocked(pasteURL) && !SignedPaintingsClient.imageManager.blockedURLs.contains(pasteURL) && textRenderer.getWidth(pasteURL) > maxWidthPerLine * 3.5) {
-            pasteString = SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(pasteURL));
+            int start = url.indexOf('/')+2;
+            domain = url.substring(0, url.substring(start).indexOf('/')+start+1);
+            uploadButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + ".create_info", domain)));
         }
 
         String[] newMessages = new String[messages.length];
@@ -301,7 +294,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         uploadButton.visible = false;
         signedPaintings$clear(false);
-        signedPaintings$paste(url, 0, 0, false);
+        signedPaintings$paste(SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(url)), 0, 0, false);
         ((SignBlockEntityAccessor) this.blockEntity).signedPaintings$getSideInfo(this.front).loadPainting(this.front, this.blockEntity, true);
 
         url = null;
@@ -310,16 +303,10 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Override
     public void signedPaintings$setVisibility(boolean to) {
         for (ClickableWidget clickableWidget : UIHelper.getButtons()) {
-            if (clickableWidget != null) {
-                clickableWidget.visible = to;
-            }
+            clickableWidget.visible = to;
         }
-        if (doneButton != null) {
-            doneButton.visible = !to;
-        }
-        if (uploadButton != null) {
-            uploadButton.visible = url != null && !to;
-        }
+
+        doneButton.visible = !to;
     }
 
     @Override

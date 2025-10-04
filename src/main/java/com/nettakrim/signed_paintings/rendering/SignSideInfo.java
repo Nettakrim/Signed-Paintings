@@ -30,7 +30,11 @@ public class SignSideInfo {
     }
 
     public String getData(){
-        return String.join("|", getParts());
+        String[] parts = getParts();
+        if (parts.length == 1) {
+            return parts[0]+"|";
+        }
+        return String.join("|", parts);
     }
 
     public String getUrl(){
@@ -46,8 +50,12 @@ public class SignSideInfo {
                 // Converted to previous format
                 combinedText = parts.length > 1 ? parts[0] + '|' + parts[1] : parts[0];
             }
+
+            return combinedText.split("[\\n ]|(\\|)", 2);
         }
-        return combinedText.split("[\\n ]|(\\|)", 2);
+
+        // only allow encoded text
+        return new String[]{""};
     }
 
     private void loadURL(String url, String afterURL, boolean isFront, SignBlockEntity blockEntity, boolean working) {

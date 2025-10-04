@@ -18,6 +18,8 @@ import net.minecraft.util.Identifier;
 import java.net.URI;
 import java.util.Map;
 import java.util.HashMap;
+
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.BufferUtils;
 
 import javax.imageio.ImageIO;
@@ -332,7 +334,9 @@ public class ImageManager {
         });
     }
 
-    public static boolean isValid(String url) {
+    public static boolean isValid(@NotNull String url) {
+        if (url.startsWith("https://media.discordapp.net/attachments/")) return false;
+
         try {
             //noinspection ResultOfMethodCallIgnored (throws for malformed urls)
             URI.create(url).toURL();
@@ -421,11 +425,14 @@ public class ImageManager {
         }
 
         int i = 0;
-        for (Map.Entry<String, ImageData> imageData : urlToImageData.entrySet()) {
+        for (Iterator<Map.Entry<String, ImageData>> iterator = urlToImageData.entrySet().iterator(); iterator.hasNext();) {
+            Map.Entry<String, ImageData> imageData = iterator.next();
             if (imageData.getKey().startsWith(domain)) {
                 i += imageData.getValue().reload();
+                iterator.remove();
             }
         }
+
         return i;
     }
 

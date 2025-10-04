@@ -29,6 +29,7 @@ public class ReloadCommand {
     }
 
     private static int reload(CommandContext<FabricClientCommandSource> context) {
+        //TODO: reload domain if url is domain-like
         String url = StringArgumentType.getString(context, "url");
         if (url.equals("all")) return reloadAll(context);
         int amount = SignedPaintingsClient.imageManager.reloadUrl(url);
