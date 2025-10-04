@@ -91,6 +91,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @WrapOperation(method = "renderSign", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/AbstractSignEditScreen;translateForRender(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/block/BlockState;)V"))
     private void translateForRender(AbstractSignEditScreen instance, DrawContext context, BlockState blockState, Operation<Void> original){
         if (isInfoCorrect()) {
+            //noinspection ConstantValue,EqualsBetweenInconvertibleTypes
             if (this.getClass().equals(SignEditScreen.class)) {
                 boolean bl = blockState.getBlock() instanceof SignBlock;
                 if (bl) {
