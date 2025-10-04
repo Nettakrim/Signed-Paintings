@@ -40,7 +40,6 @@ public class ImageManager {
     private final HashMap<String, ArrayList<ImageDataLoadInterface>> pendingImageLoads;
     public final ArrayList<String> blockedURLs;
     public final ArrayList<String> allowedDomains;
-    public final ArrayList<String> imgurApiKeys;
     public boolean autoBlockNew = false;
 
     private boolean changesMade = false;
@@ -92,7 +91,6 @@ public class ImageManager {
         pendingImageLoads = new HashMap<>();
         blockedURLs = new ArrayList<>();
         allowedDomains = new ArrayList<>();
-        imgurApiKeys = new ArrayList<>();
 
         data = FabricLoader.getInstance().getConfigDir().resolve("signed_paintings.txt").toFile();
         try {
@@ -131,8 +129,6 @@ public class ImageManager {
                             case 4:
                                 UIHelper.setBackgroundEnabled(active);
                         }
-                    } else if (phase == 4) {
-                        imgurApiKeys.add(s);
                     }
                 }
                 scanner.close();
@@ -142,18 +138,12 @@ public class ImageManager {
         } catch (IOException e) {
             SignedPaintingsClient.info("Failed to load data", true);
         }
-
-        if (imgurApiKeys.isEmpty()) {
-            imgurApiKeys.add("274478faed23e08");
-            imgurApiKeys.add("0a74b33065e56a7");
-            imgurApiKeys.add("2b12ffa92e72e63");
-            imgurApiKeys.add("c1802a39166b9d0");
-        }
     }
 
     public void save() {
         if (data.exists() && !changesMade) return;
         try {
+            // TODO: investigate this seemingly sometimes not working
             if (!data.exists()) data.createNewFile();
             FileWriter writer = new FileWriter(data);
 
@@ -176,11 +166,6 @@ public class ImageManager {
             s.append("\n").append(SignedPaintingsClient.renderShields ? "true" : "false");
             s.append("\n").append(SignedPaintingsClient.reduceCulling ? "true" : "false");
             s.append("\n").append(UIHelper.isBackgroundEnabled() ? "true" : "false");
-
-            s.append("\n- Imgur API Keys (get your own at https://api.imgur.com/oauth2/addclient) -");
-            for (String key : imgurApiKeys) {
-                s.append("\n").append(key);
-            }
 
             writer.write(s.toString());
             writer.close();
