@@ -158,9 +158,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         if (correct || currentUrl.isBlank() || currentUrl.equals("https://")) {
             uploadButton.visible = false;
         } else {
-            // TODO: dont replace existing text
             url = currentUrl;
             updateUploadButton();
+            url = null;
         }
     }
 
@@ -229,6 +229,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         if (ImageManager.isValid(pasteString) || pasteString.matches(".*([/:\\\\]).*\\|$")) {
             url = pasteURL;
+            if (url.startsWith("https://images-ext-1.discordapp.net/external/")) {
+                url = url.substring(url.substring(45).indexOf('/')+46).replaceFirst("/","://");
+            }
             updateUploadButton();
         }
 
@@ -254,6 +257,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         int cursorRow = currentRow;
 
+        // TODO: i think this needs to be changed to work on codepoints, currently the cursor isnt placed correctly when pasting encoded text
         while (true) {
             String line = newMessages[currentRow];
             int index = SignedPaintingsClient.getMaxFittingIndex(line, maxWidthPerLine, textRenderer);
@@ -297,19 +301,15 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Unique
     private void createPainting() {
-        if (url == null) return;
-
-        if (url.startsWith("https://images-ext-1.discordapp.net/external/")) {
-            url = url.substring(url.substring(45).indexOf('/')+46).replaceFirst("/","://");
-        }
-
         //TODO: allowing doesnt properly reload image data
         if (!SignedPaintingsClient.imageManager.allowedDomains.contains(domain)) {
             SignedPaintingsClient.imageManager.registerAllowedDomain(domain);
             SignedPaintingsClient.imageManager.reloadDomain(domain);
         }
-
         uploadButton.visible = false;
+
+        if (url == null) return;
+
         signedPaintings$clear(false);
         signedPaintings$paste(SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(url)), 0, 0, false);
         ((SignBlockEntityAccessor) this.blockEntity).signedPaintings$getSideInfo(this.front).loadPainting(this.front, this.blockEntity, true);
