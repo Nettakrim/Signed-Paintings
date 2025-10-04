@@ -194,6 +194,8 @@ public class ImageManager {
     public void loadImage(String url, ImageDataLoadInterface onLoadCallback) {
         if (url.equals("https://")) return;
         ImageData imageData = urlToImageData.get(url);
+
+        //TODO: notify when first loading a domain blocked image
         boolean blocked = blockedURLs.contains(url) || domainBlocked(url);
 
         if (!blocked && autoBlockNew) {

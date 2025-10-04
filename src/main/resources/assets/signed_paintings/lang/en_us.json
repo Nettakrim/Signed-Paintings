@@ -78,6 +78,7 @@
     "signed_paintings.copy_url" : "\uD83D\uDDD0 Url",
     "signed_paintings.copy_data" : "\uD83D\uDDD0 Data",
 
-    "signed_paintings.create_prompt" : "Make Painting",
-    "signed_paintings.create_info" : "%s"
+    "signed_paintings.create" : "Make Painting",
+    "signed_paintings.create_allow" : "Allow Domain & Make Painting",
+    "signed_paintings.create_info" : "Domain: %s"
 }

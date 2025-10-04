@@ -152,8 +152,16 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         SignedPaintingsClient.currentSignEdit.setSelectionManager(selectionManager);
 
-        signedPaintings$setVisibility(isInfoCorrect());
-        uploadButton.visible = false;
+        boolean correct = isInfoCorrect();
+        signedPaintings$setVisibility(correct);
+        String currentUrl = ((SignBlockEntityAccessor)blockEntity).signedPaintings$getSideInfo(front).getUrl();
+        if (correct || currentUrl.isBlank() || currentUrl.equals("https://")) {
+            uploadButton.visible = false;
+        } else {
+            // TODO: dont replace existing text
+            url = currentUrl;
+            updateUploadButton();
+        }
     }
 
 
@@ -221,11 +229,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         if (ImageManager.isValid(pasteString) || pasteString.matches(".*([/:\\\\]).*\\|$")) {
             url = pasteURL;
-            uploadButton.visible = true;
-
-            int start = url.indexOf('/')+2;
-            domain = url.substring(0, url.substring(start).indexOf('/')+start+1);
-            uploadButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + ".create_info", domain)));
+            updateUploadButton();
         }
 
         String[] newMessages = new String[messages.length];
@@ -280,6 +284,18 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
+    private void updateUploadButton() {
+        int start = url.indexOf('/')+2;
+        domain = url.substring(0, url.substring(start).indexOf('/')+start+1);
+
+        boolean blocked = SignedPaintingsClient.imageManager.domainBlocked(domain);
+
+        uploadButton.visible = true;
+        uploadButton.setMessage(Text.translatable(SignedPaintingsClient.MODID + (blocked ? ".create_allow" : ".create")));
+        uploadButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + ".create_info", domain)));
+    }
+
+    @Unique
     private void createPainting() {
         if (url == null) return;
 
@@ -287,6 +303,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             url = url.substring(url.substring(45).indexOf('/')+46).replaceFirst("/","://");
         }
 
+        //TODO: allowing doesnt properly reload image data
         if (!SignedPaintingsClient.imageManager.allowedDomains.contains(domain)) {
             SignedPaintingsClient.imageManager.registerAllowedDomain(domain);
             SignedPaintingsClient.imageManager.reloadDomain(domain);
