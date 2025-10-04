@@ -19,8 +19,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BannerBlockEntityRenderer.class)
 public class BannerBlockEntityRendererMixin {
-    //TODO: FIX RENDERING
-
     @Unique
     private static OverlayInfo currentOverlayInfo;
 
