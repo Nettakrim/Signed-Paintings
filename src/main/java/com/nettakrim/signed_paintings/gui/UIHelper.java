@@ -42,7 +42,7 @@ public class UIHelper {
     private static boolean front;
     private static int screenWidth;
     private static boolean aspectLocked = true;
-    private static boolean isBackgroundEnabled = true;
+    private static boolean isBackgroundEnabled = false;
     private static float aspectRatio;
     private static PaintingInfo info;
     private static ButtonWidget backModeButton;
