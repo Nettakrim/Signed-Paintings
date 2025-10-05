@@ -78,7 +78,10 @@
     "signed_paintings.copy_url" : "\uD83D\uDDD0 Url",
     "signed_paintings.copy_data" : "\uD83D\uDDD0 Data",
 
+    "signed_paintings.allow" : "Allow Domain",
     "signed_paintings.create" : "Make Painting",
     "signed_paintings.create_allow" : "Allow Domain & Make Painting",
-    "signed_paintings.create_info" : "Domain: %s"
+    "signed_paintings.allow_info" : "Allow domain %s",
+    "signed_paintings.create_info" : "Create a painting from domain %s",
+    "signed_paintings.create_allow_info" : "Create a painting, and allow domain %s"
 }

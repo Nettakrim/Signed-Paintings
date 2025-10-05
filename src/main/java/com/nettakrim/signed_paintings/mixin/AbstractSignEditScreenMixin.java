@@ -160,7 +160,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             uploadButton.visible = false;
         } else {
             url = currentUrl;
-            updateUploadButton();
+            updateUploadButton(true);
             url = null;
         }
     }
@@ -233,7 +233,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             if (url.startsWith("https://images-ext-1.discordapp.net/external/")) {
                 url = url.substring(url.substring(45).indexOf('/')+46).replaceFirst("/","://");
             }
-            updateUploadButton();
+            updateUploadButton(false);
         }
 
         String[] newMessages = new String[messages.length];
@@ -288,15 +288,15 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
-    private void updateUploadButton() {
+    private void updateUploadButton(boolean isExisting) {
         int start = url.indexOf('/')+2;
         domain = url.substring(0, url.substring(start).indexOf('/')+start+1);
-
         boolean blocked = SignedPaintingsClient.imageManager.domainBlocked(domain);
 
+        String key = blocked ? (isExisting ? ".allow" : ".create_allow") : ".create";
+        uploadButton.setMessage(Text.translatable(SignedPaintingsClient.MODID + key));
+        uploadButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + key+"_info", domain.substring(start, domain.length()-1))));
         uploadButton.visible = true;
-        uploadButton.setMessage(Text.translatable(SignedPaintingsClient.MODID + (blocked ? ".create_allow" : ".create")));
-        uploadButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + ".create_info", domain)));
     }
 
     @Unique
