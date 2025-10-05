@@ -143,8 +143,10 @@ public class ImageManager {
     public void save() {
         if (data.exists() && !changesMade) return;
         try {
-            // TODO: investigate this seemingly sometimes not working
-            if (!data.exists()) data.createNewFile();
+            if (!data.exists()) {
+                data.mkdirs();
+                data.createNewFile();
+            }
             FileWriter writer = new FileWriter(data);
 
             StringBuilder s = new StringBuilder("- Blocked Painting URLs -");
