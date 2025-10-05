@@ -57,8 +57,8 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
         boolean success = false;
         SignBlockEntityAccessor accessor = (SignBlockEntityAccessor)signBlockEntity;
         accessor.signedPaintings$reloadIfNeeded();
-        success |= renderPaintingInfo(accessor.signedPaintings$getFrontPaintingInfo(), matrices, vertexConsumers, model, light, block, blockState);
-        success |= renderPaintingInfo(accessor.signedPaintings$getBackPaintingInfo(),  matrices, vertexConsumers, model, light, block, blockState);
+        success |= renderPaintingInfo(accessor.signedPaintings$getFrontPaintingInfo(), matrices, vertexConsumers, model, signBlockEntity.getFrontText().isGlowing() ? -1 : light, block, blockState);
+        success |= renderPaintingInfo(accessor.signedPaintings$getBackPaintingInfo(), matrices, vertexConsumers, model, signBlockEntity.getBackText().isGlowing() ? -1 : light, block, blockState);
         return success;
     }
 
