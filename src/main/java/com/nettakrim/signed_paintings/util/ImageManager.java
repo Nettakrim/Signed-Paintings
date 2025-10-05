@@ -291,6 +291,7 @@ public class ImageManager {
 
 
     public static void removeImage(Identifier identifier) {
+        // TODO: clear images when they havent been rendered in a while
         MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().getTextureManager().destroyTexture(identifier));
     }
 
