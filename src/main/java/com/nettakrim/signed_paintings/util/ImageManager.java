@@ -39,7 +39,7 @@ public class ImageManager {
     private final HashMap<String, OverlayInfo> itemNameToOverlay;
     private final HashMap<String, ArrayList<ImageDataLoadInterface>> pendingImageLoads;
     public final ArrayList<String> blockedURLs;
-    public final ArrayList<String> allowedDomains;
+    private final ArrayList<String> allowedDomains;
     public boolean autoBlockNew = false;
 
     private boolean changesMade = false;
@@ -341,13 +341,19 @@ public class ImageManager {
         urlAliases.add(urlAlias);
     }
 
-    public void registerAllowedDomain(String url) {
-        if (allowedDomains.contains(url)) return;
-        allowedDomains.add(url);
+    public void allowDomain(String domain) {
+        if (allowedDomains.add(domain)) {
+            SignedPaintingsClient.info("allowing domain "+domain, false);
+            reloadDomain(domain);
+            makeChange();
+        }
     }
 
-    public void removeAllowedDomain(String url) {
-        allowedDomains.remove(url);
+    public void removeDomain(String domain) {
+        if (allowedDomains.remove(domain)) {
+            reloadDomain(domain);
+            makeChange();
+        }
     }
 
     public boolean domainBlocked(String url) {

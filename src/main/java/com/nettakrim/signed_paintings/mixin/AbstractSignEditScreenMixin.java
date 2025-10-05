@@ -301,10 +301,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Unique
     private void createPainting() {
-        if (!SignedPaintingsClient.imageManager.allowedDomains.contains(domain)) {
-            SignedPaintingsClient.imageManager.registerAllowedDomain(domain);
-            SignedPaintingsClient.imageManager.reloadDomain(domain);
-        }
+        SignedPaintingsClient.imageManager.allowDomain(domain);
         uploadButton.visible = false;
 
         if (url == null) return;
