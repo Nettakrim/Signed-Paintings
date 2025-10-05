@@ -24,7 +24,7 @@ public class ReloadCommand {
 
     private static int reloadAll(CommandContext<FabricClientCommandSource> context) {
         int amount = SignedPaintingsClient.imageManager.reloadAll();
-        SignedPaintingsClient.say("commands.refreshed", Integer.toString(amount));
+        SignedPaintingsClient.sayTranslated("commands.refreshed", Integer.toString(amount));
         return 1;
     }
 
@@ -37,7 +37,7 @@ public class ReloadCommand {
             amount = SignedPaintingsClient.imageManager.reloadDomain(url);
         }
 
-        SignedPaintingsClient.say("commands.refreshed", Integer.toString(amount));
+        SignedPaintingsClient.sayTranslated("commands.refreshed", Integer.toString(amount));
         return 1;
     }
 }

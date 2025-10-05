@@ -91,7 +91,7 @@ public class BlockCommand {
         if (url.equals("all")) {
             SignedPaintingsClient.imageManager.blockedURLs.clear();
             SignedPaintingsClient.imageManager.reloadAll();
-            SignedPaintingsClient.say("commands.block.remove.all");
+            SignedPaintingsClient.sayTranslated("commands.block.remove.all");
         } else {
             success = SignedPaintingsClient.imageManager.blockedURLs.remove(url);
             SignedPaintingsClient.imageManager.reloadUrl(url);
@@ -106,7 +106,7 @@ public class BlockCommand {
         for (String url : SignedPaintingsClient.imageManager.blockedURLs) {
             text.append(Text.translatable(SignedPaintingsClient.MODID+".commands.block.list", url).setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url))));
         }
-        if (SignedPaintingsClient.imageManager.blockedURLs.size() == 0) {
+        if (SignedPaintingsClient.imageManager.blockedURLs.isEmpty()) {
             text.append(Text.translatable(SignedPaintingsClient.MODID+".commands.block.list.none"));
         }
         SignedPaintingsClient.longSay(text);
@@ -118,7 +118,7 @@ public class BlockCommand {
         if (SignedPaintingsClient.imageManager.autoBlockNew) {
             SignedPaintingsClient.longSay(Text.translatable(SignedPaintingsClient.MODID+".commands.block.auto.on"));
         } else {
-            SignedPaintingsClient.say("commands.block.auto.off");
+            SignedPaintingsClient.sayTranslated("commands.block.auto.off");
         }
         return 1;
     }

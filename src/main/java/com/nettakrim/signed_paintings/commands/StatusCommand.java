@@ -57,7 +57,7 @@ public class StatusCommand {
         if (url.equals("all")) return statusAll(context);
         ImageStatus status = SignedPaintingsClient.imageManager.getUrlStatus(url);
         if (status == null || !status.ready) {
-            SignedPaintingsClient.say("commands.status.none", url);
+            SignedPaintingsClient.sayTranslated("commands.status.none", url);
             return 0;
         }
 
