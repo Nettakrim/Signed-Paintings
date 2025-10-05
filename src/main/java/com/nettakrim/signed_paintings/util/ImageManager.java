@@ -39,7 +39,7 @@ public class ImageManager {
     private final HashMap<String, OverlayInfo> itemNameToOverlay;
     private final HashMap<String, ArrayList<ImageDataLoadInterface>> pendingImageLoads;
     public final ArrayList<String> blockedURLs;
-    private final ArrayList<String> allowedDomains;
+    private final Set<String> allowedDomains;
     public boolean autoBlockNew = false;
 
     private boolean changesMade = false;
@@ -90,7 +90,7 @@ public class ImageManager {
         itemNameToOverlay = new HashMap<>();
         pendingImageLoads = new HashMap<>();
         blockedURLs = new ArrayList<>();
-        allowedDomains = new ArrayList<>();
+        allowedDomains = new HashSet<>();
 
         data = FabricLoader.getInstance().getConfigDir().resolve("signed_paintings.txt").toFile();
         try {
