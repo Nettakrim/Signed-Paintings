@@ -41,6 +41,8 @@
     "signed_paintings.commands.block.notify.base" : "[%s]",
     "signed_paintings.commands.block.notify.text" : "blocked %s",
 
+    "signed_paintings.commands.domain.notify" : "%s to allow painting domain %s",
+    "signed_paintings.commands.domain.notify.click" : "[Click Here]",
 
     "signed_paintings.align.lt" : "🡤",
     "signed_paintings.align.ct" : "🡡",

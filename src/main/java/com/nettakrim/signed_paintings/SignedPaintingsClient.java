@@ -5,6 +5,7 @@ import com.nettakrim.signed_paintings.gui.SignEditingInfo;
 import com.nettakrim.signed_paintings.rendering.PaintingRenderer;
 import com.nettakrim.signed_paintings.util.*;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.client.MinecraftClient;
@@ -21,6 +22,7 @@ import net.minecraft.client.render.VertexConsumerProvider;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 
 public class SignedPaintingsClient implements ClientModInitializer {
 	public static final String MODID = "signed_paintings";
@@ -43,6 +45,8 @@ public class SignedPaintingsClient implements ClientModInitializer {
 
 	public static boolean loggingEnabled = false;
 
+	private static final ArrayList<Text> sayBuffer = new ArrayList<>();
+
 	@Override
 	public void onInitializeClient() {
 		client = MinecraftClient.getInstance();
@@ -51,10 +55,12 @@ public class SignedPaintingsClient implements ClientModInitializer {
 
 		imageManager.registerURLAlias(new NormalAlias("https://i.imgur.com/", new String[]{"i.imgur.com/","imgur.com/","imgur:"}, ".png"));
 		imageManager.registerURLAlias(new NormalAlias("https://iili.io/", new String[]{"freeimage.host/i/", "iili:"}, ".png"));
-		imageManager.allowDomain("https://i.imgur.com/");
-		imageManager.allowDomain("https://iili.io/");
-		imageManager.allowDomain("https://i.ibb.co/");
-		imageManager.allowDomain("https://upload.wikimedia.org/");
+		if (imageManager.allowedDomains.isEmpty()) {
+			imageManager.allowDomain("https://i.imgur.com/");
+			imageManager.allowDomain("https://iili.io/");
+			imageManager.allowDomain("https://i.ibb.co/");
+			imageManager.allowDomain("https://upload.wikimedia.org/");
+		}
 
 		paintingRenderer = new PaintingRenderer();
 		renderSigns = true;
@@ -67,6 +73,16 @@ public class SignedPaintingsClient implements ClientModInitializer {
 			VertexConsumerProvider vertexConsumers = context.consumers();
 
 			SignedPaintingsClient.paintingRenderer.renderTranslucentQueue(matrices, vertexConsumers);
+		});
+
+		ClientTickEvents.START_CLIENT_TICK.register((context) -> {
+			if (!sayBuffer.isEmpty()) {
+				int size = sayBuffer.size();
+
+				for (int i = 0; i < size; i++) {
+					sayRaw(sayBuffer.remove(0));
+				}
+			}
 		});
 
 		SignedPaintingsCommands.initialize();
@@ -167,7 +183,10 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	}
 
 	public static void sayRaw(Text text) {
-		if (client.player == null) return;
+		if (client.player == null) {
+			sayBuffer.add(text);
+			return;
+		}
 		client.player.sendMessage(text, false);
 	}
 

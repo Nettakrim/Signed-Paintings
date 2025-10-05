@@ -39,7 +39,8 @@ public class ImageManager {
     private final HashMap<String, OverlayInfo> itemNameToOverlay;
     private final HashMap<String, ArrayList<ImageDataLoadInterface>> pendingImageLoads;
     public final ArrayList<String> blockedURLs;
-    private final Set<String> allowedDomains;
+    public final Set<String> allowedDomains;
+    private final Set<String> blockPromptedDomains;
     public boolean autoBlockNew = false;
 
     private boolean changesMade = false;
@@ -91,6 +92,7 @@ public class ImageManager {
         pendingImageLoads = new HashMap<>();
         blockedURLs = new ArrayList<>();
         allowedDomains = new HashSet<>();
+        blockPromptedDomains = new HashSet<>();
 
         data = FabricLoader.getInstance().getConfigDir().resolve("signed_paintings.txt").toFile();
         try {
@@ -182,8 +184,28 @@ public class ImageManager {
         if (url.equals("https://")) return;
         ImageData imageData = urlToImageData.get(url);
 
-        //TODO: notify when first loading a domain blocked image
-        boolean blocked = blockedURLs.contains(url) || domainBlocked(url);
+        boolean blocked = blockedURLs.contains(url);
+
+        if (!blocked && domainBlocked(url)) {
+            int start = url.indexOf('/')+2;
+            String domain = url.substring(0, url.substring(start).indexOf('/')+start+1);
+
+            if (blockPromptedDomains.add(domain)) {
+                ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/paintings:domain allow " + domain);
+
+                SignedPaintingsClient.sayRaw(
+                        Text.translatable(SignedPaintingsClient.MODID + ".commands.domain.notify",
+                                Text.translatable(SignedPaintingsClient.MODID + ".commands.domain.notify.click")
+                                        .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.nameTextColor).withClickEvent(clickEvent)
+                                        ),
+                                domain
+                        ).setStyle(Style.EMPTY.withColor(SignedPaintingsClient.textColor).withClickEvent(clickEvent))
+                );
+            }
+
+            blocked = true;
+        }
+
 
         if (!blocked && autoBlockNew) {
             SignedPaintingsClient.sayRaw(
@@ -209,6 +231,7 @@ public class ImageManager {
             list.add(onLoadCallback);
             registerImage(url, list, blocked);
         }
+
     }
 
     private void registerImage(String url, ArrayList<ImageDataLoadInterface> onLoadCallbacks, boolean blocked) {
