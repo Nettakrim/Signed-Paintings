@@ -301,7 +301,6 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Unique
     private void createPainting() {
-        //TODO: allowing doesnt properly reload image data
         if (!SignedPaintingsClient.imageManager.allowedDomains.contains(domain)) {
             SignedPaintingsClient.imageManager.registerAllowedDomain(domain);
             SignedPaintingsClient.imageManager.reloadDomain(domain);

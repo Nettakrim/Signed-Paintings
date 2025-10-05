@@ -23,14 +23,14 @@ public class SignSideInfo {
     }
 
     public void loadPainting(boolean isFront, SignBlockEntity blockEntity, boolean working) {
-        String[] parts = getParts();
+        String[] parts = getParts(working);
         cache = new PaintingDataCache(parts[0]);
         String url = SignedPaintingsClient.imageManager.applyURLInferences(parts[0]);
         loadURL(url, parts.length > 1 ? parts[1] : "", isFront, blockEntity, working);
     }
 
     public String getData(){
-        String[] parts = getParts();
+        String[] parts = getParts(true);
         if (parts.length == 1) {
             return parts[0]+"|";
         }
@@ -38,11 +38,11 @@ public class SignSideInfo {
     }
 
     public String getUrl(){
-        return SignedPaintingsClient.imageManager.applyURLInferences(getParts()[0]);
+        return SignedPaintingsClient.imageManager.applyURLInferences(getParts(true)[0]);
     }
 
-    private String[] getParts() {
-        String combinedText = SignedPaintingsClient.currentSignEdit == null ? SignedPaintingsClient.combineSignText(text) : SignedPaintingsClient.currentSignEdit.screen.signedPaintings$getText();
+    private String[] getParts(boolean working) {
+        String combinedText = !working || SignedPaintingsClient.currentSignEdit == null ? SignedPaintingsClient.combineSignText(text) : SignedPaintingsClient.currentSignEdit.screen.signedPaintings$getText();
         if (combinedText.startsWith(SignByteMapper.INITIALIZER_STRING)) {
             String[] parts = combinedText.substring(2).split(SignByteMapper.DELIMITER, 2);
             if (parts.length > 0) {
@@ -143,7 +143,7 @@ public class SignSideInfo {
     public boolean updateText() {
         if (paintingInfo == null) return false;
         if (updatingSignText) return true;
-        String[] parts = getParts();
+        String[] parts = getParts(true);
         if (!cache.url.equals(parts[0])) {
             return false;
         }
