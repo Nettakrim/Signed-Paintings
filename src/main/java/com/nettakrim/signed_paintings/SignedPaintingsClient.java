@@ -109,7 +109,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 			} else if (currentWidth > budgetWidth) {
 				high = mid - 1;
 			} else {
-				return mid;
+				return reference.offsetByCodePoints(0, mid);
 			}
 			index = mid;
 		}
@@ -119,7 +119,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		return reference.offsetByCodePoints(0, index);
 	}
 
-	private static String codePointSubstring(String s, int end) {
+	public static String codePointSubstring(String s, int end) {
 		int a = s.offsetByCodePoints(0, 0);
 		return s.substring(a, s.offsetByCodePoints(a, end));
 	}

@@ -258,7 +258,6 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         int cursorRow = currentRow;
 
-        // TODO: i think this needs to be changed to work on codepoints, currently the cursor isnt placed correctly when pasting encoded text
         while (true) {
             String line = newMessages[currentRow];
             int index = SignedPaintingsClient.getMaxFittingIndex(line, maxWidthPerLine, textRenderer);
@@ -312,7 +311,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         if (url == null) return;
 
         signedPaintings$clear(false);
-        signedPaintings$paste(SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(url)), 0, 0, false);
+        int newSelection = signedPaintings$paste(SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(url)), 0, 0, false);
+        selectionManager.setSelection(newSelection, newSelection);
         ((SignBlockEntityAccessor) this.blockEntity).signedPaintings$getSideInfo(this.front).loadPainting(this.front, this.blockEntity, true);
 
         url = null;
