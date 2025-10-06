@@ -188,8 +188,7 @@ public class ImageManager {
         boolean blocked = blockedURLs.contains(url);
 
         if (!blocked && domainBlocked(url)) {
-            int start = url.indexOf('/')+2;
-            String domain = url.substring(0, url.substring(start).indexOf('/')+start+1);
+            String domain = SignedPaintingsClient.getDomain(url);
 
             if (blockPromptedDomains.add(domain)) {
                 ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/paintings:domain allow " + domain);

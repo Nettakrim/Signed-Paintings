@@ -102,5 +102,7 @@
     "signed_paintings.create_allow" : "Allow Domain & Make Painting",
     "signed_paintings.allow_info" : "Allow domain %s",
     "signed_paintings.create_info" : "Create a painting from domain %s",
-    "signed_paintings.create_allow_info" : "Create a painting, and allow domain %s"
+    "signed_paintings.create_allow_info" : "Create a painting, and allow domain %s",
+    "signed_paintings.disallow" : "Disallow Domain",
+    "signed_paintings.disallow_info" : "Disallow domain %s"
 }

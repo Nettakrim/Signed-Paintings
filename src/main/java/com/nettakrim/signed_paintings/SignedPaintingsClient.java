@@ -198,4 +198,9 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	public static void info(String s, boolean force) {
 		if (loggingEnabled || force) LOGGER.info(s);
 	}
+
+	public static String getDomain(String url) {
+		int start = url.indexOf('/')+2;
+		return url.substring(0, url.substring(start).indexOf('/')+start+1);
+	}
 }
