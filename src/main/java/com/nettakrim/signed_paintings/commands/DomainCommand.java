@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.nettakrim.signed_paintings.DomainWarningScreen;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
@@ -77,14 +78,23 @@ public class DomainCommand {
     }
 
     private static int trust(CommandContext<FabricClientCommandSource> context) {
-        String domain = StringArgumentType.getString(context, "domain");
-        if (domain.equals("anything") || domain.equals("https://")) {
+        String domainTemp = StringArgumentType.getString(context, "domain");
+        String domain;
+        if (domainTemp.equals("anything")) {
+            domain = "https://";
+        } else {
+            domain = domainTemp;
+        }
+
+        if (domain.endsWith("//")) {
             Text warning = Text.translatable(SignedPaintingsClient.MODID+".domain.warning");
-            if (SignedPaintingsClient.imageManager.trustDomain("https://")) {
-                SignedPaintingsClient.sayTranslated("commands.domain.trust.anything", warning);
-                return 1;
+            if (SignedPaintingsClient.imageManager.trustedDomains.contains(domain)) {
+                SignedPaintingsClient.sayTranslated("commands.domain.trust.anything.exists", warning);
+                return 0;
             }
-            SignedPaintingsClient.sayTranslated("commands.domain.trust.anything.exists", warning);
+
+            SignedPaintingsClient.client.send(() -> SignedPaintingsClient.client.setScreen(new DomainWarningScreen(domain, DomainCommand::confirmAnything)));
+            return 1;
         } else if (domain.equals("all_prompted")) {
             int count = 0;
             for (String prompted : new ArrayList<>(SignedPaintingsClient.imageManager.blockPromptedDomains)) {
@@ -97,9 +107,6 @@ public class DomainCommand {
         } else if (domain.contains("//")) {
             if (SignedPaintingsClient.imageManager.trustDomain(domain)) {
                 SignedPaintingsClient.sayTranslated("commands.domain.trust", domain);
-                if (domain.equals("http://")) {
-                    SignedPaintingsClient.sayRaw(Text.translatable(SignedPaintingsClient.MODID+".domain.warning").setStyle(Style.EMPTY.withColor(SignedPaintingsClient.textColor)));
-                }
                 return 1;
             }
             SignedPaintingsClient.sayTranslated("commands.domain.trust.exists", domain);
@@ -107,6 +114,24 @@ public class DomainCommand {
             SignedPaintingsClient.sayTranslated("commands.domain.invalid", domain);
         }
         return 0;
+    }
+
+    private static void confirmAnything(String domain) {
+        MutableText warning = Text.translatable(SignedPaintingsClient.MODID+".domain.warning");
+        if (SignedPaintingsClient.imageManager.trustDomain(domain)) {
+            if (domain.equals("https://")) {
+                SignedPaintingsClient.sayTranslated("commands.domain.trust.anything", warning);
+            } else {
+                SignedPaintingsClient.sayTranslated("commands.domain.trust", domain);
+                SignedPaintingsClient.sayRaw(warning.setStyle(Style.EMPTY.withColor(SignedPaintingsClient.textColor)));
+            }
+        } else {
+            if (domain.equals("https://")) {
+                SignedPaintingsClient.sayTranslated("commands.domain.trust.anything.exists", warning);
+            } else {
+                SignedPaintingsClient.sayTranslated("commands.domain.trust.exists", domain);
+            }
+        }
     }
 
     private static int untrust(CommandContext<FabricClientCommandSource> context) {

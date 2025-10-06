@@ -60,6 +60,9 @@
     "signed_paintings.commands.domain.invalid": "Invalid domain \"%s\"",
 
     "signed_paintings.domain.warning" : "IMPORTANT: trusting everything is a security risk! someone could place a sign with some malicious url and it would be loaded automatically, you have been warned!",
+    "signed_paintings.domain.warning_full" : "IMPORTANT: trusting everything is a security risk!\nSomeone could place a sign with some malicious url and it would be loaded automatically\nOnly do this if you *really* need to\n\nIf you just want the convenience, run \"/paintings:domain trust all_prompted\" to quickly allow domains of signs youve loaded",
+    "signed_paintings.domain.warning_confirm" : "Yes i am *sure* i want to do this!",
+    "signed_paintings.domain.warning_close" : "Cancel",
 
     "signed_paintings.align.lt" : "🡤",
     "signed_paintings.align.ct" : "🡡",
