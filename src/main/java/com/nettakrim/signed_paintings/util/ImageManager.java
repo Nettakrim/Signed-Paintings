@@ -44,6 +44,7 @@ public class ImageManager {
     public final Set<String> trustedDomains;
     public final Set<String> blockPromptedDomains;
     public boolean autoBlockNew = false;
+    public int renderTime = 0;
 
     private boolean changesMade = false;
     public boolean hasPartialTransparency(Identifier id) {
@@ -158,7 +159,7 @@ public class ImageManager {
     }
 
     public void save() {
-        if (data.exists() && !changesMade) return;
+        if (!changesMade) return;
         try {
             if (!data.exists()) {
                 data.mkdirs();
@@ -278,7 +279,6 @@ public class ImageManager {
 
     private void onImageLoad(BufferedImage image, String url, ImageData data) {
         Identifier identifier = Identifier.of(SignedPaintingsClient.MODID, createIdentifierSafeStringFromURL(url));
-        saveBufferedImageAsIdentifier(image, identifier);
         data.onImageReady(image, identifier);
         SignedPaintingsClient.info("Ready to render Image "+url, true);
     }
@@ -329,7 +329,6 @@ public class ImageManager {
 
 
     public static void removeImage(Identifier identifier) {
-        // TODO: clear images when they havent been rendered in a while
         MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().getTextureManager().destroyTexture(identifier));
     }
 
@@ -457,6 +456,7 @@ public class ImageManager {
         urlToImageData.clear();
         itemNameToOverlay.clear();
         blockPromptedDomains.clear();
+        renderTime = 0;
         return i;
     }
 
@@ -487,7 +487,11 @@ public class ImageManager {
 
     public ArrayList<ImageStatus> getAllStatus() {
         ArrayList<ImageStatus> imageStatuses = new ArrayList<>();
-        urlToImageData.forEach((url, imageData) -> imageStatuses.add(imageData.getStatus().setUrl(url)));
+        urlToImageData.forEach((url, imageData) -> {
+            if (imageData.ready) {
+                imageStatuses.add(imageData.getStatus().setUrl(url));
+            }
+        });
         return imageStatuses;
     }
 
@@ -524,5 +528,23 @@ public class ImageManager {
 
     public void makeChange() {
         changesMade = true;
+    }
+
+    public void onTick() {
+        renderTime++;
+        // check every ~50 seconds
+        if ((renderTime & 1024) == 0) {
+            save();
+
+            // expire from vram after ~2 minutes
+            int expireVram = renderTime - 1536;
+            // expire fully after ~15 minutes
+            int expireFully = renderTime - 16384;
+            urlToImageData.values().removeIf(imageData -> imageData.checkRenderTime(expireVram, expireFully));
+
+            if (urlToImageData.isEmpty()) {
+                renderTime = 0;
+            }
+        }
     }
 }

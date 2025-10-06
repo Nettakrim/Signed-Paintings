@@ -84,6 +84,8 @@ public class SignedPaintingsClient implements ClientModInitializer {
 					sayRaw(sayBuffer.remove(0));
 				}
 			}
+
+			imageManager.onTick();
 		});
 
 		SignedPaintingsCommands.initialize();
