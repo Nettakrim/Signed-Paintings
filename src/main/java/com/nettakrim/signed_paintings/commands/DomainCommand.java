@@ -8,7 +8,6 @@ import com.nettakrim.signed_paintings.DomainWarningScreen;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.text.ClickEvent;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -172,7 +171,7 @@ public class DomainCommand {
         MutableText text = Text.translatable(SignedPaintingsClient.MODID+".commands.domain.list.start");
         for (String domain : SignedPaintingsClient.imageManager.trustedDomains) {
             if (!domain.equals("https://")) {
-                text.append(Text.translatable(SignedPaintingsClient.MODID + ".commands.domain.list", domain).setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, domain))));
+                text.append(Text.translatable(SignedPaintingsClient.MODID + ".commands.domain.list", domain).setStyle(SignedPaintingsClient.getUrlButton(domain)));
             }
         }
         if (SignedPaintingsClient.imageManager.trustedDomains.isEmpty()) {

@@ -42,8 +42,8 @@ public class Cuboid {
         return new Cuboid(width, height, 1/8f, 0, -5/6f, 0);
     }
 
-    public void setupRendering(MatrixStack matrices) {
-        cache = matrices.peek();
+    public void setupRendering(MatrixStack.Entry matrices) {
+        cache = matrices;
     }
 
     public void renderFace(VertexConsumer vertexConsumer, Vector3f face, boolean split, float minU, float maxU, float minV, float maxV, int light) {

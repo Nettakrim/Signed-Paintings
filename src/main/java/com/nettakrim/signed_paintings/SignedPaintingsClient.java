@@ -11,10 +11,7 @@ import net.minecraft.block.entity.SignText;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.util.ScreenshotRecorder;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
+import net.minecraft.text.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.client.util.math.MatrixStack;
@@ -22,6 +19,7 @@ import net.minecraft.client.render.VertexConsumerProvider;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URI;
 import java.util.ArrayList;
 
 public class SignedPaintingsClient implements ClientModInitializer {
@@ -204,5 +202,13 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	public static String getDomain(String url) {
 		int start = url.indexOf('/')+2;
 		return url.substring(0, url.substring(start).indexOf('/')+start+1);
+	}
+
+	public static Style getUrlButton(String url) {
+		try {
+			return Style.EMPTY.withClickEvent(new ClickEvent.OpenUrl(new URI(url)));
+		} catch (Exception ignored) {
+			return Style.EMPTY;
+		}
 	}
 }
