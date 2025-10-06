@@ -115,6 +115,8 @@ public class UIHelper {
 
         createButton(-PADDING, getYPosition(Y_OFF, 5.5f), BUTTON_WIDTH, getBackgroundText(isBackgroundEnabled), UIHelper::cycleBackground);
         createButton(-PADDING, getYPosition(Y_OFF, 6.5f), BUTTON_WIDTH, ScreenTexts.DONE, (ButtonWidget a) -> screen.close());
+
+        //TODO: button to disallow the domain
     }
 
     private static void createCenteringButtons() {

@@ -17,6 +17,7 @@ public class SignedPaintingsCommands {
         return CompletableFuture.completedFuture(builder.build());
     };
 
+    // TODO: whenever server storage is implemented, make sure to include screenshot uploading!
     public static ArrayList<String> recentScreenshots;
     public static final SuggestionProvider<FabricClientCommandSource> screenshots = (context, builder) -> {
         for (String screenshot : recentScreenshots) {
@@ -35,6 +36,7 @@ public class SignedPaintingsCommands {
             root.addChild(ReloadCommand.getCommandNode());
             root.addChild(StatusCommand.getCommandNode());
             root.addChild(ToggleCommand.getCommandNode());
+            root.addChild(DomainCommand.getCommandNode());
         });
     }
 }

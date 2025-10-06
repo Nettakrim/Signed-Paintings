@@ -60,6 +60,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 			imageManager.allowDomain("https://iili.io/");
 			imageManager.allowDomain("https://i.ibb.co/");
 			imageManager.allowDomain("https://upload.wikimedia.org/");
+			imageManager.allowDomain("https://web.archive.org/");
 		}
 
 		paintingRenderer = new PaintingRenderer();

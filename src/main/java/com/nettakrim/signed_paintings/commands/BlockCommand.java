@@ -110,16 +110,17 @@ public class BlockCommand {
             text.append(Text.translatable(SignedPaintingsClient.MODID+".commands.block.list.none"));
         }
         SignedPaintingsClient.longSay(text);
-        return 1;
+        return SignedPaintingsClient.imageManager.blockedURLs.size();
     }
 
     private static int auto(CommandContext<FabricClientCommandSource> context) {
         SignedPaintingsClient.imageManager.autoBlockNew = !SignedPaintingsClient.imageManager.autoBlockNew;
         if (SignedPaintingsClient.imageManager.autoBlockNew) {
             SignedPaintingsClient.longSay(Text.translatable(SignedPaintingsClient.MODID+".commands.block.auto.on"));
+            return 1;
         } else {
             SignedPaintingsClient.sayTranslated("commands.block.auto.off");
+            return 2;
         }
-        return 1;
     }
 }

@@ -40,7 +40,7 @@ public class ImageManager {
     private final HashMap<String, ArrayList<ImageDataLoadInterface>> pendingImageLoads;
     public final ArrayList<String> blockedURLs;
     public final Set<String> allowedDomains;
-    private final Set<String> blockPromptedDomains;
+    public final Set<String> blockPromptedDomains;
     public boolean autoBlockNew = false;
 
     private boolean changesMade = false;
@@ -96,6 +96,7 @@ public class ImageManager {
 
         data = FabricLoader.getInstance().getConfigDir().resolve("signed_paintings.txt").toFile();
         try {
+            //TODO: track version, if its from before, notify the user about the new functionality
             if (data.exists()) {
                 Scanner scanner = new Scanner(data);
                 if (scanner.hasNextLine()) scanner.nextLine();
@@ -365,19 +366,25 @@ public class ImageManager {
         urlAliases.add(urlAlias);
     }
 
-    public void allowDomain(String domain) {
+    public boolean allowDomain(String domain) {
         if (allowedDomains.add(domain)) {
             SignedPaintingsClient.info("allowing domain "+domain, false);
             reloadDomain(domain);
             makeChange();
+            blockPromptedDomains.remove(domain);
+            return true;
         }
+        return false;
     }
 
-    public void removeDomain(String domain) {
+    public boolean removeDomain(String domain) {
         if (allowedDomains.remove(domain)) {
+            SignedPaintingsClient.info("disallowing domain "+domain, false);
             reloadDomain(domain);
             makeChange();
+            return true;
         }
+        return false;
     }
 
     public boolean domainBlocked(String url) {
@@ -437,6 +444,7 @@ public class ImageManager {
         }
         urlToImageData.clear();
         itemNameToOverlay.clear();
+        blockPromptedDomains.clear();
         return i;
     }
 
