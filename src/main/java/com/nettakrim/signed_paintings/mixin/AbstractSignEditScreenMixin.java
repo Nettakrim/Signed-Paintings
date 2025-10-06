@@ -293,15 +293,15 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         domain = url.substring(0, url.substring(start).indexOf('/')+start+1);
         boolean blocked = SignedPaintingsClient.imageManager.domainBlocked(domain);
 
-        String key = blocked ? (isExisting ? ".allow" : ".create_allow") : ".create";
+        String key = blocked ? (isExisting ? ".trust" : ".create_trust") : ".create";
         uploadButton.setMessage(Text.translatable(SignedPaintingsClient.MODID + key));
-        uploadButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + key+"_info", domain.substring(start, domain.length()-1), Text.translatable(SignedPaintingsClient.MODID + ".allow_disclaimer"))));
+        uploadButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + key+"_info", domain.substring(start, domain.length()-1), Text.translatable(SignedPaintingsClient.MODID + ".trust_disclaimer"))));
         uploadButton.visible = true;
     }
 
     @Unique
     private void createPainting() {
-        SignedPaintingsClient.imageManager.allowDomain(domain);
+        SignedPaintingsClient.imageManager.trustDomain(domain);
         SignedPaintingsClient.imageManager.blockPromptedDomains.remove(domain);
         uploadButton.visible = false;
 

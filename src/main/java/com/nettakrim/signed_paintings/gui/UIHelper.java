@@ -47,7 +47,7 @@ public class UIHelper {
     private static float aspectRatio;
     private static PaintingInfo info;
     private static ButtonWidget backModeButton;
-    private static ButtonWidget disallowButton;
+    private static ButtonWidget untrustButton;
 
     private static Vector3f offsetVec;
     private static Vector3f rotationVec;
@@ -115,7 +115,7 @@ public class UIHelper {
         inputSliders[2] = createInputSlider(-PADDING, getYPosition(0, 4.25f), SignedPaintingsClient.MODID + ".pixels_per_block", 0, 64, 16, 0, 1024, pixelsPerBlock);
         inputSliders[2].setOnValueChanged(UIHelper::onPixelSliderChanged);
 
-        disallowButton = createButton(-PADDING, getYPosition(Y_OFF, 4.5f), BUTTON_WIDTH, Text.translatable(SignedPaintingsClient.MODID + ".disallow"), UIHelper::disallow);
+        untrustButton = createButton(-PADDING, getYPosition(Y_OFF, 4.5f), BUTTON_WIDTH, Text.translatable(SignedPaintingsClient.MODID + ".untrust"), UIHelper::untrust);
         createButton(-PADDING, getYPosition(Y_OFF, 5.5f), BUTTON_WIDTH, getBackgroundText(isBackgroundEnabled), UIHelper::cycleBackground);
         createButton(-PADDING, getYPosition(Y_OFF, 6.5f), BUTTON_WIDTH, ScreenTexts.DONE, (ButtonWidget a) -> screen.close());
     }
@@ -284,8 +284,8 @@ public class UIHelper {
         }
     }
 
-    private static void disallow(ButtonWidget button) {
-        SignedPaintingsClient.imageManager.removeDomain(SignedPaintingsClient.getDomain(getSideInfo().getUrl()));
+    private static void untrust(ButtonWidget button) {
+        SignedPaintingsClient.imageManager.untrustDomain(SignedPaintingsClient.getDomain(getSideInfo().getUrl()));
         screen.close();
     }
 
@@ -322,7 +322,7 @@ public class UIHelper {
         inputSliders[8].setValue(info.paintingInfo.rotationVec.z);
         backModeButton.setMessage(getBackTypeText(info.paintingInfo.getBackType()));
         aspectRatio = info.paintingInfo.getWidth() / info.paintingInfo.getHeight();
-        disallowButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + ".disallow_info", SignedPaintingsClient.getDomain(info.getUrl()))));
+        untrustButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + ".untrust_info", SignedPaintingsClient.getDomain(info.getUrl()))));
     }
 
     public static void addButton(BackgroundClick backgroundClick) {

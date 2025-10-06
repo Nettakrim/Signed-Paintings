@@ -41,7 +41,7 @@ public class ImageManager {
     private final HashMap<String, OverlayInfo> itemNameToOverlay;
     private final HashMap<String, ArrayList<ImageDataLoadInterface>> pendingImageLoads;
     public final ArrayList<String> blockedURLs;
-    public final Set<String> allowedDomains;
+    public final Set<String> trustedDomains;
     public final Set<String> blockPromptedDomains;
     public boolean autoBlockNew = false;
 
@@ -93,7 +93,7 @@ public class ImageManager {
         itemNameToOverlay = new HashMap<>();
         pendingImageLoads = new HashMap<>();
         blockedURLs = new ArrayList<>();
-        allowedDomains = new HashSet<>();
+        trustedDomains = new HashSet<>();
         blockPromptedDomains = new HashSet<>();
 
         data = FabricLoader.getInstance().getConfigDir().resolve("signed_paintings.txt").toFile();
@@ -129,7 +129,7 @@ public class ImageManager {
                     if (phase == 0) {
                         blockedURLs.add(s);
                     } else if (phase == 1) {
-                        allowedDomains.add(s);
+                        trustedDomains.add(s);
                     } else if (phase == 2) {
                         SignedPaintingsClient.loggingEnabled = s.equals("true");
                     } else if (phase == 3) {
@@ -172,8 +172,8 @@ public class ImageManager {
                 s.append("\n").append(url);
             }
 
-            s.append("\n- Allowed URL Domains -");
-            for (String url : allowedDomains) {
+            s.append("\n- Trusted URL Domains -");
+            for (String url : trustedDomains) {
                 s.append("\n").append(url);
             }
 
@@ -206,7 +206,7 @@ public class ImageManager {
             String domain = SignedPaintingsClient.getDomain(url);
 
             if (blockPromptedDomains.add(domain)) {
-                ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/paintings:domain allow " + domain);
+                ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/paintings:domain trust " + domain);
 
                 SignedPaintingsClient.sayRaw(
                         Text.translatable(SignedPaintingsClient.MODID + ".commands.domain.notify",
@@ -381,9 +381,9 @@ public class ImageManager {
         urlAliases.add(urlAlias);
     }
 
-    public boolean allowDomain(String domain) {
-        if (allowedDomains.add(domain)) {
-            SignedPaintingsClient.info("allowing domain "+domain, false);
+    public boolean trustDomain(String domain) {
+        if (trustedDomains.add(domain)) {
+            SignedPaintingsClient.info("trusting domain "+domain, false);
             reloadDomain(domain);
             makeChange();
             blockPromptedDomains.remove(domain);
@@ -392,9 +392,9 @@ public class ImageManager {
         return false;
     }
 
-    public boolean removeDomain(String domain) {
-        if (allowedDomains.remove(domain)) {
-            SignedPaintingsClient.info("disallowing domain "+domain, false);
+    public boolean untrustDomain(String domain) {
+        if (trustedDomains.remove(domain)) {
+            SignedPaintingsClient.info("untrusting domain "+domain, false);
             reloadDomain(domain);
             makeChange();
             return true;
@@ -403,8 +403,8 @@ public class ImageManager {
     }
 
     public boolean domainBlocked(String url) {
-        for (String allowed : allowedDomains) {
-            if (url.startsWith(allowed)) {
+        for (String trusted : trustedDomains) {
+            if (url.startsWith(trusted)) {
                 return false;
             }
         }

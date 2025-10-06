@@ -16,22 +16,22 @@ import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 public class DomainCommand {
-    public static final SuggestionProvider<FabricClientCommandSource> disallow = (context, builder) -> {
-        if (SignedPaintingsClient.imageManager.allowedDomains.contains("https://")) {
+    public static final SuggestionProvider<FabricClientCommandSource> untrust = (context, builder) -> {
+        if (SignedPaintingsClient.imageManager.trustedDomains.contains("https://")) {
             builder.suggest("anything");
             return CompletableFuture.completedFuture(builder.build());
         }
 
-        for (String url : SignedPaintingsClient.imageManager.allowedDomains) {
+        for (String url : SignedPaintingsClient.imageManager.trustedDomains) {
             builder.suggest(url);
         }
-        if (SignedPaintingsClient.imageManager.allowedDomains.size() >= 2) {
-            builder.suggest("all_allowed");
+        if (SignedPaintingsClient.imageManager.trustedDomains.size() >= 2) {
+            builder.suggest("all_trusted");
         }
         return CompletableFuture.completedFuture(builder.build());
     };
 
-    public static final SuggestionProvider<FabricClientCommandSource> allow = (context, builder) -> {
+    public static final SuggestionProvider<FabricClientCommandSource> trust = (context, builder) -> {
         for (String url : SignedPaintingsClient.imageManager.blockPromptedDomains) {
             builder.suggest(url);
         }
@@ -47,21 +47,21 @@ public class DomainCommand {
                 .literal("paintings:domain")
                 .build();
 
-        LiteralCommandNode<FabricClientCommandSource> allowNode = ClientCommandManager
-                .literal("allow")
+        LiteralCommandNode<FabricClientCommandSource> trustNode = ClientCommandManager
+                .literal("trust")
                 .then(
                         ClientCommandManager.argument("domain", StringArgumentType.greedyString())
-                                .suggests(allow)
-                                .executes(DomainCommand::allow)
+                                .suggests(trust)
+                                .executes(DomainCommand::trust)
                 )
                 .build();
 
-        LiteralCommandNode<FabricClientCommandSource> blockNode = ClientCommandManager
-                .literal("disallow")
+        LiteralCommandNode<FabricClientCommandSource> untrustNode = ClientCommandManager
+                .literal("untrust")
                 .then(
                         ClientCommandManager.argument("domain", StringArgumentType.greedyString())
-                                .suggests(disallow)
-                                .executes(DomainCommand::disallow)
+                                .suggests(untrust)
+                                .executes(DomainCommand::untrust)
                 )
                 .build();
 
@@ -70,73 +70,73 @@ public class DomainCommand {
                 .executes(DomainCommand::list)
                 .build();
 
-        domainNode.addChild(allowNode);
-        domainNode.addChild(blockNode);
+        domainNode.addChild(trustNode);
+        domainNode.addChild(untrustNode);
         domainNode.addChild(listNode);
         return domainNode;
     }
 
-    private static int allow(CommandContext<FabricClientCommandSource> context) {
+    private static int trust(CommandContext<FabricClientCommandSource> context) {
         String domain = StringArgumentType.getString(context, "domain");
         if (domain.equals("anything") || domain.equals("https://")) {
             Text warning = Text.translatable(SignedPaintingsClient.MODID+".domain.warning");
-            if (SignedPaintingsClient.imageManager.allowDomain("https://")) {
-                SignedPaintingsClient.sayTranslated("commands.domain.allow.anything", warning);
+            if (SignedPaintingsClient.imageManager.trustDomain("https://")) {
+                SignedPaintingsClient.sayTranslated("commands.domain.trust.anything", warning);
                 return 1;
             }
-            SignedPaintingsClient.sayTranslated("commands.domain.allow.anything.exists", warning);
+            SignedPaintingsClient.sayTranslated("commands.domain.trust.anything.exists", warning);
         } else if (domain.equals("all_prompted")) {
             int count = 0;
             for (String prompted : new ArrayList<>(SignedPaintingsClient.imageManager.blockPromptedDomains)) {
-                if (SignedPaintingsClient.imageManager.allowDomain(prompted)) {
+                if (SignedPaintingsClient.imageManager.trustDomain(prompted)) {
                     count++;
                 }
             }
-            SignedPaintingsClient.sayTranslated("commands.domain.allow.all", String.valueOf(count));
+            SignedPaintingsClient.sayTranslated("commands.domain.trust.all", String.valueOf(count));
             return count;
         } else if (domain.contains("//")) {
-            if (SignedPaintingsClient.imageManager.allowDomain(domain)) {
-                SignedPaintingsClient.sayTranslated("commands.domain.allow", domain);
+            if (SignedPaintingsClient.imageManager.trustDomain(domain)) {
+                SignedPaintingsClient.sayTranslated("commands.domain.trust", domain);
                 if (domain.equals("http://")) {
                     SignedPaintingsClient.sayRaw(Text.translatable(SignedPaintingsClient.MODID+".domain.warning").setStyle(Style.EMPTY.withColor(SignedPaintingsClient.textColor)));
                 }
                 return 1;
             }
-            SignedPaintingsClient.sayTranslated("commands.domain.allow.exists", domain);
+            SignedPaintingsClient.sayTranslated("commands.domain.trust.exists", domain);
         } else {
             SignedPaintingsClient.sayTranslated("commands.domain.invalid", domain);
         }
         return 0;
     }
 
-    private static int disallow(CommandContext<FabricClientCommandSource> context) {
+    private static int untrust(CommandContext<FabricClientCommandSource> context) {
         String domain = StringArgumentType.getString(context, "domain");
         if (domain.equals("anything") || domain.equals("https://")) {
             // remove http for good measure, if explicitly removing it, then the usual // case will catch it
-            SignedPaintingsClient.imageManager.removeDomain("http://");
+            SignedPaintingsClient.imageManager.untrustDomain("http://");
 
-            if (SignedPaintingsClient.imageManager.removeDomain("https://")) {
-                SignedPaintingsClient.sayTranslated("commands.domain.disallow.anything");
+            if (SignedPaintingsClient.imageManager.untrustDomain("https://")) {
+                SignedPaintingsClient.sayTranslated("commands.domain.untrust.anything");
                 return 1;
             }
-            SignedPaintingsClient.sayTranslated("commands.domain.disallow.anything.missing");
-        } else if (domain.equals("all_allowed")) {
+            SignedPaintingsClient.sayTranslated("commands.domain.untrust.anything.missing");
+        } else if (domain.equals("all_trusted")) {
             int count = 0;
-            for (String allowed : new ArrayList<>(SignedPaintingsClient.imageManager.allowedDomains)) {
-                if (SignedPaintingsClient.imageManager.removeDomain(allowed)) {
+            for (String trusted : new ArrayList<>(SignedPaintingsClient.imageManager.trustedDomains)) {
+                if (SignedPaintingsClient.imageManager.untrustDomain(trusted)) {
                     count++;
                 }
             }
-            SignedPaintingsClient.sayTranslated("commands.domain.disallow.all", String.valueOf(count));
-            SignedPaintingsClient.imageManager.allowedDomains.clear();
+            SignedPaintingsClient.sayTranslated("commands.domain.untrust.all", String.valueOf(count));
+            SignedPaintingsClient.imageManager.trustedDomains.clear();
             SignedPaintingsClient.imageManager.reloadAll();
             return count;
         } else if (domain.contains("//")) {
-            if (SignedPaintingsClient.imageManager.removeDomain(domain)) {
-                SignedPaintingsClient.sayTranslated("commands.domain.disallow", domain);
+            if (SignedPaintingsClient.imageManager.untrustDomain(domain)) {
+                SignedPaintingsClient.sayTranslated("commands.domain.untrust", domain);
                 return 1;
             }
-            SignedPaintingsClient.sayTranslated("commands.domain.disallow.missing", domain);
+            SignedPaintingsClient.sayTranslated("commands.domain.untrust.missing", domain);
         } else {
             SignedPaintingsClient.sayTranslated("commands.domain.invalid", domain);
         }
@@ -145,18 +145,18 @@ public class DomainCommand {
 
     private static int list(CommandContext<FabricClientCommandSource> context) {
         MutableText text = Text.translatable(SignedPaintingsClient.MODID+".commands.domain.list.start");
-        for (String domain : SignedPaintingsClient.imageManager.allowedDomains) {
+        for (String domain : SignedPaintingsClient.imageManager.trustedDomains) {
             if (!domain.equals("https://")) {
                 text.append(Text.translatable(SignedPaintingsClient.MODID + ".commands.domain.list", domain).setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, domain))));
             }
         }
-        if (SignedPaintingsClient.imageManager.allowedDomains.isEmpty()) {
+        if (SignedPaintingsClient.imageManager.trustedDomains.isEmpty()) {
             text.append(Text.translatable(SignedPaintingsClient.MODID+".commands.domain.list.none"));
-        } else if (SignedPaintingsClient.imageManager.allowedDomains.contains("https://")) {
+        } else if (SignedPaintingsClient.imageManager.trustedDomains.contains("https://")) {
             text.append(Text.translatable(SignedPaintingsClient.MODID + ".commands.domain.list.anything", Text.translatable(SignedPaintingsClient.MODID + ".domain.warning")));
         }
 
         SignedPaintingsClient.longSay(text);
-        return SignedPaintingsClient.imageManager.allowedDomains.size();
+        return SignedPaintingsClient.imageManager.trustedDomains.size();
     }
 }
