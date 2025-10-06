@@ -365,9 +365,6 @@ public class ImageManager {
     }
 
     public static boolean isValid(@NotNull String url) {
-        // TODO: tell the user about discord expiry
-        if (url.startsWith("https://media.discordapp.net/attachments/")) return false;
-
         try {
             //noinspection ResultOfMethodCallIgnored (throws for malformed urls)
             URI.create(url).toURL();

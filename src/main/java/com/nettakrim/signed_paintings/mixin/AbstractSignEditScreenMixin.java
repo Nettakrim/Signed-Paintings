@@ -23,6 +23,7 @@ import net.minecraft.client.gui.screen.ingame.SignEditScreen;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
@@ -69,6 +70,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Unique
     private String domain = null;
+
+    @Unique
+    private TextWidget discordDisclaimer;
 
     @Unique
     private ClickableWidget uploadButton;
@@ -142,6 +146,10 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             addDrawableChild(widget);
             addSelectableChild(widget);
         }
+
+        discordDisclaimer = new TextWidget(0, (this.height / 4 + 144)-43, this.width, 25, Text.translatable(SignedPaintingsClient.MODID+".discord_disclaimer"), textRenderer);
+        discordDisclaimer.visible = false;
+        addDrawableChild(discordDisclaimer);
 
         uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".create_prompt"), button -> this.createPainting()).dimensions(this.width / 2 - 100, (this.height / 4 + 144)-25, 200, 20).build();
         addDrawableChild(uploadButton);
@@ -297,6 +305,11 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         uploadButton.setMessage(Text.translatable(SignedPaintingsClient.MODID + key));
         uploadButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + key+"_info", domain.substring(start, domain.length()-1), Text.translatable(SignedPaintingsClient.MODID + ".trust_disclaimer"))));
         uploadButton.visible = true;
+
+        if (url.startsWith("https://media.discordapp.net")) {
+            url = url.replace("format=webp", "format=png");
+            discordDisclaimer.visible = true;
+        }
     }
 
     @Unique
@@ -304,6 +317,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         SignedPaintingsClient.imageManager.trustDomain(domain);
         SignedPaintingsClient.imageManager.blockPromptedDomains.remove(domain);
         uploadButton.visible = false;
+        discordDisclaimer.visible = false;
 
         if (url == null) return;
 

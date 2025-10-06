@@ -55,7 +55,7 @@
     "signed_paintings.commands.domain.list" : "\n- %s",
     "signed_paintings.commands.domain.list.none" : "\nNone",
     "signed_paintings.commands.domain.list.anything" : "\n- any https:// domain\n%s",
-    "signed_paintings.commands.domain.notify" : "%s to trust painting domain, make sure you know it!\n%s",
+    "signed_paintings.commands.domain.notify" : "%s to trust painting domain, make sure you know it:\n%s",
     "signed_paintings.commands.domain.notify.click" : "[Click Here]",
     "signed_paintings.commands.domain.invalid": "Invalid domain \"%s\"",
 
@@ -107,5 +107,7 @@
     "signed_paintings.untrust_info" : "Untrust domain %s",
     "signed_paintings.trust_disclaimer" : "Other players will also need to trust this domain, to avoid this, upload the image to one of the image hosters trusted by default: imgur.com, imgbb.com, or freeimage.host",
 
-    "signed_paintings.upload_change_notification": "In-game image uploading has been removed\n- When pasting a link, you will now be prompted to trust it's domain directly\n- If you think it will be more reliable/trustworthy, you can upload the image manually to an image hoster like imgur.com, imgbb.com, or freeimage.host\n- For more information, click on this text - this message will not show again"
+    "signed_paintings.discord_disclaimer" : "Watch out! Discord images expire after a day or two!",
+
+    "signed_paintings.upload_change_notification": "In-game image uploading has been removed:\n- When pasting a link, you will now be prompted to trust it's domain directly\n- If you think it will be more reliable/trustworthy, you can upload the image manually to an image hoster like imgur.com, imgbb.com, or freeimage.host\n- For more information, click on this message, it will not be shown again"
 }
