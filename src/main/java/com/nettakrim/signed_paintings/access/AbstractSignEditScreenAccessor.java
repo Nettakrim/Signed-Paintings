@@ -12,4 +12,6 @@ public interface AbstractSignEditScreenAccessor {
     void signedPaintings$initSliders(SignSideInfo info);
 
     String signedPaintings$getText();
+
+    int signedPaintings$internalRenderState();
 }

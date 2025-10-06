@@ -11,7 +11,6 @@ import com.nettakrim.signed_paintings.rendering.PaintingInfo;
 import com.nettakrim.signed_paintings.rendering.SignSideInfo;
 import com.nettakrim.signed_paintings.util.ImageManager;
 import com.nettakrim.signed_paintings.util.SignByteMapper;
-import net.minecraft.block.BlockState;
 import net.minecraft.block.SignBlock;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
@@ -27,6 +26,8 @@ import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
+import org.joml.Matrix3x2f;
+import org.joml.Matrix3x2fStack;
 import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -92,24 +93,21 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         return !isInfoCorrect();
     }
 
-    @WrapOperation(method = "renderSign", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/AbstractSignEditScreen;translateForRender(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/block/BlockState;)V"))
-    private void translateForRender(AbstractSignEditScreen instance, DrawContext context, BlockState blockState, Operation<Void> original){
+    @WrapOperation(method = "renderSign", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix3x2fStack;translate(FF)Lorg/joml/Matrix3x2f;"))
+    private Matrix3x2f translateForRender(Matrix3x2fStack instance, float x, float y, Operation<Matrix3x2f> original){
         if (isInfoCorrect()) {
+            float offset = 0f;
             //noinspection ConstantValue,EqualsBetweenInconvertibleTypes
             if (this.getClass().equals(SignEditScreen.class)) {
-                boolean bl = blockState.getBlock() instanceof SignBlock;
-                if (bl) {
-                    context.getMatrices().translate(0.0f, -16.0f, 0f);
-                } else {
-                    context.getMatrices().translate(0.0f, -4.0f, 0f);
-                }
+                offset = blockEntity.getCachedState().getBlock() instanceof SignBlock ? -16.0f : -4.0f;
             }
             // 97.5 is centered, but it looks a bit weird, deliberately offcentering it ends up looking better
-            context.getMatrices().translate(86.5f, 38.0f, 50.0f);
-            context.getMatrices().scale(0.5f, 0.5f, 0.5f);
+            original.call(instance, 86f, 38.0f + offset);
+            instance.scale(0.5f, 0.5f);
         } else {
-            original.call(instance, context, blockState);
+            original.call(instance, x, y);
         }
+        return instance;
     }
 
     @Unique
@@ -350,5 +348,13 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             s.append(message);
         }
         return s.toString();
+    }
+
+    @Override
+    public int signedPaintings$internalRenderState() {
+        if (!isInfoCorrect()) {
+            return 0;
+        }
+        return blockEntity.getCachedState().getBlock() instanceof SignBlock ? -16 : -4;
     }
 }
