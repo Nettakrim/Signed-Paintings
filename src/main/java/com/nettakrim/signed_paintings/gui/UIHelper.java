@@ -280,7 +280,7 @@ public class UIHelper {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.player != null) {
             Clipboard clipboard = new Clipboard();
-            clipboard.setClipboard(client.getWindow().getHandle(), string);
+            clipboard.set(client.getWindow(), string);
         }
     }
 

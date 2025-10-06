@@ -6,7 +6,6 @@ import com.nettakrim.signed_paintings.rendering.PaintingRenderer;
 import com.nettakrim.signed_paintings.util.*;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -14,8 +13,6 @@ import net.minecraft.client.util.ScreenshotRecorder;
 import net.minecraft.text.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.render.VertexConsumerProvider;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -67,12 +64,13 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		renderShields = true;
 		reduceCulling = false;
 
-		WorldRenderEvents.AFTER_TRANSLUCENT.register((context) -> {
-			MatrixStack matrices = context.matrixStack();
-			VertexConsumerProvider vertexConsumers = context.consumers();
-
-			SignedPaintingsClient.paintingRenderer.renderTranslucentQueue(matrices, vertexConsumers);
-		});
+		// TODO: fix transparent images
+		//WorldRenderEvents.AFTER_TRANSLUCENT.register((context) -> {
+		//	MatrixStack matrices = context.matrixStack();
+		//	VertexConsumerProvider vertexConsumers = context.consumers();
+		//
+		//	SignedPaintingsClient.paintingRenderer.renderTranslucentQueue(matrices, vertexConsumers);
+		//});
 
 		ClientTickEvents.START_CLIENT_TICK.register((context) -> {
 			if (!sayBuffer.isEmpty()) {

@@ -11,10 +11,12 @@ import net.minecraft.client.model.Model;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.block.entity.AbstractSignBlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
+import net.minecraft.client.render.block.entity.state.SignBlockEntityRenderState;
+import net.minecraft.client.render.command.ModelCommandRenderer;
+import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,18 +24,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AbstractSignBlockEntityRenderer.class)
 public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRendererAccessor, BlockEntityRenderer<SignBlockEntity> {
-    @Shadow protected abstract Model getModel(BlockState state, WoodType woodType);
-
     @Inject(
             at = @At(
-                    value = "HEAD",
-                    target = "Lnet/minecraft/client/render/block/entity/SignBlockEntityRenderer;renderSign(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;IILnet/minecraft/block/WoodType;Lnet/minecraft/client/model/Model;)V"
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/render/block/entity/AbstractSignBlockEntityRenderer;renderSign(Lnet/minecraft/client/util/math/MatrixStack;ILnet/minecraft/block/WoodType;Lnet/minecraft/client/model/Model$SinglePartModel;Lnet/minecraft/client/render/command/ModelCommandRenderer$CrumblingOverlayCommand;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;)V"
             ),
-            method = "render(Lnet/minecraft/block/entity/SignBlockEntity;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;IILnet/minecraft/block/BlockState;Lnet/minecraft/block/AbstractSignBlock;Lnet/minecraft/block/WoodType;Lnet/minecraft/client/model/Model;)V",
+            method = "render(Lnet/minecraft/client/render/block/entity/state/SignBlockEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/block/BlockState;Lnet/minecraft/block/AbstractSignBlock;Lnet/minecraft/block/WoodType;Lnet/minecraft/client/model/Model$SinglePartModel;Lnet/minecraft/client/render/command/ModelCommandRenderer$CrumblingOverlayCommand;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;)V",
             cancellable = true
     )
-    private void onRender(SignBlockEntity entity, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, BlockState state, AbstractSignBlock block, WoodType woodType, Model model, CallbackInfo ci) {
-        if (renderPaintings(entity, matrices, vertexConsumers, model, light, block, state)) {
+    private void onRender(SignBlockEntityRenderState renderState, MatrixStack matrices, BlockState blockState, AbstractSignBlock block, WoodType woodType, Model.SinglePartModel model, ModelCommandRenderer.CrumblingOverlayCommand crumblingOverlay, OrderedRenderCommandQueue queue, CallbackInfo ci) {
+        if (renderPaintings(renderState, matrices, model, block)) {
             ci.cancel();
         }
     }
@@ -42,18 +42,15 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
     public boolean signedPaintings$enhancedRender(BlockEntity signBlockEntity, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay) {
         if (!SignedPaintingsClient.renderSigns) return false;
 
-        BlockState blockState = signBlockEntity.getCachedState();
-        AbstractSignBlock block = (AbstractSignBlock)blockState.getBlock();
-        WoodType woodType = AbstractSignBlock.getWoodType(block);
-        Model model = getModel(blockState, woodType);
-
-        return renderPaintings((SignBlockEntity)signBlockEntity, matrices, vertexConsumers, model, light, block, blockState);
+        //return renderPaintings();
+        return false;
     }
 
     @Unique
-    private boolean renderPaintings(SignBlockEntity signBlockEntity, MatrixStack matrices, VertexConsumerProvider vertexConsumers, Model model, int light, AbstractSignBlock block, BlockState blockState) {
+    private boolean renderPaintings(SignBlockEntityRenderState renderState, MatrixStack matrices, Model model, AbstractSignBlock block) {
         if (!SignedPaintingsClient.renderSigns) return false;
 
+        // TODO: store painting info in the RenderState
         boolean success = false;
         SignBlockEntityAccessor accessor = (SignBlockEntityAccessor)signBlockEntity;
         accessor.signedPaintings$reloadIfNeeded();
@@ -71,7 +68,6 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
         return false;
     }
 
-    @Override
     public boolean isInRenderDistance(SignBlockEntity blockEntity, Vec3d pos) {
         return (hasPainting((SignBlockEntityAccessor)blockEntity) && SignedPaintingsClient.reduceCulling) || BlockEntityRenderer.super.isInRenderDistance(blockEntity, pos);
     }

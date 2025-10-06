@@ -8,6 +8,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.client.texture.Sprite;
+import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -177,7 +178,7 @@ public class PaintingInfo {
         if (this.backType == BackType.Type.SIGN) {
             String name = ((AbstractSignBlock) this.blockEntity.getCachedState().getBlock()).getWoodType().name();
             try {
-                back = SignedPaintingsClient.client.getSpriteAtlas(Identifier.of("minecraft", "textures/atlas/blocks.png")).apply(Identifier.of("minecraft", "block/" + name + "_planks"));
+                back = SignedPaintingsClient.client.getAtlasManager().getSprite(new SpriteIdentifier( Identifier.of("minecraft", "textures/atlas/blocks.png"), Identifier.of("minecraft", "block/" + name + "_planks")));
             } catch (Exception ignored) {}
         }
         if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getBlockModels().getModelParticleSprite(blockState);

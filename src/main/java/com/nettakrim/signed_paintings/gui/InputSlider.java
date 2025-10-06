@@ -4,6 +4,8 @@ import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.input.CharInput;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import org.apache.commons.lang3.StringUtils;
@@ -56,20 +58,20 @@ public class InputSlider {
         return textFieldWidget.isFocused() || sliderWidget.isFocused();
     }
 
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyInput input) {
         if (textFieldWidget.isActive()) {
-            return textFieldWidget.keyPressed(keyCode, scanCode, modifiers);
+            return textFieldWidget.keyPressed(input);
         } else if (sliderWidget.isFocused()) {
-            return sliderWidget.keyPressed(keyCode, scanCode, modifiers);
+            return sliderWidget.keyPressed(input);
         }
         return false;
     }
 
-    public boolean charTyped(char chr, int modifiers) {
+    public boolean charTyped(CharInput input) {
         if (textFieldWidget.isActive()) {
-            return textFieldWidget.charTyped(chr, modifiers);
+            return textFieldWidget.charTyped(input);
         } else if (sliderWidget.isFocused()) {
-            return sliderWidget.charTyped(chr, modifiers);
+            return sliderWidget.charTyped(input);
         }
         return false;
     }
@@ -123,14 +125,14 @@ public class InputSlider {
         }
 
         @Override
-        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            if (keyCode == 257) {
+        public boolean keyPressed(KeyInput input) {
+            if (input.getKeycode() == 257) {
                 this.setFocused(false);
                 return true;
-            } else if (keyCode == 258) {
+            } else if (input.getKeycode() == 258) {
                 return false;
             } else {
-                return super.keyPressed(keyCode, scanCode, modifiers);
+                return super.keyPressed(input);
             }
         }
     }
@@ -156,13 +158,13 @@ public class InputSlider {
         protected void updateMessage() {}
 
         @Override
-        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            if (keyCode == 263 || keyCode == 262) {
-                value = MathHelper.clamp(value + (keyCode == 263 ? -step : step)/(max-min), 0, 1);
+        public boolean keyPressed(KeyInput input) {
+            if (input.getKeycode() == 263 || input.getKeycode() == 262) {
+                value = MathHelper.clamp(value + (input.getKeycode() == 263 ? -step : step)/(max-min), 0, 1);
                 applyValue();
                 return true;
             }
-            return super.keyPressed(keyCode, scanCode, modifiers);
+            return super.keyPressed(input);
         }
 
         @Override

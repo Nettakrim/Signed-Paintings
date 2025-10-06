@@ -23,6 +23,8 @@ import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextWidget;
+import net.minecraft.client.input.CharInput;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
@@ -183,9 +185,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Inject(at = @At("HEAD"), method = "keyPressed", cancellable = true)
-    private void onKeyPress(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
+    private void onKeyPress(KeyInput input, CallbackInfoReturnable<Boolean> cir) {
         for (InputSlider slider : UIHelper.getInputSliders()) {
-            if (slider != null && slider.isFocused() && slider.keyPressed(keyCode, scanCode, modifiers)) {
+            if (slider != null && slider.isFocused() && slider.keyPressed(input)) {
                 cir.setReturnValue(true);
                 cir.cancel();
                 return;
@@ -194,9 +196,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Inject(at = @At("HEAD"), method = "charTyped", cancellable = true)
-    private void onCharType(char chr, int modifiers, CallbackInfoReturnable<Boolean> cir) {
+    private void onCharType(CharInput input, CallbackInfoReturnable<Boolean> cir) {
         for (InputSlider slider : UIHelper.getInputSliders()) {
-            if (slider != null && slider.isFocused() && slider.charTyped(chr, modifiers)) {
+            if (slider != null && slider.isFocused() && slider.charTyped(input)) {
                 cir.setReturnValue(true);
                 cir.cancel();
                 return;

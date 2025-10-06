@@ -1,5 +1,6 @@
 package com.nettakrim.signed_paintings.gui;
 
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.ClickableWidget;
@@ -20,8 +21,8 @@ public class BackgroundClick extends ClickableWidget {
     protected void appendClickableNarrations(NarrationMessageBuilder builder) {}
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (!(visible && isValidClickButton(button))) return false;
+    public boolean mouseClicked(Click click, boolean doubled) {
+        if (!(visible && isValidClickButton(click.buttonInfo()))) return false;
         for (InputSlider inputSlider : sliders) {
             if (inputSlider.isFocused()) return true;
         }
