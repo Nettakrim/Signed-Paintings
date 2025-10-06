@@ -295,7 +295,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         String key = blocked ? (isExisting ? ".allow" : ".create_allow") : ".create";
         uploadButton.setMessage(Text.translatable(SignedPaintingsClient.MODID + key));
-        uploadButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + key+"_info", domain.substring(start, domain.length()-1))));
+        uploadButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + key+"_info", domain.substring(start, domain.length()-1), Text.translatable(SignedPaintingsClient.MODID + ".allow_disclaimer"))));
         uploadButton.visible = true;
     }
 

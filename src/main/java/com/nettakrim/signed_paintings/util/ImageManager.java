@@ -32,6 +32,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class ImageManager {
+    private final String dataHeader = "https://modrinth.com/mod/signed-paintings config v";
+    private final int dataVersion = 2;
     private final File data;
     private final ArrayList<URLAlias> urlAliases;
     private final Map<Identifier, Boolean> transparencyCache = new HashMap<>();
@@ -96,12 +98,24 @@ public class ImageManager {
 
         data = FabricLoader.getInstance().getConfigDir().resolve("signed_paintings.txt").toFile();
         try {
-            //TODO: track version, if its from before, notify the user about the new functionality
             if (data.exists()) {
                 Scanner scanner = new Scanner(data);
-                if (scanner.hasNextLine()) scanner.nextLine();
+
                 int phase = 0;
                 int lines = 0;
+
+                if (scanner.hasNextLine()) {
+                    String version = scanner.nextLine();
+                    if (version.startsWith(dataHeader)) {
+                        // next line will be the first phase marker, which will move it to phase 0, for consistency with old format
+                        phase = -1;
+                    } else {
+                        // loading older format without version header, user needs to be notified about upload removal
+                        SignedPaintingsClient.sayText(Text.translatable(SignedPaintingsClient.MODID+".upload_change_notification").setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/Nettakrim/Signed-Paintings/blob/fixes/upload_removal.md"))));
+                        makeChange();
+                    }
+                }
+
                 while (scanner.hasNextLine()) {
                     String s = scanner.nextLine();
                     if (s.startsWith("-")) {
@@ -152,7 +166,8 @@ public class ImageManager {
             }
             FileWriter writer = new FileWriter(data);
 
-            StringBuilder s = new StringBuilder("- Blocked Painting URLs -");
+            StringBuilder s = new StringBuilder(dataHeader+dataVersion);
+            s.append("\n- Blocked Painting URLs -");
             for (String url : blockedURLs) {
                 s.append("\n").append(url);
             }
@@ -350,6 +365,7 @@ public class ImageManager {
     }
 
     public static boolean isValid(@NotNull String url) {
+        // TODO: tell the user about discord expiry
         if (url.startsWith("https://media.discordapp.net/attachments/")) return false;
 
         try {

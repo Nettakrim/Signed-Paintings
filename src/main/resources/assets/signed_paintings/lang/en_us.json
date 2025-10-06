@@ -36,7 +36,7 @@
     "signed_paintings.commands.block.list.start" : "\nBlock list contains the following:",
     "signed_paintings.commands.block.list" : "\n- %s",
     "signed_paintings.commands.block.list.none" : "\nNone",
-    "signed_paintings.commands.block.auto.on" : "\nAutomatic blocking enabled:\n- any newly loading links will be automatically blocked\n- run again or relog to disable\n- use \"/paintings:reload all\" to quickly block all nearby links",
+    "signed_paintings.commands.block.auto.on" : "\nAutomatic blocking enabled:\n- any newly loading images will be automatically blocked\n- run again or relog to disable\n- use \"/paintings:reload all\" to quickly block all nearby links",
     "signed_paintings.commands.block.auto.off" : "Automatic blocking disabled",
     "signed_paintings.commands.block.notify.base" : "[%s]",
     "signed_paintings.commands.block.notify.text" : "blocked %s",
@@ -100,9 +100,12 @@
     "signed_paintings.allow" : "Allow Domain",
     "signed_paintings.create" : "Make Painting",
     "signed_paintings.create_allow" : "Allow Domain & Make Painting",
-    "signed_paintings.allow_info" : "Allow domain %s",
+    "signed_paintings.allow_info" : "Allow domain %s\n\n%s",
     "signed_paintings.create_info" : "Create a painting from domain %s",
-    "signed_paintings.create_allow_info" : "Create a painting, and allow domain %s",
+    "signed_paintings.create_allow_info" : "Create a painting, and allow domain %s\n\n%s",
     "signed_paintings.disallow" : "Disallow Domain",
-    "signed_paintings.disallow_info" : "Disallow domain %s"
+    "signed_paintings.disallow_info" : "Disallow domain %s",
+    "signed_paintings.allow_disclaimer" : "Other players will also need to allow this domain, to avoid this, upload the image to one of the image hosters allowed by default: imgur.com, imgbb.com, or freeimage.host",
+
+    "signed_paintings.upload_change_notification": "In-game image uploading has been removed\n- When pasting a link, you will now be prompted to allow it's domain directly\n- If you think it will be more reliable/trustworthy, you can upload the image manually to an image hoster like imgur.com, imgbb.com, or freeimage.host\n- For more information, click on this text. this message will not show again."
 }
