@@ -55,11 +55,11 @@
     "signed_paintings.commands.domain.list" : "\n- %s",
     "signed_paintings.commands.domain.list.none" : "\nNone",
     "signed_paintings.commands.domain.list.anything" : "\n- any https:// domain\n%s",
-    "signed_paintings.commands.domain.notify" : "%s to trust painting domain %s",
+    "signed_paintings.commands.domain.notify" : "%s to trust painting domain, make sure you know it!\n%s",
     "signed_paintings.commands.domain.notify.click" : "[Click Here]",
     "signed_paintings.commands.domain.invalid": "Invalid domain \"%s\"",
 
-    "signed_paintings.domain.warning" : "IMPORTANT: trusting anything is a security risk! someone could place a sign with some malicious url and it would be loaded automatically, you have been warned!",
+    "signed_paintings.domain.warning" : "IMPORTANT: trusting everything is a security risk! someone could place a sign with some malicious url and it would be loaded automatically, you have been warned!",
 
     "signed_paintings.align.lt" : "🡤",
     "signed_paintings.align.ct" : "🡡",

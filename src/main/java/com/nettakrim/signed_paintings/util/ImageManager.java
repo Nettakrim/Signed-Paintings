@@ -347,8 +347,8 @@ public class ImageManager {
                 if (isValid(urlStr)) {
                     URLConnection connection = URI.create(urlStr).toURL().openConnection();
                     connection.setRequestProperty("User-Agent", "Signed Paintings mod");
-                    connection.setRequestProperty("Sec-Fetch-Site", "same-site");
                     if (urlStr.startsWith("https://i.imgur.com")) {
+                        connection.setRequestProperty("Sec-Fetch-Site", "same-site");
                         connection.setRequestProperty("Referer", "https://imgur.com/");
                     }
                     connection.connect();
