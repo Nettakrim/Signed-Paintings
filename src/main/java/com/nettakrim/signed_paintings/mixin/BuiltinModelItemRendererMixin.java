@@ -16,17 +16,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ShieldModelRenderer.class)
 public class BuiltinModelItemRendererMixin {
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/math/MatrixStack;pop()V", ordinal = 0), method = "render(Lnet/minecraft/component/ComponentMap;Lnet/minecraft/item/ItemDisplayContext;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;IIZ)V")
-    private void onShieldRender(ComponentMap componentMap, ItemDisplayContext itemDisplayContext, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int light, int j, boolean bl, CallbackInfo ci) {
-        if (!SignedPaintingsClient.renderShields) return;
+    // TODO: update shield rendering
 
-        Text name = componentMap.getOrDefault(DataComponentTypes.CUSTOM_NAME, null);
-        if (name == null) return;
-
-        OverlayInfo info = SignedPaintingsClient.imageManager.getOverlayInfo(name.getString());
-
-        if (info.isReady()) {
-            SignedPaintingsClient.paintingRenderer.renderItemOverlay(matrixStack, vertexConsumerProvider, info, light);
-        }
-    }
+    //@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/math/MatrixStack;pop()V", ordinal = 0), method = "render(Lnet/minecraft/component/ComponentMap;Lnet/minecraft/item/ItemDisplayContext;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;IIZ)V")
+    //private void onShieldRender(ComponentMap componentMap, ItemDisplayContext itemDisplayContext, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int light, int j, boolean bl, CallbackInfo ci) {
+    //    if (!SignedPaintingsClient.renderShields) return;
+    //
+    //    Text name = componentMap.getOrDefault(DataComponentTypes.CUSTOM_NAME, null);
+    //    if (name == null) return;
+    //
+    //    OverlayInfo info = SignedPaintingsClient.imageManager.getOverlayInfo(name.getString());
+    //
+    //    if (info.isReady()) {
+    //        SignedPaintingsClient.paintingRenderer.renderItemOverlay(matrixStack, vertexConsumerProvider, info, light);
+    //    }
+    //}
 }

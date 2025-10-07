@@ -192,7 +192,7 @@ public class ImageManager {
             writer.close();
             changesMade = false;
         } catch (IOException e) {
-            SignedPaintingsClient.info("Failed to save data", true);
+            SignedPaintingsClient.info("Failed to save data\n"+e.getMessage()+"\n"+Arrays.toString(e.getStackTrace()), true);
         }
     }
 
@@ -535,7 +535,7 @@ public class ImageManager {
     public void onTick() {
         renderTime++;
         // check every ~50 seconds
-        if ((renderTime & 1024) == 0) {
+        if ((renderTime & 1023) == 0) {
             save();
 
             // expire from vram after ~2 minutes

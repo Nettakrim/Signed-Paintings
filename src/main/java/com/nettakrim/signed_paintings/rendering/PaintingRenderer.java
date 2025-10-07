@@ -1,11 +1,11 @@
 package com.nettakrim.signed_paintings.rendering;
 
 import com.nettakrim.signed_paintings.util.ImageManager;
-import net.minecraft.client.model.Model;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
@@ -18,13 +18,13 @@ public class PaintingRenderer {
     public PaintingRenderer() {
 
     }
-    private record TranslucentRenderData(MatrixStack.Entry matrixEntry, Model model, PaintingInfo info, int light, float rotationDegrees) {}
+    private record TranslucentRenderData(MatrixStack.Entry matrixEntry, PaintingInfo info, int light, float rotationDegrees) {}
 
 
     private static final List<TranslucentRenderData> translucentQueue = new ArrayList<>();
 
-    private static void queueTranslucentRender(MatrixStack.Entry capturedEntry, Model model, PaintingInfo info, int light, float rotationDegrees) {
-        translucentQueue.add(new TranslucentRenderData(capturedEntry, model, info, light, rotationDegrees));
+    private static void queueTranslucentRender(MatrixStack.Entry capturedEntry, PaintingInfo info, int light, float rotationDegrees) {
+        translucentQueue.add(new TranslucentRenderData(capturedEntry, info, light, rotationDegrees));
     }
 
     private void renderTranslucentPaintingImmediately(MatrixStack matrices, VertexConsumerProvider consumers, TranslucentRenderData data) {
@@ -34,7 +34,7 @@ public class PaintingRenderer {
         matrices.push();
         matrices.multiplyPositionMatrix(data.matrixEntry.getPositionMatrix());
         data.info.cuboid.setupRendering(matrices.peek());
-        renderPainting(consumers, data.info, data.light, RenderLayer.getEntityTranslucent(image));
+        //renderPainting(consumers, data.info, data.light, RenderLayer.getEntityTranslucent(image));
         matrices.pop(); 
     }
 
@@ -46,7 +46,7 @@ public class PaintingRenderer {
         translucentQueue.clear();
     }
 
-    public void renderOrQueuePainting(MatrixStack matrices, VertexConsumerProvider vertexConsumers, Model model, PaintingInfo info, int light, float rotationDegrees) {
+    public void renderOrQueuePainting(MatrixStack matrices, PaintingInfo info, int light, float rotationDegrees, OrderedRenderCommandQueue queue) {
         Identifier image = info.getImageIdentifier();
         if (!ImageManager.hasImage(image)) return;
 
@@ -58,22 +58,25 @@ public class PaintingRenderer {
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(info.rotationVec.x));
 
         if (info.hasPartialTransparency()) {
-            queueTranslucentRender(matrices.peek().copy(), model, info, light, rotationDegrees);
+            queueTranslucentRender(matrices.peek().copy(), info, light, rotationDegrees);
         } else {
-            info.cuboid.setupRendering(matrices.peek());
-            renderPainting(vertexConsumers, info, light, RenderLayer.getEntityCutout(info.getImageIdentifier()));
+            renderPainting(matrices, info, light, RenderLayer.getEntityCutout(info.getImageIdentifier()), queue);
         }
         matrices.pop();
     }
 
-    private void renderPainting(VertexConsumerProvider vertexConsumers, PaintingInfo info, int light, RenderLayer renderLayer) {
-        VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(renderLayer);
-        renderImage(imageVertexConsumer, info, light);
+    private void renderPainting(MatrixStack matrices, PaintingInfo info, int light, RenderLayer renderLayer, OrderedRenderCommandQueue queue) {
+        queue.submitCustom(matrices, renderLayer, (matrix, vertexConsumer) -> {
+            info.cuboid.setupRendering(matrix);
+            renderImage(vertexConsumer, info, light);
+        });
 
         if (info.getBackType() != BackType.Type.NONE) {
             Sprite sprite = info.getBackSprite();
-            VertexConsumer backVertexConsumer = sprite.getTextureSpecificVertexConsumer(vertexConsumers.getBuffer(RenderLayer.getEntityCutout(sprite.getAtlasId())));
-            renderBack(backVertexConsumer, sprite, info, light);
+            queue.submitCustom(matrices, RenderLayer.getEntityCutout(sprite.getAtlasId()), (matrix, vertexConsumer) -> {
+                info.cuboid.setupRendering(matrix);
+                renderBack(sprite.getTextureSpecificVertexConsumer(vertexConsumer), sprite, info, light);
+            });
         }
     }
 

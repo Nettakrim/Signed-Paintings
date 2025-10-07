@@ -310,7 +310,6 @@ public class UIHelper {
     }
 
     public static void updateUI(SignSideInfo info) {
-        // todo check if it's safe
         inputSliders[0].setValue(info.paintingInfo.getWidth());
         inputSliders[1].setValue(info.paintingInfo.getHeight());
         inputSliders[2].setValue(info.paintingInfo.getPixelsPerBlock());

@@ -17,6 +17,7 @@
     "SelectionManagerMixin",
     "SignBlockEntityMixin",
     "SignBlockEntityRendererMixin",
+    "SignBlockEntityRenderStateMixin",
     "SignEditScreenMixin",
     "TextureManagerAccessor"
   ],

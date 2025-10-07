@@ -1,5 +1,6 @@
 package com.nettakrim.signed_paintings.mixin;
 
+import com.nettakrim.signed_paintings.access.SignBlockEntityRenderStateAccessor;
 import com.nettakrim.signed_paintings.access.SignBlockEntityRendererAccessor;
 import com.nettakrim.signed_paintings.rendering.PaintingInfo;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
@@ -7,6 +8,7 @@ import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.SignBlockEntity;
+import net.minecraft.block.entity.SignText;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.block.entity.AbstractSignBlockEntityRenderer;
@@ -23,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AbstractSignBlockEntityRenderer.class)
-public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRendererAccessor, BlockEntityRenderer<SignBlockEntity> {
+public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRendererAccessor, BlockEntityRenderer<SignBlockEntity, SignBlockEntityRenderState> {
     @Inject(
             at = @At(
                     value = "INVOKE",
@@ -33,7 +35,7 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
             cancellable = true
     )
     private void onRender(SignBlockEntityRenderState renderState, MatrixStack matrices, BlockState blockState, AbstractSignBlock block, WoodType woodType, Model.SinglePartModel model, ModelCommandRenderer.CrumblingOverlayCommand crumblingOverlay, OrderedRenderCommandQueue queue, CallbackInfo ci) {
-        if (renderPaintings(renderState, matrices, model, block)) {
+        if (renderPaintings(renderState, matrices, block, queue)) {
             ci.cancel();
         }
     }
@@ -47,22 +49,20 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
     }
 
     @Unique
-    private boolean renderPaintings(SignBlockEntityRenderState renderState, MatrixStack matrices, Model model, AbstractSignBlock block) {
+    private boolean renderPaintings(SignBlockEntityRenderState renderState, MatrixStack matrices, AbstractSignBlock block, OrderedRenderCommandQueue queue) {
         if (!SignedPaintingsClient.renderSigns) return false;
 
-        // TODO: store painting info in the RenderState
         boolean success = false;
-        SignBlockEntityAccessor accessor = (SignBlockEntityAccessor)signBlockEntity;
-        accessor.signedPaintings$reloadIfNeeded();
-        success |= renderPaintingInfo(accessor.signedPaintings$getFrontPaintingInfo(), matrices, vertexConsumers, model, signBlockEntity.getFrontText().isGlowing() ? -1 : light, block, blockState);
-        success |= renderPaintingInfo(accessor.signedPaintings$getBackPaintingInfo(), matrices, vertexConsumers, model, signBlockEntity.getBackText().isGlowing() ? -1 : light, block, blockState);
+        SignBlockEntityRenderStateAccessor accessor = (SignBlockEntityRenderStateAccessor)renderState;
+        success |= renderPaintingInfo(accessor.signedPaintings$getFrontInfo(), matrices, renderState, renderState.frontText, block, queue);
+        success |= renderPaintingInfo(accessor.signedPaintings$getBackInfo(), matrices, renderState, renderState.backText, block, queue);
         return success;
     }
 
     @Unique
-    private boolean renderPaintingInfo(PaintingInfo info, MatrixStack matrices, VertexConsumerProvider vertexConsumers, Model model, int light, AbstractSignBlock block, BlockState state) {
+    private boolean renderPaintingInfo(PaintingInfo info, MatrixStack matrices, SignBlockEntityRenderState state, SignText text, AbstractSignBlock block, OrderedRenderCommandQueue queue) {
         if (info != null && info.isReady()) {
-            SignedPaintingsClient.paintingRenderer.renderOrQueuePainting(matrices, vertexConsumers, model, info, light, -block.getRotationDegrees(state));
+            SignedPaintingsClient.paintingRenderer.renderOrQueuePainting(matrices, info, text != null && text.isGlowing() ? -1 : state.lightmapCoordinates, -block.getRotationDegrees(state.blockState), queue);
             return true;
         }
         return false;
@@ -79,5 +79,15 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
         if (paintingInfo != null && paintingInfo.isReady()) return true;
         paintingInfo = accessor.signedPaintings$getBackPaintingInfo();
         return paintingInfo != null && paintingInfo.isReady();
+    }
+
+    @Inject(at = @At("TAIL"), method = "updateRenderState(Lnet/minecraft/block/entity/SignBlockEntity;Lnet/minecraft/client/render/block/entity/state/SignBlockEntityRenderState;FLnet/minecraft/util/math/Vec3d;Lnet/minecraft/client/render/command/ModelCommandRenderer$CrumblingOverlayCommand;)V")
+    private void updateRenderState(SignBlockEntity signBlockEntity, SignBlockEntityRenderState signBlockEntityRenderState, float f, Vec3d vec3d, ModelCommandRenderer.CrumblingOverlayCommand crumblingOverlayCommand, CallbackInfo ci) {
+        SignBlockEntityAccessor accessor = (SignBlockEntityAccessor)signBlockEntity;
+        accessor.signedPaintings$reloadIfNeeded();
+
+        SignBlockEntityRenderStateAccessor state = (SignBlockEntityRenderStateAccessor)signBlockEntityRenderState;
+        state.signedPaintings$setFrontInfo(accessor.signedPaintings$getFrontPaintingInfo());
+        state.signedPaintings$setBackInfo(accessor.signedPaintings$getBackPaintingInfo());
     }
 }
