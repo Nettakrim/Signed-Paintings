@@ -31,8 +31,8 @@ public class PaintingInfo {
     private float height;
     private float depth;
 
-    private Centering.Type xCentering = Centering.Type.CENTER;
-    private Centering.Type yCentering = Centering.Type.CENTER;
+    private Centering.Type xCentering;
+    private Centering.Type yCentering;
 
     private BackType.Type backType = BackType.Type.SIGN;
 
@@ -80,7 +80,7 @@ public class PaintingInfo {
     private void resetCuboid() {
         this.depth = 1 / 16f;
         this.xCentering = Centering.Type.CENTER;
-        this.yCentering = Centering.Type.CENTER;
+        this.yCentering = signType == SignType.Type.STANDING ? Centering.Type.MIN : Centering.Type.CENTER;
         resetSize();
     }
 
@@ -110,6 +110,10 @@ public class PaintingInfo {
         this.xCentering = xCentering;
         this.yCentering = yCentering;
         updateCuboid();
+    }
+
+    public int getCenterIndex() {
+        return (2-xCentering.getIndex()) + yCentering.getIndex()*3;
     }
 
     public void updateCuboidSize(float xSize, float ySize) {

@@ -72,7 +72,7 @@ public class SignSideInfo {
         }
         paintingInfo.working = working;
 
-        cache.init(paintingInfo);
+        cache.init(paintingInfo, paintingInfo.signType);
 
         SignedPaintingsClient.info("loading extra data \""+afterURL+"\"", false);
         updateCache(afterURL);
@@ -193,9 +193,9 @@ public class SignSideInfo {
             this.url = url;
         }
 
-        public void init(PaintingInfo paintingInfo) {
+        public void init(PaintingInfo paintingInfo, SignType.Type signType) {
             this.xCentering = Centering.Type.CENTER;
-            this.yCentering = Centering.Type.CENTER;
+            this.yCentering = signType == SignType.Type.STANDING ? Centering.Type.MIN : Centering.Type.CENTER;
             this.width = paintingInfo.getWidth();
             this.height = paintingInfo.getHeight();
             this.backType = BackType.Type.SIGN;

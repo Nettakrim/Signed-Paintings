@@ -157,19 +157,24 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         BackgroundClick backgroundClick = new BackgroundClick(UIHelper.getInputSliders());
         addSelectableChild(backgroundClick);
-        UIHelper.addButton(backgroundClick);
+        UIHelper.addBackground(backgroundClick);
 
         SignedPaintingsClient.currentSignEdit.setSelectionManager(selectionManager);
 
         boolean correct = isInfoCorrect();
         signedPaintings$setVisibility(correct);
-        String currentUrl = ((SignBlockEntityAccessor)blockEntity).signedPaintings$getSideInfo(front).getUrl();
+        SignSideInfo sideInfo = ((SignBlockEntityAccessor)blockEntity).signedPaintings$getSideInfo(front);
+        String currentUrl = sideInfo.getUrl();
         if (correct || currentUrl.isBlank() || currentUrl.equals("https://")) {
             uploadButton.visible = false;
         } else {
             url = currentUrl;
             updateUploadButton(true);
             url = null;
+        }
+
+        if (correct) {
+            UIHelper.updateUI(sideInfo);
         }
     }
 
@@ -324,7 +329,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         signedPaintings$clear(false);
         int newSelection = signedPaintings$paste(SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(url)), 0, 0, false);
         selectionManager.setSelection(newSelection, newSelection);
-        ((SignBlockEntityAccessor) this.blockEntity).signedPaintings$getSideInfo(this.front).loadPainting(this.front, this.blockEntity, true);
+
+        SignSideInfo info = ((SignBlockEntityAccessor) this.blockEntity).signedPaintings$getSideInfo(this.front);
+        info.loadPainting(this.front, this.blockEntity, true);
 
         url = null;
     }

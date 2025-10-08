@@ -36,6 +36,7 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
     )
     private void onRender(SignBlockEntityRenderState renderState, MatrixStack matrices, BlockState blockState, AbstractSignBlock block, WoodType woodType, Model.SinglePartModel model, ModelCommandRenderer.CrumblingOverlayCommand crumblingOverlay, OrderedRenderCommandQueue queue, CallbackInfo ci) {
         if (renderPaintings(renderState, matrices, block, queue)) {
+            matrices.pop();
             ci.cancel();
         }
     }
@@ -54,15 +55,15 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
 
         boolean success = false;
         SignBlockEntityRenderStateAccessor accessor = (SignBlockEntityRenderStateAccessor)renderState;
-        success |= renderPaintingInfo(accessor.signedPaintings$getFrontInfo(), matrices, renderState, renderState.frontText, block, queue);
-        success |= renderPaintingInfo(accessor.signedPaintings$getBackInfo(), matrices, renderState, renderState.backText, block, queue);
+        success |= renderPaintingInfo(accessor.signedPaintings$getFrontInfo(), matrices, renderState, renderState.frontText, queue);
+        success |= renderPaintingInfo(accessor.signedPaintings$getBackInfo(), matrices, renderState, renderState.backText, queue);
         return success;
     }
 
     @Unique
-    private boolean renderPaintingInfo(PaintingInfo info, MatrixStack matrices, SignBlockEntityRenderState state, SignText text, AbstractSignBlock block, OrderedRenderCommandQueue queue) {
+    private boolean renderPaintingInfo(PaintingInfo info, MatrixStack matrices, SignBlockEntityRenderState state, SignText text, OrderedRenderCommandQueue queue) {
         if (info != null && info.isReady()) {
-            SignedPaintingsClient.paintingRenderer.renderOrQueuePainting(matrices, info, text != null && text.isGlowing() ? -1 : state.lightmapCoordinates, -block.getRotationDegrees(state.blockState), queue);
+            SignedPaintingsClient.paintingRenderer.renderOrQueuePainting(matrices, info, text != null && text.isGlowing() ? -1 : state.lightmapCoordinates, queue);
             return true;
         }
         return false;

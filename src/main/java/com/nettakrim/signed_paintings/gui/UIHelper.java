@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 public class UIHelper {
-
     private static final int BUTTON_HEIGHT = 14;
     private static final int BUTTON_WIDTH = 115;
     private static final int PADDING = 10;
@@ -48,6 +47,7 @@ public class UIHelper {
     private static PaintingInfo info;
     private static ButtonWidget backModeButton;
     private static ButtonWidget untrustButton;
+    private static ClickableWidget activeCentering;
 
     private static Vector3f offsetVec;
     private static Vector3f rotationVec;
@@ -136,7 +136,10 @@ public class UIHelper {
         int xPos = getCenteringButtonPosition(AREA_SIZE, xCentering, BUTTON_HEIGHT, 0) + (AREA_SIZE / 2) + (BUTTON_HEIGHT / 2) + PADDING;
         int yPos = -getCenteringButtonPosition(AREA_SIZE, yCentering, BUTTON_HEIGHT, 0) + (AREA_SIZE / 2) - (BUTTON_HEIGHT / 2) + PADDING;
         ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".align." + id),
-                        button -> getSideInfo().updatePaintingCentering(xCentering, yCentering))
+                        button -> {
+                            updateActiveCentering(button);
+                            getSideInfo().updatePaintingCentering(xCentering, yCentering);
+                        })
                 .position(xPos, yPos)
                 .size(BUTTON_HEIGHT, BUTTON_HEIGHT)
                 .build();
@@ -322,9 +325,18 @@ public class UIHelper {
         backModeButton.setMessage(getBackTypeText(info.paintingInfo.getBackType()));
         aspectRatio = info.paintingInfo.getWidth() / info.paintingInfo.getHeight();
         untrustButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + ".untrust_info", SignedPaintingsClient.getDomain(info.getUrl()))));
+        updateActiveCentering(buttons.get(info.paintingInfo.getCenterIndex()));
     }
 
-    public static void addButton(BackgroundClick backgroundClick) {
+    private static void updateActiveCentering(ClickableWidget newCentering) {
+        if (activeCentering != null) {
+            activeCentering.active = true;
+        }
+        activeCentering = newCentering;
+        activeCentering.active = false;
+    }
+
+    public static void addBackground(BackgroundClick backgroundClick) {
         buttons.add(backgroundClick);
     }
 

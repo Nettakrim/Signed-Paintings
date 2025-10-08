@@ -2,9 +2,19 @@ package com.nettakrim.signed_paintings.rendering;
 
 public class Centering {
     public enum Type {
-        MIN,
-        CENTER,
-        MAX
+        MIN(0),
+        CENTER(1),
+        MAX(2);
+
+        private final int index;
+
+        Type(int index) {
+            this.index = index;
+        }
+
+        public int getIndex() {
+            return index;
+        }
     }
 
     public static float getOffset(float size, Type centering) {

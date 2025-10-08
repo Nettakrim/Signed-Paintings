@@ -18,13 +18,13 @@ public class PaintingRenderer {
     public PaintingRenderer() {
 
     }
-    private record TranslucentRenderData(MatrixStack.Entry matrixEntry, PaintingInfo info, int light, float rotationDegrees) {}
+    private record TranslucentRenderData(MatrixStack.Entry matrixEntry, PaintingInfo info, int light) {}
 
 
     private static final List<TranslucentRenderData> translucentQueue = new ArrayList<>();
 
-    private static void queueTranslucentRender(MatrixStack.Entry capturedEntry, PaintingInfo info, int light, float rotationDegrees) {
-        translucentQueue.add(new TranslucentRenderData(capturedEntry, info, light, rotationDegrees));
+    private static void queueTranslucentRender(MatrixStack.Entry capturedEntry, PaintingInfo info, int light) {
+        translucentQueue.add(new TranslucentRenderData(capturedEntry, info, light));
     }
 
     private void renderTranslucentPaintingImmediately(MatrixStack matrices, VertexConsumerProvider consumers, TranslucentRenderData data) {
@@ -46,19 +46,19 @@ public class PaintingRenderer {
         translucentQueue.clear();
     }
 
-    public void renderOrQueuePainting(MatrixStack matrices, PaintingInfo info, int light, float rotationDegrees, OrderedRenderCommandQueue queue) {
+    public void renderOrQueuePainting(MatrixStack matrices, PaintingInfo info, int light, OrderedRenderCommandQueue queue) {
         Identifier image = info.getImageIdentifier();
         if (!ImageManager.hasImage(image)) return;
 
         matrices.push();
-        matrices.translate(0.5F, 0.5F, 0.5F);
+        //matrices.translate(0.5F, 0.5F, 0.5F);
         matrices.translate(info.offsetVec.x, info.offsetVec.y, info.offsetVec.z);
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotationDegrees + info.rotationVec.y + (info.isFront ? 0 : 180)));
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(info.rotationVec.y + (info.isFront ? 0 : 180)));
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(info.rotationVec.z));
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(info.rotationVec.x));
 
         if (info.hasPartialTransparency()) {
-            queueTranslucentRender(matrices.peek().copy(), info, light, rotationDegrees);
+            queueTranslucentRender(matrices.peek().copy(), info, light);
         } else {
             renderPainting(matrices, info, light, RenderLayer.getEntityCutout(info.getImageIdentifier()), queue);
         }
