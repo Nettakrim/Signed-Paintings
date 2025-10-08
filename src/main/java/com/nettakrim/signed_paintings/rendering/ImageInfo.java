@@ -8,11 +8,11 @@ public abstract class ImageInfo {
     public Cuboid cuboid;
     protected ImageData image;
 
-    public boolean hasPartialTransparency() {
+    public boolean hasTranslucency() {
         Identifier id = this.getImageIdentifier();
 
         if (SignedPaintingsClient.imageManager != null && id != null) {
-            return SignedPaintingsClient.imageManager.hasPartialTransparency(id);
+            return SignedPaintingsClient.imageManager.hasTranslucency(id);
         }
         return false;
     }

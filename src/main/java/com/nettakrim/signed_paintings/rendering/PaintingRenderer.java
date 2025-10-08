@@ -58,7 +58,7 @@ public class PaintingRenderer {
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(info.rotationVec.z));
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(info.rotationVec.x));
 
-        if (info.hasPartialTransparency()) {
+        if (info.hasTranslucency()) {
             queueTranslucentRender(matrices.peek().copy(), info, light);
             //renderPainting(matrices, queue, info, light, RenderLayer.getEntityTranslucent(info.getImageIdentifier()));
         } else {
@@ -114,7 +114,7 @@ public class PaintingRenderer {
         Identifier image = info.getImageIdentifier();
         if (!ImageManager.hasImage(image)) return;
 
-        RenderLayer layer = info.hasPartialTransparency() ? RenderLayer.getEntityTranslucent(image) : RenderLayer.getEntityCutout(image);
+        RenderLayer layer = info.hasTranslucency() ? RenderLayer.getEntityTranslucent(image) : RenderLayer.getEntityCutout(image);
         queue.submitCustom(matrices, layer, (matrix, vertexConsumer) -> info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light));
     }
 }

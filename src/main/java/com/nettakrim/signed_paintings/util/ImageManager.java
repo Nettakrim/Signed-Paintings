@@ -35,8 +35,9 @@ public class ImageManager {
     private final String dataHeader = "https://modrinth.com/mod/signed-paintings config v";
     private final int dataVersion = 2;
     private final File data;
+
     private final ArrayList<URLAlias> urlAliases;
-    private final Map<Identifier, Boolean> transparencyCache = new HashMap<>();
+    private final Map<Identifier, Boolean> translucencyCache = new HashMap<>();
     private final HashMap<String, ImageData> urlToImageData;
     private final HashMap<String, OverlayInfo> itemNameToOverlay;
     private final HashMap<String, ArrayList<ImageDataLoadInterface>> pendingImageLoads;
@@ -47,22 +48,22 @@ public class ImageManager {
     public int renderTime = 0;
 
     private boolean changesMade = false;
-    public boolean hasPartialTransparency(Identifier id) {
-        return transparencyCache.getOrDefault(id, false);
+    public boolean hasTranslucency(Identifier id) {
+        return translucencyCache.getOrDefault(id, false);
     }
 
-    private void checkAndCacheTransparency(Identifier id, BufferedImage bufferedImage) {
+    private void checkAndCacheTranslucency(Identifier id, BufferedImage bufferedImage) {
         if (bufferedImage == null) {
-            transparencyCache.put(id, false);
+            translucencyCache.put(id, false);
             SignedPaintingsClient.info("Cannot check transparency for null BufferedImage: " + id, false);
             return;
         }
 
-        if (transparencyCache.containsKey(id)) {
+        if (translucencyCache.containsKey(id)) {
             return;
         }
 
-        boolean hasPartial = false;
+        boolean hasTranslucency = false;
         int width = bufferedImage.getWidth();
         int height = bufferedImage.getHeight();
 
@@ -73,11 +74,11 @@ public class ImageManager {
                     int alpha = (color >> 24) & 0xFF;
 
                     if (alpha > 0 && alpha < 255) {
-                        hasPartial = true;
+                        hasTranslucency = true;
                         break; 
                     }
                 }
-                if (hasPartial) {
+                if (hasTranslucency) {
                     break; 
                 }
             }
@@ -85,7 +86,7 @@ public class ImageManager {
             SignedPaintingsClient.info("Error checking transparency for " + id + ": " + e.getMessage(), true);
         }
 
-        transparencyCache.put(id, hasPartial);
+        translucencyCache.put(id, hasTranslucency);
     }
 
     public ImageManager() {
@@ -299,7 +300,7 @@ public class ImageManager {
         // https://discord.com/channels/507304429255393322/807617488313516032/934395931380576287
         try {
             if (SignedPaintingsClient.imageManager != null) {
-                 SignedPaintingsClient.imageManager.checkAndCacheTransparency(identifier, bufferedImage);
+                 SignedPaintingsClient.imageManager.checkAndCacheTranslucency(identifier, bufferedImage);
             } else {
                  SignedPaintingsClient.info("ImageManager instance not available for transparency check: " + identifier, true);
             }
@@ -324,7 +325,7 @@ public class ImageManager {
         } catch (Throwable e) {
             SignedPaintingsClient.info("Failed to convert/register BufferedImage for identifier \"" + identifier + "\": " + e.getMessage(), true);
             if (SignedPaintingsClient.imageManager != null) {
-                 SignedPaintingsClient.imageManager.transparencyCache.put(identifier, false);
+                 SignedPaintingsClient.imageManager.translucencyCache.put(identifier, false);
             }
         }
     }
