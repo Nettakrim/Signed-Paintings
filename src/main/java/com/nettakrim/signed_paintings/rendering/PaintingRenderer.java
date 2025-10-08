@@ -1,10 +1,10 @@
 package com.nettakrim.signed_paintings.rendering;
 
 import com.nettakrim.signed_paintings.util.ImageManager;
-import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.block.entity.model.BannerFlagBlockModel;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.math.MatrixStack;
@@ -86,13 +86,14 @@ public class PaintingRenderer {
         info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0,  -1, 0),  true, backSprite.getMinU(), backSprite.getMaxU(), backSprite.getMinV(), backSprite.getMaxV(), light);
     }
 
-    public void renderImageOverlay(MatrixStack matrices, OrderedRenderCommandQueue queue, OverlayInfo info, int light, ModelPart canvas) {
+    public void renderImageOverlay(MatrixStack matrices, OrderedRenderCommandQueue queue, OverlayInfo info, int light, BannerFlagBlockModel flagBlockModel, float pitch) {
         Identifier image = info.getImageIdentifier();
         if (!ImageManager.hasImage(image)) return;
 
         matrices.push();
+        flagBlockModel.setAngles(pitch);
+        flagBlockModel.getRootPart().getChild("flag").applyTransform(matrices);
         //these numbers are entirely trial and error, I have no idea how to derive them
-        canvas.applyTransform(matrices);
         matrices.scale(1.5f, -1.5f, 1f);
         matrices.translate(0, 0, -0.2f);
 

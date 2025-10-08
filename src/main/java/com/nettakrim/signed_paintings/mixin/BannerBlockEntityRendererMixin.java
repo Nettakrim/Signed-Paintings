@@ -45,7 +45,7 @@ public class BannerBlockEntityRendererMixin {
         if (!SignedPaintingsClient.renderBanners || currentOverlayInfo == null) return;
 
         if (currentOverlayInfo.isReady()) {
-            SignedPaintingsClient.paintingRenderer.renderImageOverlay(matrices, queue, currentOverlayInfo, light, flagModel.getRootPart().getChild("flag"));
+            SignedPaintingsClient.paintingRenderer.renderImageOverlay(matrices, queue, currentOverlayInfo, light, flagModel, pitch);
         }
         currentOverlayInfo = null;
     }
