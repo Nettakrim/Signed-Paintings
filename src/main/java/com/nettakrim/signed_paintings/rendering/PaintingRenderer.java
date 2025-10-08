@@ -87,35 +87,30 @@ public class PaintingRenderer {
     }
 
     public void renderImageOverlay(MatrixStack matrices, OrderedRenderCommandQueue queue, OverlayInfo info, int light, BannerFlagBlockModel flagBlockModel, float pitch) {
-        Identifier image = info.getImageIdentifier();
-        if (!ImageManager.hasImage(image)) return;
-
         matrices.push();
         flagBlockModel.setAngles(pitch);
         flagBlockModel.getRootPart().getChild("flag").applyTransform(matrices);
         //these numbers are entirely trial and error, I have no idea how to derive them
         matrices.scale(1.5f, -1.5f, 1f);
         matrices.translate(0, 0, -0.2f);
-
-        RenderLayer layer = info.hasPartialTransparency() ? RenderLayer.getEntityTranslucent(image) : RenderLayer.getEntityCutout(image);
-        queue.submitCustom(matrices, layer, (matrix, vertexConsumer) -> info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light));
-
+        renderOverlay(matrices, queue, info, light);
         matrices.pop();
     }
 
-
-    public void renderItemOverlay(MatrixStack matrices, VertexConsumerProvider vertexConsumers, OverlayInfo info, int light) {
-        Identifier image = info.getImageIdentifier();
-        if (!ImageManager.hasImage(image)) return;
-
-        RenderLayer layer = info.hasPartialTransparency() ? RenderLayer.getEntityTranslucent(image) : RenderLayer.getEntityCutout(image);
-        VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(layer);
-
+    public void renderItemOverlay(MatrixStack matrices, OrderedRenderCommandQueue queue, OverlayInfo info, int light) {
         matrices.push();
         //these are also trial and error
         matrices.scale(0.75f, -0.75f, -1f);
         matrices.translate(0F, 0.833f, 0.065f);
-        //info.cuboid.renderFace(imageVertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
+        renderOverlay(matrices, queue, info, light);
         matrices.pop();
+    }
+
+    private void renderOverlay(MatrixStack matrices, OrderedRenderCommandQueue queue, OverlayInfo info, int light) {
+        Identifier image = info.getImageIdentifier();
+        if (!ImageManager.hasImage(image)) return;
+
+        RenderLayer layer = info.hasPartialTransparency() ? RenderLayer.getEntityTranslucent(image) : RenderLayer.getEntityCutout(image);
+        queue.submitCustom(matrices, layer, (matrix, vertexConsumer) -> info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light));
     }
 }

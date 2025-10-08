@@ -11,7 +11,7 @@
     "BannerBlockEntityMixin",
     "BannerBlockEntityRendererMixin",
     "BannerBlockEntityRenderStateMixin",
-    "BuiltinModelItemRendererMixin",
+    "ShieldModelRendererMixin",
     "FabricationFixMixin",
     "MinecraftClientMixin",
     "ScreenshotRecorderMixin",
