@@ -55,15 +55,15 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
 
         boolean success = false;
         SignBlockEntityRenderStateAccessor accessor = (SignBlockEntityRenderStateAccessor)renderState;
-        success |= renderPaintingInfo(accessor.signedPaintings$getFrontInfo(), matrices, renderState, renderState.frontText, queue);
-        success |= renderPaintingInfo(accessor.signedPaintings$getBackInfo(), matrices, renderState, renderState.backText, queue);
+        success |= renderPaintingInfo(accessor.signedPaintings$getFrontInfo(), queue, matrices, renderState, renderState.frontText);
+        success |= renderPaintingInfo(accessor.signedPaintings$getBackInfo(), queue, matrices, renderState, renderState.backText);
         return success;
     }
 
     @Unique
-    private boolean renderPaintingInfo(PaintingInfo info, MatrixStack matrices, SignBlockEntityRenderState state, SignText text, OrderedRenderCommandQueue queue) {
+    private boolean renderPaintingInfo(PaintingInfo info, OrderedRenderCommandQueue queue, MatrixStack matrices, SignBlockEntityRenderState state, SignText text) {
         if (info != null && info.isReady()) {
-            SignedPaintingsClient.paintingRenderer.renderOrQueuePainting(matrices, info, text != null && text.isGlowing() ? -1 : state.lightmapCoordinates, queue);
+            SignedPaintingsClient.paintingRenderer.renderOrQueuePainting(matrices, queue, info, text != null && text.isGlowing() ? -1 : state.lightmapCoordinates);
             return true;
         }
         return false;

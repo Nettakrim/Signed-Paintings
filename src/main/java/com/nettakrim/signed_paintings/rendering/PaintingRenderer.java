@@ -33,7 +33,6 @@ public class PaintingRenderer {
 
         matrices.push();
         matrices.multiplyPositionMatrix(data.matrixEntry.getPositionMatrix());
-        data.info.cuboid.setupRendering(matrices.peek());
         //renderPainting(consumers, data.info, data.light, RenderLayer.getEntityTranslucent(image));
         matrices.pop(); 
     }
@@ -46,12 +45,11 @@ public class PaintingRenderer {
         translucentQueue.clear();
     }
 
-    public void renderOrQueuePainting(MatrixStack matrices, PaintingInfo info, int light, OrderedRenderCommandQueue queue) {
+    public void renderOrQueuePainting(MatrixStack matrices, OrderedRenderCommandQueue queue, PaintingInfo info, int light) {
         Identifier image = info.getImageIdentifier();
         if (!ImageManager.hasImage(image)) return;
 
         matrices.push();
-        //matrices.translate(0.5F, 0.5F, 0.5F);
         matrices.translate(info.offsetVec.x, info.offsetVec.y, info.offsetVec.z);
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(info.rotationVec.y + (info.isFront ? 0 : 180)));
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(info.rotationVec.z));
@@ -60,54 +58,47 @@ public class PaintingRenderer {
         if (info.hasPartialTransparency()) {
             queueTranslucentRender(matrices.peek().copy(), info, light);
         } else {
-            renderPainting(matrices, info, light, RenderLayer.getEntityCutout(info.getImageIdentifier()), queue);
+            renderPainting(matrices, queue, info, light, RenderLayer.getEntityCutout(info.getImageIdentifier()));
         }
         matrices.pop();
     }
 
-    private void renderPainting(MatrixStack matrices, PaintingInfo info, int light, RenderLayer renderLayer, OrderedRenderCommandQueue queue) {
-        queue.submitCustom(matrices, renderLayer, (matrix, vertexConsumer) -> {
-            info.cuboid.setupRendering(matrix);
-            renderImage(vertexConsumer, info, light);
-        });
+    private void renderPainting(MatrixStack matrices, OrderedRenderCommandQueue queue, PaintingInfo info, int light, RenderLayer renderLayer) {
+        queue.submitCustom(matrices, renderLayer, (matrix, vertexConsumer) -> renderImage(matrix, vertexConsumer, info, light));
 
         if (info.getBackType() != BackType.Type.NONE) {
             Sprite sprite = info.getBackSprite();
-            queue.submitCustom(matrices, RenderLayer.getEntityCutout(sprite.getAtlasId()), (matrix, vertexConsumer) -> {
-                info.cuboid.setupRendering(matrix);
-                renderBack(sprite.getTextureSpecificVertexConsumer(vertexConsumer), sprite, info, light);
-            });
+            queue.submitCustom(matrices, RenderLayer.getEntityCutout(sprite.getAtlasId()), (matrix, vertexConsumer) -> renderBack(matrix, sprite.getTextureSpecificVertexConsumer(vertexConsumer), sprite, info, light));
         }
     }
 
-    private void renderImage(VertexConsumer vertexConsumer, PaintingInfo info, int light) {
-        info.cuboid.renderFace(vertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
+    private void renderImage(MatrixStack.Entry matrix, VertexConsumer vertexConsumer, PaintingInfo info, int light) {
+        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
     }
 
-    private void renderBack(VertexConsumer vertexConsumer, Sprite backSprite, PaintingInfo info, int light) {
-        info.cuboid.renderFace(vertexConsumer, new Vector3f(0,  0,  -1), true, backSprite.getMinU(), backSprite.getMaxU(), backSprite.getMinV(), backSprite.getMaxV(), light);
+    private void renderBack(MatrixStack.Entry matrix, VertexConsumer vertexConsumer, Sprite backSprite, PaintingInfo info, int light) {
+        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0,  0,  -1), true, backSprite.getMinU(), backSprite.getMaxU(), backSprite.getMinV(), backSprite.getMaxV(), light);
 
-        info.cuboid.renderFace(vertexConsumer, new Vector3f(1,  0,  0),  true, backSprite.getMinU(), backSprite.getMaxU(), backSprite.getMinV(), backSprite.getMaxV(), light);
-        info.cuboid.renderFace(vertexConsumer, new Vector3f(-1, 0,  0),  true, backSprite.getMinU(), backSprite.getMaxU(), backSprite.getMinV(), backSprite.getMaxV(), light);
+        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(1,  0,  0),  true, backSprite.getMinU(), backSprite.getMaxU(), backSprite.getMinV(), backSprite.getMaxV(), light);
+        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(-1, 0,  0),  true, backSprite.getMinU(), backSprite.getMaxU(), backSprite.getMinV(), backSprite.getMaxV(), light);
 
-        info.cuboid.renderFace(vertexConsumer, new Vector3f(0,  1,  0),  true, backSprite.getMinU(), backSprite.getMaxU(), backSprite.getMinV(), backSprite.getMaxV(), light);
-        info.cuboid.renderFace(vertexConsumer, new Vector3f(0,  -1, 0),  true, backSprite.getMinU(), backSprite.getMaxU(), backSprite.getMinV(), backSprite.getMaxV(), light);
+        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0,  1,  0),  true, backSprite.getMinU(), backSprite.getMaxU(), backSprite.getMinV(), backSprite.getMaxV(), light);
+        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0,  -1, 0),  true, backSprite.getMinU(), backSprite.getMaxU(), backSprite.getMinV(), backSprite.getMaxV(), light);
     }
 
-    public void renderImageOverlay(MatrixStack matrices, VertexConsumerProvider vertexConsumers, OverlayInfo info, ModelPart canvas, int light) {
+    public void renderImageOverlay(MatrixStack matrices, OrderedRenderCommandQueue queue, OverlayInfo info, int light, ModelPart canvas) {
         Identifier image = info.getImageIdentifier();
         if (!ImageManager.hasImage(image)) return;
-
-        RenderLayer layer = info.hasPartialTransparency() ? RenderLayer.getEntityTranslucent(image) : RenderLayer.getEntityCutout(image);
-        VertexConsumer imageVertexConsumer = vertexConsumers.getBuffer(layer);
 
         matrices.push();
         //these numbers are entirely trial and error, I have no idea how to derive them
         canvas.applyTransform(matrices);
         matrices.scale(1.5f, -1.5f, 1f);
         matrices.translate(0, 0, -0.2f);
-        info.cuboid.setupRendering(matrices.peek());
-        info.cuboid.renderFace(imageVertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
+
+        RenderLayer layer = info.hasPartialTransparency() ? RenderLayer.getEntityTranslucent(image) : RenderLayer.getEntityCutout(image);
+        queue.submitCustom(matrices, layer, (matrix, vertexConsumer) -> info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light));
+
         matrices.pop();
     }
 
@@ -123,8 +114,7 @@ public class PaintingRenderer {
         //these are also trial and error
         matrices.scale(0.75f, -0.75f, -1f);
         matrices.translate(0F, 0.833f, 0.065f);
-        info.cuboid.setupRendering(matrices.peek());
-        info.cuboid.renderFace(imageVertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
+        //info.cuboid.renderFace(imageVertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
         matrices.pop();
     }
 }

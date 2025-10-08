@@ -15,13 +15,11 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import org.joml.Vector3f;
 
-public class PaintingInfo {
+public class PaintingInfo extends ImageInfo {
     public final BlockEntity blockEntity;
     public final boolean isFront;
     public final SignType.Type signType;
 
-    private ImageData image;
-    public Cuboid cuboid;
     private Sprite back;
 
     public Vector3f rotationVec = zero;
@@ -49,32 +47,6 @@ public class PaintingInfo {
         this.signType = SignType.getType(blockEntity.getCachedState().getBlock());
         this.isFront = isFront;
         resetCuboid();
-    }
-
-    public boolean hasPartialTransparency() {
-        Identifier id = this.getImageIdentifier();
-
-        if (SignedPaintingsClient.imageManager != null && id != null) {
-            return SignedPaintingsClient.imageManager.hasPartialTransparency(id);
-        }
-        return false;
-    }
-
-    public void updateImage(ImageData image) {
-        this.image = image;
-        resetCuboid();
-    }
-
-    public void invalidateImage() {
-        this.image = null;
-    }
-
-    public boolean isReady() {
-        return image != null && image.ready;
-    }
-
-    public boolean needsReload() {
-        return image != null && image.needsReload;
     }
 
     private void resetCuboid() {
@@ -194,9 +166,10 @@ public class PaintingInfo {
         return blockPos.offset(direction, world.getBlockState(blockPos.offset(direction, 1)).isAir() ? -1 : 1);
     }
 
+    @Override
     public Identifier getImageIdentifier() {
         if (pixelsPerBlock == 0) {
-            return image.getBaseIdentifier();
+            return super.getImageIdentifier();
         } else {
             return image.getIdentifier(Math.round(width*pixelsPerBlock), Math.round(height*pixelsPerBlock), working);
         }

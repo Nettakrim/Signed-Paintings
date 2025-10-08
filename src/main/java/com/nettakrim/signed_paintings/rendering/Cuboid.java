@@ -12,8 +12,6 @@ public class Cuboid {
     private final Vector3fc size;
     private final Vector3fc offset;
 
-    private MatrixStack.Entry cache;
-
     private Cuboid(float xSize, float ySize, float zSize, float xOffset, float yOffset, float zOffset) {
         this.size = new Vector3f(xSize, ySize, zSize);
         this.offset = new Vector3f(xOffset, yOffset, zOffset);
@@ -42,15 +40,7 @@ public class Cuboid {
         return new Cuboid(width, height, 1/8f, 0, -5/6f, 0);
     }
 
-    public void setupRendering(MatrixStack.Entry matrices) {
-        cache = matrices;
-    }
-
-    public void renderFace(VertexConsumer vertexConsumer, Vector3f face, boolean split, float minU, float maxU, float minV, float maxV, int light) {
-        if (cache == null) {
-            return;
-        }
-
+    public void renderFace(MatrixStack.Entry matrix, VertexConsumer vertexConsumer, Vector3f face, boolean split, float minU, float maxU, float minV, float maxV, int light) {
         AxisAngle4f rotation;
 
         if (face.y == 0) {
@@ -68,7 +58,7 @@ public class Cuboid {
             rotation = new AxisAngle4f(angle, 1, 0, 0);
         }
 
-        renderFaceRotated(vertexConsumer, rotation, split, minU, maxU, minV, maxV, light);
+        renderFaceRotated(matrix, vertexConsumer, rotation, split, minU, maxU, minV, maxV, light);
     }
 
     private Vector3f adjustVertex(Vector3f v, AxisAngle4f rotation) {
@@ -78,7 +68,7 @@ public class Cuboid {
         return vertex;
     }
 
-    private void renderFaceRotated(VertexConsumer vertexConsumer, AxisAngle4f rotation, boolean split, float minU, float maxU, float minV, float maxV, int light) {
+    private void renderFaceRotated(MatrixStack.Entry matrix, VertexConsumer vertexConsumer, AxisAngle4f rotation, boolean split, float minU, float maxU, float minV, float maxV, int light) {
         Vector3f normal;
         if (light == -1) {
             light = 15728640;
@@ -88,7 +78,7 @@ public class Cuboid {
         }
 
         if (!split) {
-            renderQuad(vertexConsumer, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, rotation, minU, maxU, minV, maxV, normal, light);
+            renderQuad(matrix, vertexConsumer, -0.5f, 0.5f, -0.5f, 0.5f, rotation, minU, maxU, minV, maxV, normal, light);
             return;
         }
 
@@ -109,23 +99,23 @@ public class Cuboid {
                 float newMaxU = minU+((maxU-minU)*(maxX-minX));
                 float newMinV = maxV-((maxV-minV)*(maxY-minY));
 
-                renderQuad(vertexConsumer, scaledMinX, scaledMaxX, scaledMinY, scaledMaxY, 0.5f, rotation, minU, newMaxU, newMinV, maxV, normal, light);
+                renderQuad(matrix, vertexConsumer, scaledMinX, scaledMaxX, scaledMinY, scaledMaxY, rotation, minU, newMaxU, newMinV, maxV, normal, light);
             }
         }
     }
 
-    private void renderQuad(VertexConsumer vertexConsumer, float minX, float maxX, float minY, float maxY, float z, AxisAngle4f rotation, float minU, float maxU, float minV, float maxV, Vector3f normal, int light) {
-        vertexFromVector(vertexConsumer, adjustVertex(new Vector3f(minX, minY, z), rotation), minU, maxV, normal, light);
-        vertexFromVector(vertexConsumer, adjustVertex(new Vector3f(maxX, minY, z), rotation), maxU, maxV, normal, light);
-        vertexFromVector(vertexConsumer, adjustVertex(new Vector3f(maxX, maxY, z), rotation), maxU, minV, normal, light);
-        vertexFromVector(vertexConsumer, adjustVertex(new Vector3f(minX, maxY, z), rotation), minU, minV, normal, light);
+    private void renderQuad(MatrixStack.Entry matrix, VertexConsumer vertexConsumer, float minX, float maxX, float minY, float maxY, AxisAngle4f rotation, float minU, float maxU, float minV, float maxV, Vector3f normal, int light) {
+        vertexFromVector(matrix, vertexConsumer, adjustVertex(new Vector3f(minX, minY, 0.5f), rotation), minU, maxV, normal, light);
+        vertexFromVector(matrix, vertexConsumer, adjustVertex(new Vector3f(maxX, minY, 0.5f), rotation), maxU, maxV, normal, light);
+        vertexFromVector(matrix, vertexConsumer, adjustVertex(new Vector3f(maxX, maxY, 0.5f), rotation), maxU, minV, normal, light);
+        vertexFromVector(matrix, vertexConsumer, adjustVertex(new Vector3f(minX, maxY, 0.5f), rotation), minU, minV, normal, light);
     }
 
-    private void vertexFromVector(VertexConsumer vertexConsumer, Vector3f vertexPos, float u, float v, Vector3f normal, int light) {
-        this.vertex(vertexConsumer, vertexPos.x, vertexPos.y, vertexPos.z, u, v, normal.x, normal.y, normal.z, light);
+    private void vertexFromVector(MatrixStack.Entry matrix, VertexConsumer vertexConsumer, Vector3f vertexPos, float u, float v, Vector3f normal, int light) {
+        this.vertex(matrix, vertexConsumer, vertexPos.x, vertexPos.y, vertexPos.z, u, v, normal.x, normal.y, normal.z, light);
     }
 
-    private void vertex(VertexConsumer vertexConsumer, float x, float y, float z, float u, float v, float normalX, float normalY, float normalZ, int light) {
-        vertexConsumer.vertex(cache.getPositionMatrix(), x, y, z).color(255, 255, 255, 255).texture(u, v).overlay(OverlayTexture.DEFAULT_UV).light(light).normal(cache, normalX, normalY, normalZ);
+    private void vertex(MatrixStack.Entry matrix, VertexConsumer vertexConsumer, float x, float y, float z, float u, float v, float normalX, float normalY, float normalZ, int light) {
+        vertexConsumer.vertex(matrix.getPositionMatrix(), x, y, z).color(255, 255, 255, 255).texture(u, v).overlay(OverlayTexture.DEFAULT_UV).light(light).normal(matrix, normalX, normalY, normalZ);
     }
 }

@@ -10,6 +10,7 @@
     "AbstractSignEditScreenMixin",
     "BannerBlockEntityMixin",
     "BannerBlockEntityRendererMixin",
+    "BannerBlockEntityRenderStateMixin",
     "BuiltinModelItemRendererMixin",
     "FabricationFixMixin",
     "MinecraftClientMixin",
