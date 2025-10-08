@@ -58,6 +58,7 @@ public class PaintingRenderer {
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(info.rotationVec.x));
 
         if (info.hasTranslucency()) {
+            // TODO: this
             // queueing seems to cause more problems than it solves (i think its currently not correctly happening after everything)
             //queueTranslucentRender(matrices.peek().copy(), info, light);
             renderPainting(matrices, queue, info, light, RenderLayer.getEntityTranslucent(info.getImageIdentifier()));
