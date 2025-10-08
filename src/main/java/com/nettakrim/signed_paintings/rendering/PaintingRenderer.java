@@ -3,7 +3,6 @@ package com.nettakrim.signed_paintings.rendering;
 import com.nettakrim.signed_paintings.util.ImageManager;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.model.BannerFlagBlockModel;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.texture.Sprite;
@@ -11,12 +10,11 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
 import org.joml.Vector3f;
-import java.util.List;
-import java.util.ArrayList;
 
 public class PaintingRenderer {
     public PaintingRenderer() {}
 
+    /*
     private record TranslucentRenderData(MatrixStack.Entry matrixEntry, PaintingInfo info, int light) {}
 
     private static final List<TranslucentRenderData> translucentQueue = new ArrayList<>();
@@ -47,6 +45,7 @@ public class PaintingRenderer {
             renderBack(matrix, sprite.getTextureSpecificVertexConsumer(consumers.getBuffer(RenderLayer.getEntityCutout(sprite.getAtlasId()))), sprite, info, light);
         }
     }
+    */
 
     public void renderOrQueuePainting(MatrixStack matrices, OrderedRenderCommandQueue queue, PaintingInfo info, int light) {
         Identifier image = info.getImageIdentifier();
@@ -59,8 +58,9 @@ public class PaintingRenderer {
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(info.rotationVec.x));
 
         if (info.hasTranslucency()) {
-            queueTranslucentRender(matrices.peek().copy(), info, light);
-            //renderPainting(matrices, queue, info, light, RenderLayer.getEntityTranslucent(info.getImageIdentifier()));
+            // queueing seems to cause more problems than it solves (i think its currently not correctly happening after everything)
+            //queueTranslucentRender(matrices.peek().copy(), info, light);
+            renderPainting(matrices, queue, info, light, RenderLayer.getEntityTranslucent(info.getImageIdentifier()));
         } else {
             renderPainting(matrices, queue, info, light, RenderLayer.getEntityCutout(info.getImageIdentifier()));
         }

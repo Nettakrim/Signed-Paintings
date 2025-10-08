@@ -20,8 +20,7 @@
     "SignBlockEntityRendererMixin",
     "SignBlockEntityRenderStateMixin",
     "SignEditScreenMixin",
-    "TextureManagerAccessor",
-    "WorldRendererMixin"
+    "TextureManagerAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

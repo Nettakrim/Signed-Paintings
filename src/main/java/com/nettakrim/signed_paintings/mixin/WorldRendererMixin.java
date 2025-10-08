@@ -1,5 +1,6 @@
 package com.nettakrim.signed_paintings.mixin;
 
+/*
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import net.minecraft.client.render.*;
@@ -24,3 +25,4 @@ public class WorldRendererMixin {
         SignedPaintingsClient.paintingRenderer.renderTranslucentQueue(bufferBuilders.getEntityVertexConsumers());
     }
 }
+*/
