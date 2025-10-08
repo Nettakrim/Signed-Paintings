@@ -15,34 +15,37 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class PaintingRenderer {
-    public PaintingRenderer() {
+    public PaintingRenderer() {}
 
-    }
     private record TranslucentRenderData(MatrixStack.Entry matrixEntry, PaintingInfo info, int light) {}
 
-
     private static final List<TranslucentRenderData> translucentQueue = new ArrayList<>();
+
+    public void renderTranslucentQueue(VertexConsumerProvider vertexConsumers) {
+        for (TranslucentRenderData data : translucentQueue) {
+            renderTranslucentPaintingImmediately(vertexConsumers, data);
+        }
+        translucentQueue.clear();
+    }
 
     private static void queueTranslucentRender(MatrixStack.Entry capturedEntry, PaintingInfo info, int light) {
         translucentQueue.add(new TranslucentRenderData(capturedEntry, info, light));
     }
 
-    private void renderTranslucentPaintingImmediately(MatrixStack matrices, VertexConsumerProvider consumers, TranslucentRenderData data) {
+    private void renderTranslucentPaintingImmediately(VertexConsumerProvider consumers, TranslucentRenderData data) {
         Identifier image = data.info.getImageIdentifier();
         if (!ImageManager.hasImage(image)) return;
 
-        matrices.push();
-        matrices.multiplyPositionMatrix(data.matrixEntry.getPositionMatrix());
-        //renderPainting(consumers, data.info, data.light, RenderLayer.getEntityTranslucent(image));
-        matrices.pop(); 
+        renderPaintingImmediately(data.matrixEntry, consumers, data.info, data.light, RenderLayer.getEntityTranslucent(image));
     }
 
+    private void renderPaintingImmediately(MatrixStack.Entry matrix, VertexConsumerProvider consumers, PaintingInfo info, int light, RenderLayer renderLayer) {
+        renderImage(matrix, consumers.getBuffer(renderLayer), info, light);
 
-    public void renderTranslucentQueue(MatrixStack matrices, VertexConsumerProvider vertexConsumers) {
-        for (TranslucentRenderData data : translucentQueue) {
-            renderTranslucentPaintingImmediately(matrices, vertexConsumers, data);
+        if (info.getBackType() != BackType.Type.NONE) {
+            Sprite sprite = info.getBackSprite();
+            renderBack(matrix, sprite.getTextureSpecificVertexConsumer(consumers.getBuffer(RenderLayer.getEntityCutout(sprite.getAtlasId()))), sprite, info, light);
         }
-        translucentQueue.clear();
     }
 
     public void renderOrQueuePainting(MatrixStack matrices, OrderedRenderCommandQueue queue, PaintingInfo info, int light) {
@@ -57,6 +60,7 @@ public class PaintingRenderer {
 
         if (info.hasPartialTransparency()) {
             queueTranslucentRender(matrices.peek().copy(), info, light);
+            //renderPainting(matrices, queue, info, light, RenderLayer.getEntityTranslucent(info.getImageIdentifier()));
         } else {
             renderPainting(matrices, queue, info, light, RenderLayer.getEntityCutout(info.getImageIdentifier()));
         }

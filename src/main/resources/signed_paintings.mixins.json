@@ -11,16 +11,17 @@
     "BannerBlockEntityMixin",
     "BannerBlockEntityRendererMixin",
     "BannerBlockEntityRenderStateMixin",
-    "ShieldModelRendererMixin",
     "FabricationFixMixin",
     "MinecraftClientMixin",
     "ScreenshotRecorderMixin",
     "SelectionManagerMixin",
+    "ShieldModelRendererMixin",
     "SignBlockEntityMixin",
     "SignBlockEntityRendererMixin",
     "SignBlockEntityRenderStateMixin",
     "SignEditScreenMixin",
-    "TextureManagerAccessor"
+    "TextureManagerAccessor",
+    "WorldRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

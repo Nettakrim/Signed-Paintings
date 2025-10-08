@@ -64,14 +64,6 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		renderShields = true;
 		reduceCulling = false;
 
-		// TODO: fix transparent images
-		//WorldRenderEvents.AFTER_TRANSLUCENT.register((context) -> {
-		//	MatrixStack matrices = context.matrixStack();
-		//	VertexConsumerProvider vertexConsumers = context.consumers();
-		//
-		//	SignedPaintingsClient.paintingRenderer.renderTranslucentQueue(matrices, vertexConsumers);
-		//});
-
 		ClientTickEvents.START_CLIENT_TICK.register((context) -> {
 			if (!sayBuffer.isEmpty()) {
 				int size = sayBuffer.size();
