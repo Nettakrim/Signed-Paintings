@@ -31,7 +31,7 @@ The reason i required images to be imgur to begin with was because having the cl
 
 While i did complain about issues with Imgur and Discord specifically, there is no reason your favourite image hoster would be immune to the same issues. (especially the last one! internet censorship does suck but, for now, it is the world we live in,, and image hosters are particularly susceptible to it)
 
-A lot of the alternatives ive looked at are weirdly lacking in clear descriptions of api limitations etc, and they are all limited in some way - i dont want to end up with the mod constantly rate limited, and i also dont know why an image upload service that *isnt* rate limited wouldnt say so in their advertising
+A lot of the alternatives ive looked at are weirdly lacking in clear descriptions of api limitations etc, and they are all limited in some way - i dont want to end up with the mod constantly rate limited (again!), and i also dont know why an image upload service that *isnt* rate limited wouldnt say so in their advertising (i am literally their target audience, why dont they tell me what i want to know!!)
 
 People have also, reasonably, complained that they cant trust imgur to keep their images safe etc - your favourite image hoster is almost certainly untrustworthy to someone else. I picked Imgur in part because it is the most recognisable to the average user!
 
