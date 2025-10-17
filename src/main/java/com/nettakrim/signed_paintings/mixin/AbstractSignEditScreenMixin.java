@@ -14,6 +14,7 @@ import com.nettakrim.signed_paintings.util.SignByteMapper;
 import net.minecraft.block.SignBlock;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -137,8 +138,10 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Inject(at = @At("TAIL"), method = "init")
-    private void init(CallbackInfo ci) {
-        doneButton = (ClickableWidget)this.children().get(0);
+    private void onInit(CallbackInfo ci) {
+        if (!this.children().isEmpty()) {
+            doneButton = (ClickableWidget) this.children().get(0);
+        }
 
         UIHelper.init(front, this, (SignBlockEntityAccessor) blockEntity);
         ArrayList<ClickableWidget> uiButtons = UIHelper.getButtons();
@@ -342,7 +345,17 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             clickableWidget.visible = to;
         }
 
-        doneButton.visible = !to;
+        if (doneButton != null) {
+            doneButton.visible = !to;
+        } else {
+            // litematica sets text before the edit screen appears when touching a sign in a schematic
+            // doing nothing here causes everything to break moments later
+            // just force closing the screen stops this
+            // TODO: fix this propery?
+            MinecraftClient.getInstance().send(() -> MinecraftClient.getInstance().setScreen(null));
+            selectionManager = new SelectionManager(() -> "", (s) -> {}, () -> "", (s) -> {}, (s) -> true);
+            onInit(null);
+        }
     }
 
     @Override
