@@ -163,7 +163,6 @@ public class ImageManager {
         if (!changesMade) return;
         try {
             if (!data.exists()) {
-                data.mkdirs();
                 data.createNewFile();
             }
             FileWriter writer = new FileWriter(data);
