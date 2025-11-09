@@ -148,9 +148,25 @@ public class ImageManager {
                             case 4:
                                 UIHelper.setBackgroundEnabled(active);
                         }
+                    } else if (phase == 4) {
+                        urlAliases.add(new URLAlias(s));
                     }
                 }
                 scanner.close();
+
+                if (urlAliases.isEmpty()) {
+                    registerURLAlias(new URLAlias("https://i.imgur.com/", new String[]{"i.imgur.com/", "imgur.com/", "imgur:"}, ".png"));
+                    registerURLAlias(new URLAlias("https://iili.io/", new String[]{"freeimage.host/i/", "iili:"}, ".png"));
+                    makeChange();
+                }
+                if (trustedDomains.isEmpty()) {
+                    trustDomain("https://i.imgur.com/");
+                    trustDomain("https://iili.io/");
+                    trustDomain("https://i.ibb.co/");
+                    trustDomain("https://upload.wikimedia.org/");
+                    trustDomain("https://web.archive.org/");
+                    makeChange();
+                }
             } else {
                 changesMade = true;
             }
@@ -187,6 +203,11 @@ public class ImageManager {
             s.append("\n").append(SignedPaintingsClient.renderShields ? "true" : "false");
             s.append("\n").append(SignedPaintingsClient.reduceCulling ? "true" : "false");
             s.append("\n").append(UIHelper.isBackgroundEnabled() ? "true" : "false");
+
+            s.append("\n- Aliases (list separated by spaces, first item is what url it will use, second item should be left as .png, then theres a list of aliases. to redirect, put your redirect host as the first item, and the put the original host (without the https://) in the alias list) -");
+            for (URLAlias alias : urlAliases) {
+                s.append("\n").append(alias.save());
+            }
 
             writer.write(s.toString());
             writer.close();
@@ -359,7 +380,7 @@ public class ImageManager {
                     return null;
                 }
             } catch (Throwable e) {
-                SignedPaintingsClient.info("error downloading image: "+e, true);
+                SignedPaintingsClient.info("error downloading image "+urlStr+" : "+e, true);
                 return null;
             }
         });
