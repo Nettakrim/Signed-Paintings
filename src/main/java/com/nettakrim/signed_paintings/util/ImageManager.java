@@ -149,7 +149,12 @@ public class ImageManager {
                                 UIHelper.setBackgroundEnabled(active);
                         }
                     } else if (phase == 4) {
-                        urlAliases.add(new URLAlias(s));
+                        String[] parts = s.split(" ", 3);
+                        if (parts.length == 3) {
+                            urlAliases.add(new URLAlias(parts[0], parts[2].split(" "), parts[1]));
+                        } else {
+                            SignedPaintingsClient.info("invalid url alias: \""+s+"\"", true);
+                        }
                     }
                 }
                 scanner.close();

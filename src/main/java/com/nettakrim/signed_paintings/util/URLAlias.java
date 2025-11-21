@@ -13,13 +13,6 @@ public class URLAlias {
         this.defaultImageFormat = defaultImageFormat;
     }
 
-    public URLAlias(String load) {
-        String[] parts = load.split(" ", 3);
-        domain = parts[0];
-        defaultImageFormat = parts[1];
-        aliases = parts[2].split(" ");
-    }
-
     public String save() {
         StringBuilder stringBuilder = new StringBuilder(domain);
         stringBuilder.append(' ').append(defaultImageFormat);
