@@ -11,9 +11,11 @@ import com.nettakrim.signed_paintings.rendering.PaintingInfo;
 import com.nettakrim.signed_paintings.rendering.SignSideInfo;
 import com.nettakrim.signed_paintings.util.ImageManager;
 import com.nettakrim.signed_paintings.util.SignByteMapper;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.SignBlock;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -40,6 +42,10 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import javax.imageio.ImageIO;
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 @Mixin(AbstractSignEditScreen.class)
@@ -73,7 +79,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private String domain = null;
 
     @Unique
-    private TextWidget discordDisclaimer;
+    private TextWidget disclaimer;
 
     @Unique
     private ClickableWidget uploadButton;
@@ -135,8 +141,10 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Inject(at = @At("TAIL"), method = "init")
-    private void init(CallbackInfo ci) {
-        doneButton = (ClickableWidget)this.children().get(0);
+    private void onInit(CallbackInfo ci) {
+        if (!this.children().isEmpty()) {
+            doneButton = (ClickableWidget) this.children().get(0);
+        }
 
         UIHelper.init(front, this, (SignBlockEntityAccessor) blockEntity);
         ArrayList<ClickableWidget> uiButtons = UIHelper.getButtons();
@@ -145,11 +153,13 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             addSelectableChild(widget);
         }
 
-        discordDisclaimer = new TextWidget(0, (this.height / 4 + 144)-43, this.width, 25, Text.translatable(SignedPaintingsClient.MODID+".discord_disclaimer"), textRenderer);
-        discordDisclaimer.visible = false;
-        addDrawableChild(discordDisclaimer);
+        int y = FabricLoader.getInstance().isModLoaded("stendhal") ? 40 : (this.height / 4 + 144);
 
-        uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".create_prompt"), button -> this.createPainting()).dimensions(this.width / 2 - 100, (this.height / 4 + 144)-25, 200, 20).build();
+        disclaimer = new TextWidget(0, y-43, this.width, 25, Text.empty(), textRenderer);
+        disclaimer.visible = false;
+        addDrawableChild(disclaimer);
+
+        uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".create_prompt"), button -> this.createPainting()).dimensions(this.width / 2 - 100, y-25, 200, 20).build();
         addDrawableChild(uploadButton);
         addSelectableChild(uploadButton);
 
@@ -237,7 +247,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         if (ImageManager.isValid(pasteString) || pasteString.matches(".*([/:\\\\]).*\\|$")) {
             url = pasteURL;
             if (url.startsWith("https://images-ext-1.discordapp.net/external/")) {
-                url = url.substring(url.substring(45).indexOf('/')+46).replaceFirst("/","://");
+                url = URLDecoder.decode(url.substring(url.substring(45).indexOf('/')+46).replaceFirst("/","://"), StandardCharsets.UTF_8);
             }
             updateUploadButton(false);
         }
@@ -295,6 +305,11 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Unique
     private void updateUploadButton(boolean isExisting) {
+        // stendhal compat
+        if (uploadButton == null) {
+            onInit(null);
+        }
+
         int start = url.indexOf('/')+2;
         domain = url.substring(0, url.substring(start).indexOf('/')+start+1);
         boolean blocked = SignedPaintingsClient.imageManager.domainBlocked(domain);
@@ -306,8 +321,35 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         if (url.startsWith("https://media.discordapp.net")) {
             url = url.replace("format=webp", "format=png");
-            discordDisclaimer.visible = true;
+            activateDisclaimer(Text.translatable(SignedPaintingsClient.MODID+".disclaimer.discord"));
+            return;
         }
+
+        URI uri = URI.create(url);
+        String path = uri.getPath();
+        int i = Math.max(path.lastIndexOf('.'), path.lastIndexOf('@'));
+
+        if (i == -1) {
+            activateDisclaimer(Text.translatable(SignedPaintingsClient.MODID + ".disclaimer.image_address"));
+            return;
+        }
+
+        String format = path.substring(i+1);
+
+        for (String supported : ImageIO.getReaderFormatNames()) {
+            if (supported.equals(format)) {
+                return;
+            }
+        }
+
+        activateDisclaimer(Text.translatable(SignedPaintingsClient.MODID + ".disclaimer.format", format));
+    }
+
+    @Unique
+    private void activateDisclaimer(Text text) {
+        disclaimer.setMessage(text);
+        disclaimer.visible = true;
+        disclaimer.setX((width - disclaimer.getWidth()) / 2);
     }
 
     @Unique
@@ -315,7 +357,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         SignedPaintingsClient.imageManager.trustDomain(domain);
         SignedPaintingsClient.imageManager.blockPromptedDomains.remove(domain);
         uploadButton.visible = false;
-        discordDisclaimer.visible = false;
+        disclaimer.visible = false;
 
         if (url == null) return;
 
@@ -333,7 +375,17 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             clickableWidget.visible = to;
         }
 
-        doneButton.visible = !to;
+        if (doneButton != null) {
+            doneButton.visible = !to;
+        } else {
+            // litematica sets text before the edit screen appears when touching a sign in a schematic
+            // doing nothing here causes everything to break moments later
+            // just force closing the screen stops this
+            // TODO: fix this propery?
+            MinecraftClient.getInstance().send(() -> MinecraftClient.getInstance().setScreen(null));
+            selectionManager = new SelectionManager(() -> "", (s) -> {}, () -> "", (s) -> {}, (s) -> true);
+            onInit(null);
+        }
     }
 
     @Override
