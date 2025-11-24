@@ -158,25 +158,25 @@ public class ImageManager {
                     }
                 }
                 scanner.close();
-
-                if (urlAliases.isEmpty()) {
-                    registerURLAlias(new URLAlias("https://i.imgur.com/", new String[]{"i.imgur.com/", "imgur.com/", "imgur:"}, ".png"));
-                    registerURLAlias(new URLAlias("https://iili.io/", new String[]{"freeimage.host/i/", "iili:"}, ".png"));
-                    makeChange();
-                }
-                if (trustedDomains.isEmpty()) {
-                    trustDomain("https://i.imgur.com/");
-                    trustDomain("https://iili.io/");
-                    trustDomain("https://i.ibb.co/");
-                    trustDomain("https://upload.wikimedia.org/");
-                    trustDomain("https://web.archive.org/");
-                    makeChange();
-                }
             } else {
                 changesMade = true;
             }
         } catch (IOException e) {
             SignedPaintingsClient.info("Failed to load data", true);
+        }
+
+        if (urlAliases.isEmpty()) {
+            registerURLAlias(new URLAlias("https://i.imgur.com/", new String[]{"i.imgur.com/", "imgur.com/", "imgur:"}, ".png"));
+            registerURLAlias(new URLAlias("https://iili.io/", new String[]{"freeimage.host/i/", "iili:"}, ".png"));
+            makeChange();
+        }
+        if (trustedDomains.isEmpty()) {
+            trustDomain("https://i.imgur.com/");
+            trustDomain("https://iili.io/");
+            trustDomain("https://i.ibb.co/");
+            trustDomain("https://upload.wikimedia.org/");
+            trustDomain("https://web.archive.org/");
+            makeChange();
         }
     }
 
