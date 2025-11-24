@@ -378,6 +378,12 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         if (doneButton != null) {
             doneButton.visible = !to;
         } else {
+            // stendhal compat
+            if (uploadButton == null) {
+                onInit(null);
+                return;
+            }
+
             // litematica sets text before the edit screen appears when touching a sign in a schematic
             // doing nothing here causes everything to break moments later
             // just force closing the screen stops this
