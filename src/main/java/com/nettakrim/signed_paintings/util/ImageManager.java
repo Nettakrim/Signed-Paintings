@@ -402,6 +402,15 @@ public class ImageManager {
     }
 
     public void registerURLAlias(URLAlias urlAlias) {
+        // replace existing
+        for (URLAlias other : urlAliases) {
+            if (other.domain.equals(urlAlias.domain)) {
+                other.aliases = urlAlias.aliases;
+                other.defaultImageFormat = urlAlias.defaultImageFormat;
+                return;
+            }
+        }
+
         urlAliases.add(urlAlias);
     }
 
