@@ -11,6 +11,7 @@ import com.nettakrim.signed_paintings.rendering.PaintingInfo;
 import com.nettakrim.signed_paintings.rendering.SignSideInfo;
 import com.nettakrim.signed_paintings.util.ImageManager;
 import com.nettakrim.signed_paintings.util.SignByteMapper;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.SignBlock;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
@@ -154,11 +155,13 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             addSelectableChild(widget);
         }
 
-        disclaimer = new TextWidget(0, (this.height / 4 + 144)-43, this.width, 25, Text.empty(), textRenderer);
+        int y = FabricLoader.getInstance().isModLoaded("stendhal") ? 40 : (this.height / 4 + 144);
+
+        disclaimer = new TextWidget(0, y-43, this.width, 25, Text.empty(), textRenderer);
         disclaimer.visible = false;
         addDrawableChild(disclaimer);
 
-        uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".create_prompt"), button -> this.createPainting()).dimensions(this.width / 2 - 100, (this.height / 4 + 144)-25, 200, 20).build();
+        uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".create_prompt"), button -> this.createPainting()).dimensions(this.width / 2 - 100, y-25, 200, 20).build();
         addDrawableChild(uploadButton);
         addSelectableChild(uploadButton);
 
@@ -309,6 +312,11 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Unique
     private void updateUploadButton(boolean isExisting) {
+        // stendhal compat
+        if (uploadButton == null) {
+            onInit(null);
+        }
+
         int start = url.indexOf('/')+2;
         domain = url.substring(0, url.substring(start).indexOf('/')+start+1);
         boolean blocked = SignedPaintingsClient.imageManager.domainBlocked(domain);
