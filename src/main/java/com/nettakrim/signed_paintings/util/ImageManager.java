@@ -166,7 +166,7 @@ public class ImageManager {
         }
 
         if (urlAliases.isEmpty()) {
-            registerURLAlias(new URLAlias("https://i.imgur.com/", new String[]{"i.imgur.com/", "imgur.com/", "imgur:"}, ".png"));
+            registerURLAlias(new URLAlias("https://i.imgur.com/", new String[]{"i.imgur.com/", "imgur:"}, ".png"));
             registerURLAlias(new URLAlias("https://iili.io/", new String[]{"freeimage.host/i/", "iili:"}, ".png"));
             makeChange();
         }

@@ -43,6 +43,10 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import javax.imageio.ImageIO;
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 @Mixin(AbstractSignEditScreen.class)
@@ -76,7 +80,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private String domain = null;
 
     @Unique
-    private TextWidget discordDisclaimer;
+    private TextWidget disclaimer;
 
     @Unique
     private ClickableWidget uploadButton;
@@ -150,9 +154,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             addSelectableChild(widget);
         }
 
-        discordDisclaimer = new TextWidget(0, (this.height / 4 + 144)-43, this.width, 25, Text.translatable(SignedPaintingsClient.MODID+".discord_disclaimer"), textRenderer);
-        discordDisclaimer.visible = false;
-        addDrawableChild(discordDisclaimer);
+        disclaimer = new TextWidget(0, (this.height / 4 + 144)-43, this.width, 25, Text.empty(), textRenderer);
+        disclaimer.visible = false;
+        addDrawableChild(disclaimer);
 
         uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".create_prompt"), button -> this.createPainting()).dimensions(this.width / 2 - 100, (this.height / 4 + 144)-25, 200, 20).build();
         addDrawableChild(uploadButton);
@@ -247,7 +251,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         if (ImageManager.isValid(pasteString) || pasteString.matches(".*([/:\\\\]).*\\|$")) {
             url = pasteURL;
             if (url.startsWith("https://images-ext-1.discordapp.net/external/")) {
-                url = url.substring(url.substring(45).indexOf('/')+46).replaceFirst("/","://");
+                url = URLDecoder.decode(url.substring(url.substring(45).indexOf('/')+46).replaceFirst("/","://"), StandardCharsets.UTF_8);
             }
             updateUploadButton(false);
         }
@@ -316,8 +320,35 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         if (url.startsWith("https://media.discordapp.net")) {
             url = url.replace("format=webp", "format=png");
-            discordDisclaimer.visible = true;
+            activateDisclaimer(Text.translatable(SignedPaintingsClient.MODID+".disclaimer.discord"));
+            return;
         }
+
+        URI uri = URI.create(url);
+        String path = uri.getPath();
+        int i = Math.max(path.lastIndexOf('.'), path.lastIndexOf('@'));
+
+        if (i == -1) {
+            activateDisclaimer(Text.translatable(SignedPaintingsClient.MODID + ".disclaimer.image_address"));
+            return;
+        }
+
+        String format = path.substring(i+1);
+
+        for (String supported : ImageIO.getReaderFormatNames()) {
+            if (supported.equals(format)) {
+                return;
+            }
+        }
+
+        activateDisclaimer(Text.translatable(SignedPaintingsClient.MODID + ".disclaimer.format", format));
+    }
+
+    @Unique
+    private void activateDisclaimer(Text text) {
+        disclaimer.setMessage(text);
+        disclaimer.visible = true;
+        disclaimer.setX((width - disclaimer.getWidth()) / 2);
     }
 
     @Unique
@@ -325,7 +356,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         SignedPaintingsClient.imageManager.trustDomain(domain);
         SignedPaintingsClient.imageManager.blockPromptedDomains.remove(domain);
         uploadButton.visible = false;
-        discordDisclaimer.visible = false;
+        disclaimer.visible = false;
 
         if (url == null) return;
 
