@@ -2,6 +2,7 @@ package com.nettakrim.signed_paintings.rendering;
 
 import com.nettakrim.signed_paintings.util.ImageManager;
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.block.entity.model.BannerFlagBlockModel;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
@@ -61,9 +62,9 @@ public class PaintingRenderer {
             // TODO: this
             // queueing seems to cause more problems than it solves (i think its currently not correctly happening after everything)
             //queueTranslucentRender(matrices.peek().copy(), info, light);
-            renderPainting(matrices, queue, info, light, RenderLayer.getEntityTranslucent(info.getImageIdentifier()));
+            renderPainting(matrices, queue, info, light, RenderLayers.entityTranslucent(info.getImageIdentifier()));
         } else {
-            renderPainting(matrices, queue, info, light, RenderLayer.getEntityCutout(info.getImageIdentifier()));
+            renderPainting(matrices, queue, info, light, RenderLayers.entityCutout(info.getImageIdentifier()));
         }
         matrices.pop();
     }
@@ -73,7 +74,7 @@ public class PaintingRenderer {
 
         if (info.getBackType() != BackType.Type.NONE) {
             Sprite sprite = info.getBackSprite();
-            queue.submitCustom(matrices, RenderLayer.getEntityCutout(sprite.getAtlasId()), (matrix, vertexConsumer) -> renderBack(matrix, sprite.getTextureSpecificVertexConsumer(vertexConsumer), sprite, info, light));
+            queue.submitCustom(matrices, RenderLayers.entityCutout(sprite.getAtlasId()), (matrix, vertexConsumer) -> renderBack(matrix, sprite.getTextureSpecificVertexConsumer(vertexConsumer), sprite, info, light));
         }
     }
 
@@ -115,7 +116,7 @@ public class PaintingRenderer {
         Identifier image = info.getImageIdentifier();
         if (!ImageManager.hasImage(image)) return;
 
-        RenderLayer layer = info.hasTranslucency() ? RenderLayer.getEntityTranslucent(image) : RenderLayer.getEntityCutout(image);
+        RenderLayer layer = info.hasTranslucency() ? RenderLayers.entityTranslucent(image) : RenderLayers.entityCutout(image);
         queue.submitCustom(matrices, layer, (matrix, vertexConsumer) -> info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light));
     }
 }
