@@ -231,6 +231,7 @@ public class ImageManager {
 
         if (!blocked && domainBlocked(url)) {
             String domain = SignedPaintingsClient.getDomain(url);
+            SignedPaintingsClient.info("Prompting domain trust for '"+ domain +"' from url '"+url+"'", false);
 
             if (blockPromptedDomains.add(domain)) {
                 ClickEvent clickEvent = new ClickEvent.SuggestCommand("/paintings:domain trust " + domain);
