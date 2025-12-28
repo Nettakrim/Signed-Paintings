@@ -9,8 +9,8 @@ import net.minecraft.client.sound.SoundManager;
 public class BackgroundClick extends ClickableWidget {
     private final InputSlider[] sliders;
 
-    public BackgroundClick(InputSlider[] sliders) {
-        super(0, 0, 0, 0, null);
+    public BackgroundClick(InputSlider[] sliders, int width, int height) {
+        super(0, 0, width, height, null);
         this.sliders = sliders;
     }
 

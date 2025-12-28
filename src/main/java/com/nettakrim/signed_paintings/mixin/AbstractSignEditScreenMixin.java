@@ -165,7 +165,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         addDrawableChild(uploadButton);
         addSelectableChild(uploadButton);
 
-        BackgroundClick backgroundClick = new BackgroundClick(UIHelper.getInputSliders());
+        BackgroundClick backgroundClick = new BackgroundClick(UIHelper.getInputSliders(), width, height);
         addSelectableChild(backgroundClick);
         UIHelper.addBackground(backgroundClick);
 
