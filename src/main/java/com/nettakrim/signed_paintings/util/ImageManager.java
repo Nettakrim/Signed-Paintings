@@ -16,11 +16,16 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 import java.net.URI;
+import java.nio.IntBuffer;
 import java.util.Map;
 import java.util.HashMap;
 
+import net.minecraft.util.PngMetadata;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.stb.STBImage;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -29,7 +34,10 @@ import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ImageManager {
     private final String dataHeader = "https://modrinth.com/mod/signed-paintings config v";
@@ -46,6 +54,9 @@ public class ImageManager {
     public final Set<String> blockPromptedDomains;
     public boolean autoBlockNew = false;
     public int renderTime = 0;
+
+    private static final Executor virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
+    private static final Executor threadPoolExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     private boolean changesMade = false;
     public boolean hasTranslucency(Identifier id) {
@@ -75,11 +86,11 @@ public class ImageManager {
 
                     if (alpha > 0 && alpha < 255) {
                         hasTranslucency = true;
-                        break; 
+                        break;
                     }
                 }
                 if (hasTranslucency) {
-                    break; 
+                    break;
                 }
             }
         } catch (Exception e) {
@@ -322,40 +333,66 @@ public class ImageManager {
         return builder.toString();
     }
 
-    public static void saveBufferedImageAsIdentifier(BufferedImage bufferedImage, Identifier identifier) {
+    public static CompletableFuture<Void> saveBufferedImageAsIdentifier(BufferedImage bufferedImage, Identifier identifier) {
         // https://discord.com/channels/507304429255393322/807617488313516032/934395931380576287
-        try {
+        return CompletableFuture.supplyAsync(() -> {
             if (SignedPaintingsClient.imageManager != null) {
-                 SignedPaintingsClient.imageManager.checkAndCacheTranslucency(identifier, bufferedImage);
+                SignedPaintingsClient.imageManager.checkAndCacheTranslucency(identifier, bufferedImage);
             } else {
-                 SignedPaintingsClient.info("ImageManager instance not available for transparency check: " + identifier, true);
+                SignedPaintingsClient.info("ImageManager instance not available for transparency check: " + identifier, true);
             }
 
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            ImageIO.write(bufferedImage, "png", stream);
+
+            try {
+                ImageIO.write(bufferedImage, "png", stream);
+            } catch (IOException e) {
+                SignedPaintingsClient.info("Failed to convert/register BufferedImage for identifier \"" + identifier + "\": " + e.getMessage(), true);
+                if (SignedPaintingsClient.imageManager != null) {
+                    SignedPaintingsClient.imageManager.translucencyCache.put(identifier, false);
+                }
+
+                return null;
+            }
+
             byte[] bytes = stream.toByteArray();
 
             ByteBuffer data = BufferUtils.createByteBuffer(bytes.length).put(bytes);
             data.flip();
 
-            MinecraftClient.getInstance().execute(() -> {
-                try {
-                    NativeImage img = NativeImage.read(data);
-                    NativeImageBackedTexture texture = new NativeImageBackedTexture(identifier::toString, img);
-                    MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, texture);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+            try {
+                PngMetadata.validate(data);
+
+                try (MemoryStack memoryStack = MemoryStack.stackPush()) {
+                    IntBuffer xBuffer = memoryStack.mallocInt(1);
+                    IntBuffer yBuffer = memoryStack.mallocInt(1);
+                    IntBuffer channelBuffer = memoryStack.mallocInt(1);
+                    ByteBuffer byteBuffer = STBImage.stbi_load_from_memory(data, xBuffer, yBuffer, channelBuffer, 4);
+
+                    AtomicReference<NativeImage> nativeImage = new AtomicReference<>();
+                    MinecraftClient.getInstance().submitAndJoin(() ->
+                            nativeImage.set(new NativeImage(NativeImage.Format.RGBA, xBuffer.get(0), yBuffer.get(0), true)));
+
+                    if (byteBuffer == null) {
+                        throw new IOException("Could not load image: " + STBImage.stbi_failure_reason());
+                    }
+
+                    var nativeImageBuffer = MemoryUtil.memByteBuffer(nativeImage.get().imageId(),
+                            nativeImage.get().getHeight() * nativeImage.get().getWidth() * nativeImage.get().getFormat().getChannelCount());
+
+                    MemoryUtil.memCopy(byteBuffer, nativeImageBuffer);
+
+                    MinecraftClient.getInstance().submitAndJoin(() -> {
+                        NativeImageBackedTexture texture = new NativeImageBackedTexture(identifier::toString, nativeImage.get());
+                        MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, texture);
+                    });
                 }
-            });
-
-        } catch (Throwable e) {
-            SignedPaintingsClient.info("Failed to convert/register BufferedImage for identifier \"" + identifier + "\": " + e.getMessage(), true);
-            if (SignedPaintingsClient.imageManager != null) {
-                 SignedPaintingsClient.imageManager.translucencyCache.put(identifier, false);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        }
+            return null;
+        }, threadPoolExecutor);
     }
-
 
     public static void removeImage(Identifier identifier) {
         MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().getTextureManager().destroyTexture(identifier));
@@ -389,7 +426,7 @@ public class ImageManager {
                 SignedPaintingsClient.info("error downloading image "+urlStr+" : "+e, true);
                 return null;
             }
-        });
+        }, virtualThreadExecutor);
     }
 
     public static boolean isValid(@NotNull String url) {

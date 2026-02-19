@@ -8,15 +8,16 @@ import org.joml.Vector2i;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ImageData {
     private BufferedImage baseImage;
     private Identifier baseIdentifier;
     private Identifier workingIdentifier;
-    private final HashMap<Vector2i, VariantData> images;
+    private final ConcurrentHashMap<Vector2i, VariantData> images = new ConcurrentHashMap<>();
+    private final Set<Identifier> loadingImages = Collections.newSetFromMap(new ConcurrentHashMap<>());
+
     public boolean ready = false;
     public boolean needsReload = false;
 
@@ -29,8 +30,8 @@ public class ImageData {
 
     private int expiredAllAt = -1;
 
+
     public ImageData() {
-        this.images = new HashMap<>();
     }
 
     public void onImageReady(BufferedImage image, Identifier baseIdentifier) {
@@ -61,8 +62,9 @@ public class ImageData {
             if (width != workingWidth || height != workingHeight) {
                 workingWidth = width;
                 workingHeight = height;
-                ImageManager.saveBufferedImageAsIdentifier(scaleImage(baseImage, width, height), workingIdentifier);
+                ImageManager.saveBufferedImageAsIdentifier(scaleImage(baseImage, width, height), workingIdentifier).join();
             }
+
             return workingIdentifier;
         } else {
             Identifier identifier;
@@ -76,8 +78,23 @@ public class ImageData {
                 bufferedImage = scaleImage(baseImage, width, height);
             }
 
-            ImageManager.saveBufferedImageAsIdentifier(bufferedImage, identifier);
-            images.put(resolution, new VariantData(identifier));
+            if (loadingImages.contains(identifier))
+                return identifier;
+
+            loadingImages.add(identifier);
+
+            ImageManager.saveBufferedImageAsIdentifier(bufferedImage, identifier).handleAsync((v, e) -> {
+                if (e != null)
+                {
+                    loadingImages.remove(identifier);
+                    return null;
+                }
+                images.put(resolution, new VariantData(identifier));
+                loadingImages.remove(identifier);
+
+                return null;
+            });
+
             return identifier;
         }
     }
