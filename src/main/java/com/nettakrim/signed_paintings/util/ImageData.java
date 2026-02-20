@@ -62,7 +62,7 @@ public class ImageData {
             if (width != workingWidth || height != workingHeight) {
                 workingWidth = width;
                 workingHeight = height;
-                ImageManager.saveBufferedImageAsIdentifier(scaleImage(baseImage, width, height), workingIdentifier).join();
+                ImageManager.saveBufferedImageAsIdentifier(scaleImage(baseImage, width, height), workingIdentifier);
             }
 
             return workingIdentifier;
@@ -83,7 +83,7 @@ public class ImageData {
 
             loadingImages.add(identifier);
 
-            ImageManager.saveBufferedImageAsIdentifier(bufferedImage, identifier).handleAsync((v, e) -> {
+            ImageManager.saveBufferedImageAsIdentifierAsync(bufferedImage, identifier).handleAsync((v, e) -> {
                 if (e != null)
                 {
                     loadingImages.remove(identifier);

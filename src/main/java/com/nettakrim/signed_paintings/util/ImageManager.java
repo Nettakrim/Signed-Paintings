@@ -333,9 +333,8 @@ public class ImageManager {
         return builder.toString();
     }
 
-    public static CompletableFuture<Void> saveBufferedImageAsIdentifier(BufferedImage bufferedImage, Identifier identifier) {
-        // https://discord.com/channels/507304429255393322/807617488313516032/934395931380576287
-        return CompletableFuture.supplyAsync(() -> {
+    public static void saveBufferedImageAsIdentifier(BufferedImage bufferedImage, Identifier identifier) {
+        {
             if (SignedPaintingsClient.imageManager != null) {
                 SignedPaintingsClient.imageManager.checkAndCacheTranslucency(identifier, bufferedImage);
             } else {
@@ -351,8 +350,7 @@ public class ImageManager {
                 if (SignedPaintingsClient.imageManager != null) {
                     SignedPaintingsClient.imageManager.translucencyCache.put(identifier, false);
                 }
-
-                return null;
+                return;
             }
 
             byte[] bytes = stream.toByteArray();
@@ -381,7 +379,6 @@ public class ImageManager {
                             nativeImage.get().getHeight() * nativeImage.get().getWidth() * nativeImage.get().getFormat().getChannelCount());
 
                     MemoryUtil.memCopy(byteBuffer, nativeImageBuffer);
-
                     MinecraftClient.getInstance().submitAndJoin(() -> {
                         NativeImageBackedTexture texture = new NativeImageBackedTexture(identifier::toString, nativeImage.get());
                         MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, texture);
@@ -390,6 +387,13 @@ public class ImageManager {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    public static CompletableFuture<Void> saveBufferedImageAsIdentifierAsync(BufferedImage bufferedImage, Identifier identifier) {
+        // https://discord.com/channels/507304429255393322/807617488313516032/934395931380576287
+        return CompletableFuture.supplyAsync(() -> {
+            saveBufferedImageAsIdentifier(bufferedImage, identifier);
             return null;
         }, threadPoolExecutor);
     }
