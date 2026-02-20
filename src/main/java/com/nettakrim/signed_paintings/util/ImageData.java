@@ -78,6 +78,9 @@ public class ImageData {
                 bufferedImage = scaleImage(baseImage, width, height);
             }
 
+            if (identifier == null)
+                return null;
+
             if (loadingImages.contains(identifier))
                 return identifier;
 
