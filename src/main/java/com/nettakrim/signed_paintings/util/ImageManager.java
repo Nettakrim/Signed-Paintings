@@ -334,59 +334,57 @@ public class ImageManager {
     }
 
     public static void saveBufferedImageAsIdentifier(BufferedImage bufferedImage, Identifier identifier) {
-        {
+        if (SignedPaintingsClient.imageManager != null) {
+            SignedPaintingsClient.imageManager.checkAndCacheTranslucency(identifier, bufferedImage);
+        } else {
+            SignedPaintingsClient.info("ImageManager instance not available for transparency check: " + identifier, true);
+        }
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+        try {
+            ImageIO.write(bufferedImage, "png", stream);
+        } catch (IOException e) {
+            SignedPaintingsClient.info("Failed to convert/register BufferedImage for identifier \"" + identifier + "\": " + e.getMessage(), true);
             if (SignedPaintingsClient.imageManager != null) {
-                SignedPaintingsClient.imageManager.checkAndCacheTranslucency(identifier, bufferedImage);
-            } else {
-                SignedPaintingsClient.info("ImageManager instance not available for transparency check: " + identifier, true);
+                SignedPaintingsClient.imageManager.translucencyCache.put(identifier, false);
             }
+            return;
+        }
 
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        byte[] bytes = stream.toByteArray();
 
-            try {
-                ImageIO.write(bufferedImage, "png", stream);
-            } catch (IOException e) {
-                SignedPaintingsClient.info("Failed to convert/register BufferedImage for identifier \"" + identifier + "\": " + e.getMessage(), true);
-                if (SignedPaintingsClient.imageManager != null) {
-                    SignedPaintingsClient.imageManager.translucencyCache.put(identifier, false);
+        ByteBuffer data = BufferUtils.createByteBuffer(bytes.length).put(bytes);
+        data.flip();
+
+        try {
+            PngMetadata.validate(data);
+
+            try (MemoryStack memoryStack = MemoryStack.stackPush()) {
+                IntBuffer xBuffer = memoryStack.mallocInt(1);
+                IntBuffer yBuffer = memoryStack.mallocInt(1);
+                IntBuffer channelBuffer = memoryStack.mallocInt(1);
+                ByteBuffer byteBuffer = STBImage.stbi_load_from_memory(data, xBuffer, yBuffer, channelBuffer, 4);
+
+                AtomicReference<NativeImage> nativeImage = new AtomicReference<>();
+                MinecraftClient.getInstance().submitAndJoin(() ->
+                        nativeImage.set(new NativeImage(NativeImage.Format.RGBA, xBuffer.get(0), yBuffer.get(0), true)));
+
+                if (byteBuffer == null) {
+                    throw new IOException("Could not load image: " + STBImage.stbi_failure_reason());
                 }
-                return;
+
+                var nativeImageBuffer = MemoryUtil.memByteBuffer(nativeImage.get().imageId(),
+                        nativeImage.get().getHeight() * nativeImage.get().getWidth() * nativeImage.get().getFormat().getChannelCount());
+
+                MemoryUtil.memCopy(byteBuffer, nativeImageBuffer);
+                MinecraftClient.getInstance().submitAndJoin(() -> {
+                    NativeImageBackedTexture texture = new NativeImageBackedTexture(identifier::toString, nativeImage.get());
+                    MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, texture);
+                });
             }
-
-            byte[] bytes = stream.toByteArray();
-
-            ByteBuffer data = BufferUtils.createByteBuffer(bytes.length).put(bytes);
-            data.flip();
-
-            try {
-                PngMetadata.validate(data);
-
-                try (MemoryStack memoryStack = MemoryStack.stackPush()) {
-                    IntBuffer xBuffer = memoryStack.mallocInt(1);
-                    IntBuffer yBuffer = memoryStack.mallocInt(1);
-                    IntBuffer channelBuffer = memoryStack.mallocInt(1);
-                    ByteBuffer byteBuffer = STBImage.stbi_load_from_memory(data, xBuffer, yBuffer, channelBuffer, 4);
-
-                    AtomicReference<NativeImage> nativeImage = new AtomicReference<>();
-                    MinecraftClient.getInstance().submitAndJoin(() ->
-                            nativeImage.set(new NativeImage(NativeImage.Format.RGBA, xBuffer.get(0), yBuffer.get(0), true)));
-
-                    if (byteBuffer == null) {
-                        throw new IOException("Could not load image: " + STBImage.stbi_failure_reason());
-                    }
-
-                    var nativeImageBuffer = MemoryUtil.memByteBuffer(nativeImage.get().imageId(),
-                            nativeImage.get().getHeight() * nativeImage.get().getWidth() * nativeImage.get().getFormat().getChannelCount());
-
-                    MemoryUtil.memCopy(byteBuffer, nativeImageBuffer);
-                    MinecraftClient.getInstance().submitAndJoin(() -> {
-                        NativeImageBackedTexture texture = new NativeImageBackedTexture(identifier::toString, nativeImage.get());
-                        MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, texture);
-                    });
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
