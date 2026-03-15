@@ -56,7 +56,7 @@ public class ImageManager {
     public int renderTime = 0;
 
     private static final Executor virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
-    private static final Executor threadPoolExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private static final Executor singleThreadExecutor = Executors.newSingleThreadExecutor();
 
     private boolean changesMade = false;
     public boolean hasTranslucency(Identifier id) {
@@ -393,7 +393,7 @@ public class ImageManager {
         return CompletableFuture.supplyAsync(() -> {
             saveBufferedImageAsIdentifier(bufferedImage, identifier);
             return null;
-        }, threadPoolExecutor);
+        }, singleThreadExecutor);
     }
 
     public static void removeImage(Identifier identifier) {
