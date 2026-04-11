@@ -24,9 +24,6 @@ public class SignedPaintingsMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.equals("com.nettakrim.signed_paintings.mixin.FabricationFixMixin")) {
             return FabricLoader.getInstance().isModLoaded("fabrication");
         }
-        if (mixinClassName.equals("com.nettakrim.signed_paintings.mixin.EnhancedBlockEntitiesMixin")) {
-            return FabricLoader.getInstance().isModLoaded("enhancedblockentities");
-        }
         return true;
     }
 

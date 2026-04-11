@@ -3,9 +3,6 @@
   "package": "com.nettakrim.signed_paintings.mixin",
   "compatibilityLevel": "JAVA_17",
   "plugin": "com.nettakrim.signed_paintings.SignedPaintingsMixinPlugin",
-  "mixins": [
-    "EnhancedBlockEntitiesMixin"
-  ],
   "client": [
     "AbstractSignEditScreenMixin",
     "BannerBlockEntityMixin",

@@ -1,20 +1,17 @@
 package com.nettakrim.signed_paintings.mixin;
 
 import com.nettakrim.signed_paintings.access.SignBlockEntityRenderStateAccessor;
-import com.nettakrim.signed_paintings.access.SignBlockEntityRendererAccessor;
 import com.nettakrim.signed_paintings.rendering.PaintingInfo;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import net.minecraft.client.model.Model;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.AbstractSignRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.state.SignRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.world.level.block.SignBlock;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
@@ -27,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AbstractSignRenderer.class)
-public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRendererAccessor, BlockEntityRenderer<SignBlockEntity, SignRenderState> {
+public abstract class SignBlockEntityRendererMixin implements BlockEntityRenderer<SignBlockEntity, SignRenderState> {
     @Inject(
             at = @At(
                     value = "INVOKE",
@@ -41,14 +38,6 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
             matrices.popPose();
             ci.cancel();
         }
-    }
-
-    @Override
-    public boolean signedPaintings$enhancedRender(BlockEntity signBlockEntity, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay) {
-        if (!SignedPaintingsClient.renderSigns) return false;
-
-        //return renderPaintings();
-        return false;
     }
 
     @Unique
