@@ -6,11 +6,15 @@ import com.nettakrim.signed_paintings.rendering.PaintingRenderer;
 import com.nettakrim.signed_paintings.util.*;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.minecraft.block.entity.SignText;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.util.ScreenshotRecorder;
-import net.minecraft.text.*;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Screenshot;
+import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.world.level.block.entity.SignText;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +27,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	public static final String MODID = "signed_paintings";
     private static final Logger LOGGER = LoggerFactory.getLogger(MODID);
 
-	public static MinecraftClient client;
+	public static Minecraft client;
 
 	public static ImageManager imageManager;
 	public static PaintingRenderer paintingRenderer;
@@ -40,11 +44,11 @@ public class SignedPaintingsClient implements ClientModInitializer {
 
 	public static boolean loggingEnabled = false;
 
-	private static final ArrayList<Text> sayBuffer = new ArrayList<>();
+	private static final ArrayList<Component> sayBuffer = new ArrayList<>();
 
 	@Override
 	public void onInitializeClient() {
-		client = MinecraftClient.getInstance();
+		client = Minecraft.getInstance();
 
 		imageManager = new ImageManager();
 
@@ -59,7 +63,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 				int size = sayBuffer.size();
 
 				for (int i = 0; i < size; i++) {
-					sayRaw(sayBuffer.remove(0));
+					sayRaw(sayBuffer.removeFirst());
 				}
 			}
 
@@ -70,16 +74,16 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	}
 
 	public static String combineSignText(SignText text) {
-		Text[] layers = text.getMessages(false);
+		Component[] layers = text.getMessages(false);
 		if (layers == null) return "";
 		StringBuilder combined = new StringBuilder();
-		for (Text line : layers) {
+		for (Component line : layers) {
 			if (line != null) combined.append(line.getString());
 		}
 		return combined.toString();
 	}
 
-	public static int getMaxFittingIndex(String reference, int budgetWidth, TextRenderer textRenderer) {
+	public static int getMaxFittingIndex(String reference, int budgetWidth, Font textRenderer) {
 		//the string->width function can be considered as a sorted array where array[N] is the width of the first N characters of our string
 		//this means it can be binary searched, resulting in an index representing the most first N characters that are at or below the budget width
 
@@ -91,7 +95,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 
 		//limit to 80 characters, since paper(?) additionally limits character count
 		int charLength = reference.length();
-		if (charLength > 80 && !MinecraftClient.getInstance().isInSingleplayer()) {
+		if (charLength > 80 && !Minecraft.getInstance().isLocalServer()) {
 			charLength = 80;
 		}
 
@@ -101,7 +105,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 
 		while (low <= high) {
 			int mid = low + ((high - low) / 2);
-			int currentWidth = textRenderer.getWidth(codePointSubstring(reference, mid));
+			int currentWidth = textRenderer.width(codePointSubstring(reference, mid));
 			if (currentWidth < budgetWidth) {
 				low = mid + 1;
 			} else if (currentWidth > budgetWidth) {
@@ -113,7 +117,7 @@ public class SignedPaintingsClient implements ClientModInitializer {
 		}
 
 		//length was not directly achievable, so use the next smallest length instead
-		if (textRenderer.getWidth(codePointSubstring(reference, index)) > budgetWidth) index--;
+		if (textRenderer.width(codePointSubstring(reference, index)) > budgetWidth) index--;
 		return reference.offsetByCodePoints(0, index);
 	}
 
@@ -145,34 +149,34 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	}
 
 	public static void sayStyled(String key, Style style, Object... args) {
-		Text text = Text.translatable(MODID+".say").setStyle(style.withColor(nameTextColor)).append(Text.translatable(MODID+"."+key, args).setStyle(Style.EMPTY.withColor(textColor)));
+		Component text = Component.translatable(MODID+".say").setStyle(style.withColor(nameTextColor)).append(Component.translatable(MODID+"."+key, args).setStyle(Style.EMPTY.withColor(textColor)));
 		sayRaw(text);
 	}
 
 	public static void sayTranslated(String key, Object... args) {
-		sayText(Text.translatable(MODID+"."+key, args));
+		sayText(Component.translatable(MODID+"."+key, args));
 	}
 
-	public static void sayText(MutableText text) {
-		Text newText = Text.translatable(MODID+".say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(text.setStyle(text.getStyle().withColor(textColor)));
+	public static void sayText(MutableComponent text) {
+		Component newText = Component.translatable(MODID+".say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(text.setStyle(text.getStyle().withColor(textColor)));
 		sayRaw(newText);
 	}
 
-	public static void longSay(MutableText text) {
-		Text newText = Text.translatable(MODID+".long_say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(text.setStyle(text.getStyle().withColor(textColor)));
+	public static void longSay(MutableComponent text) {
+		Component newText = Component.translatable(MODID+".long_say").setStyle(Style.EMPTY.withColor(nameTextColor)).append(text.setStyle(text.getStyle().withColor(textColor)));
 		sayRaw(newText);
 	}
 
-	public static void sayRaw(Text text) {
+	public static void sayRaw(Component text) {
 		if (client.player == null) {
 			sayBuffer.add(text);
 			return;
 		}
-		client.player.sendMessage(text, false);
+		client.player.sendSystemMessage(text);
 	}
 
 	public static String getScreenshotDirectory() {
-		return SignedPaintingsClient.client.runDirectory+"\\"+ ScreenshotRecorder.SCREENSHOTS_DIRECTORY+"\\";
+		return SignedPaintingsClient.client.gameDirectory+"\\"+ Screenshot.SCREENSHOT_DIR+"\\";
 	}
 
 	public static void info(String s, boolean force) {

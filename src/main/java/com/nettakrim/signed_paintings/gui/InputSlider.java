@@ -1,19 +1,17 @@
 package com.nettakrim.signed_paintings.gui;
 
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.widget.SliderWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
-import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 public class InputSlider {
     public final InputTextFieldWidget textFieldWidget;
@@ -24,11 +22,9 @@ public class InputSlider {
     private final float minValue;
     private final float maxValue;
 
-    private static final Predicate<String> textPredicate = text -> StringUtils.countMatches(text, '.') <= 1 && text.replaceAll("[^0-9.-]", "").length() == text.length();
-
     private Consumer<Float> onValueChanged;
 
-    public InputSlider(int x, int y, int textWidth, int sliderWidth, int height, int elementSpacing, float minSlider, float maxSlider, float sliderStep, float startingValue, float minValue, float maxValue, Text text) {
+    public InputSlider(int x, int y, int textWidth, int sliderWidth, int height, int elementSpacing, float minSlider, float maxSlider, float sliderStep, float startingValue, float minValue, float maxValue, Component text) {
         this.minValue = minValue;
         this.maxValue = maxValue;
 
@@ -36,17 +32,16 @@ public class InputSlider {
         sliderWidget.setChangedListener(this::onSliderChanged);
 
         textFieldWidget = createTextField(x+sliderWidth+elementSpacing+1, y+1, textWidth-2, height-2);
-        textFieldWidget.setChangedListener(this::onTextChanged);
-        textFieldWidget.setTextPredicate(textPredicate);
+        textFieldWidget.setResponder(this::onTextChanged);
 
         setValue(startingValue);
     }
 
     private InputTextFieldWidget createTextField(int x, int y, int width, int height) {
-        return new InputTextFieldWidget(SignedPaintingsClient.client.textRenderer, x, y, width, height, Text.literal("0"));
+        return new InputTextFieldWidget(SignedPaintingsClient.client.font, x, y, width, height, Component.literal("0"));
     }
 
-    private InputSliderWidget createSlider(int x, int y, int width, int height, Text text, float min, float max, float step) {
+    private InputSliderWidget createSlider(int x, int y, int width, int height, Component text, float min, float max, float step) {
         return new InputSliderWidget(x, y, width, height, text, min, max, step, 0.5f);
     }
 
@@ -58,8 +53,8 @@ public class InputSlider {
         return textFieldWidget.isFocused() || sliderWidget.isFocused();
     }
 
-    public boolean keyPressed(KeyInput input) {
-        if (textFieldWidget.isActive()) {
+    public boolean keyPressed(KeyEvent input) {
+        if (textFieldWidget.canConsumeInput()) {
             return textFieldWidget.keyPressed(input);
         } else if (sliderWidget.isFocused()) {
             return sliderWidget.keyPressed(input);
@@ -67,8 +62,8 @@ public class InputSlider {
         return false;
     }
 
-    public boolean charTyped(CharInput input) {
-        if (textFieldWidget.isActive()) {
+    public boolean charTyped(CharacterEvent input) {
+        if (textFieldWidget.canConsumeInput()) {
             return textFieldWidget.charTyped(input);
         } else if (sliderWidget.isFocused()) {
             return sliderWidget.charTyped(input);
@@ -93,13 +88,13 @@ public class InputSlider {
 
     private void onChange(float newValue) {
         if (Float.isFinite(newValue)) {
-            value = MathHelper.clamp(newValue, minValue, maxValue);
+            value = Mth.clamp(newValue, minValue, maxValue);
             if (onValueChanged != null) onValueChanged.accept(value);
         }
     }
 
     public void setValue(float to) {
-        value = MathHelper.clamp(to, minValue, maxValue);
+        value = Mth.clamp(to, minValue, maxValue);
         updateTextField();
         updateSlider();
     }
@@ -109,27 +104,27 @@ public class InputSlider {
     }
 
     private void updateTextField() {
-        textFieldWidget.setChangedListener(null);
-        textFieldWidget.setText(Float.toString(value));
-        textFieldWidget.setCursorToStart(false);
-        textFieldWidget.setChangedListener(this::onTextChanged);
+        textFieldWidget.setResponder((s) -> {});
+        textFieldWidget.setValue(Float.toString(value));
+        textFieldWidget.moveCursorToStart(false);
+        textFieldWidget.setResponder(this::onTextChanged);
     }
 
     public float getValue() {
         return value;
     }
 
-    public static class InputTextFieldWidget extends TextFieldWidget {
-        public InputTextFieldWidget(TextRenderer textRenderer, int x, int y, int width, int height, Text text) {
+    public static class InputTextFieldWidget extends EditBox {
+        public InputTextFieldWidget(Font textRenderer, int x, int y, int width, int height, Component text) {
             super(textRenderer, x, y, width, height, text);
         }
 
         @Override
-        public boolean keyPressed(KeyInput input) {
-            if (input.getKeycode() == 257) {
+        public boolean keyPressed(KeyEvent input) {
+            if (input.input() == 257) {
                 this.setFocused(false);
                 return true;
-            } else if (input.getKeycode() == 258) {
+            } else if (input.input() == 258) {
                 return false;
             } else {
                 return super.keyPressed(input);
@@ -137,13 +132,13 @@ public class InputSlider {
         }
     }
 
-    public static class InputSliderWidget extends SliderWidget {
+    public static class InputSliderWidget extends AbstractSliderButton {
         private final float min;
         private final float max;
         private final float step;
         private Consumer<Float> onChange;
 
-        public InputSliderWidget(int x, int y, int width, int height, Text text, float min, float max, float step, double value) {
+        public InputSliderWidget(int x, int y, int width, int height, Component text, float min, float max, float step, double value) {
             super(x, y, width, height, text, value);
             this.min = min;
             this.max = max;
@@ -158,9 +153,9 @@ public class InputSlider {
         protected void updateMessage() {}
 
         @Override
-        public boolean keyPressed(KeyInput input) {
-            if (input.getKeycode() == 263 || input.getKeycode() == 262) {
-                value = MathHelper.clamp(value + (input.getKeycode() == 263 ? -step : step)/(max-min), 0, 1);
+        public boolean keyPressed(KeyEvent input) {
+            if (input.input() == 263 || input.input() == 262) {
+                value = Mth.clamp(value + (input.input() == 263 ? -step : step)/(max-min), 0, 1);
                 applyValue();
                 return true;
             }
@@ -180,7 +175,7 @@ public class InputSlider {
 
         public void setValue(float to) {
             to = (to - min)/(max - min);
-            value = MathHelper.clamp(to, 0, 1);
+            value = Mth.clamp(to, 0, 1);
             updateMessage();
         }
     }

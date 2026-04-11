@@ -5,21 +5,20 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.util.ImageStatus;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import java.util.ArrayList;
 import java.util.Collections;
 
 public class StatusCommand {
     public static LiteralCommandNode<FabricClientCommandSource> getCommandNode() {
-        LiteralCommandNode<FabricClientCommandSource> statusNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> statusNode = ClientCommands
                 .literal("paintings:status")
                 .executes(StatusCommand::statusAll)
                 .then(
-                        ClientCommandManager.argument("url", StringArgumentType.greedyString())
+                        ClientCommands.argument("url", StringArgumentType.greedyString())
                         .suggests(SignedPaintingsCommands.images)
                         .executes(StatusCommand::status)
                 )
@@ -36,11 +35,11 @@ public class StatusCommand {
             totalSize += status.getTotalSize();
         }
 
-        MutableText text = getStatusText("unique", Integer.toString(statuses.size()));
+        MutableComponent text = getStatusText("unique", Integer.toString(statuses.size()));
         text.append(getStatusText("total_size", getKBString(totalSize)));
         for (ImageStatus status : statuses) {
             if (status.ready) {
-                MutableText linkText = getStatusText("size.link", getKBString(status.getTotalSize()), status.url);
+                MutableComponent linkText = getStatusText("size.link", getKBString(status.getTotalSize()), status.url);
                 linkText.setStyle(SignedPaintingsClient.getUrlButton(status.url));
                 text.append(linkText);
             }
@@ -59,7 +58,7 @@ public class StatusCommand {
             return 0;
         }
 
-        MutableText text = Text.literal("").append(getStatusText("link", status.url).setStyle(SignedPaintingsClient.getUrlButton(status.url)));
+        MutableComponent text = Component.literal("").append(getStatusText("link", status.url).setStyle(SignedPaintingsClient.getUrlButton(status.url)));
         text.append(getStatusText("resolutions", Integer.toString(status.getResolutionsCount())));
         text.append(getStatusText("total_size", getKBString(status.getTotalSize())));
 
@@ -86,7 +85,7 @@ public class StatusCommand {
         return s.substring(0, Math.min(5, s.length()))+unit;
     }
 
-    private static MutableText getStatusText(String key, Object... args) {
-        return Text.translatable(SignedPaintingsClient.MODID+".commands.status."+key, args);
+    private static MutableComponent getStatusText(String key, Object... args) {
+        return Component.translatable(SignedPaintingsClient.MODID+".commands.status."+key, args);
     }
 }

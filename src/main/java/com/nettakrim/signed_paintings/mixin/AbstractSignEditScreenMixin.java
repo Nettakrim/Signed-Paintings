@@ -12,27 +12,27 @@ import com.nettakrim.signed_paintings.rendering.SignSideInfo;
 import com.nettakrim.signed_paintings.util.ImageManager;
 import com.nettakrim.signed_paintings.util.SignByteMapper;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.block.SignBlock;
-import net.minecraft.block.entity.SignBlockEntity;
-import net.minecraft.block.entity.SignText;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.AbstractSignEditScreen;
-import net.minecraft.client.gui.screen.ingame.SignEditScreen;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.TextWidget;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.util.SelectionManager;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.font.TextFieldHelper;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.AbstractSignEditScreen;
+import net.minecraft.client.gui.screens.inventory.SignEditScreen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.block.StandingSignBlock;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.SignText;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
-import org.joml.Vector3f;
+import org.jspecify.annotations.NonNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -40,7 +40,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -62,17 +61,17 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Final
     @Shadow
-    protected SignBlockEntity blockEntity;
+    protected SignBlockEntity sign;
 
     @Final
     @Shadow
-    private boolean front;
+    private boolean isFrontText;
 
     @Shadow
-    private int currentRow;
+    private int line;
 
     @Shadow
-    private SelectionManager selectionManager;
+    private TextFieldHelper signField;
 
     @Unique
     private String url = null;
@@ -81,33 +80,33 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private String domain = null;
 
     @Unique
-    private TextWidget disclaimer;
+    private StringWidget disclaimer;
 
     @Unique
-    private ClickableWidget uploadButton;
+    private AbstractWidget uploadButton;
 
     @Unique
-    private ClickableWidget doneButton;
+    private AbstractWidget doneButton;
 
-    protected AbstractSignEditScreenMixin(Text title) {
+    protected AbstractSignEditScreenMixin(Component title) {
         super(title);
     }
 
     @Shadow
-    protected abstract void setCurrentRowMessage(String message);
+    protected abstract void setMessage(String message);
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawCenteredTextWithShadow(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;III)V"))
-    private boolean shouldRenderTitle(DrawContext context, TextRenderer textRenderer, Text text, int centerX, int y, int color){
+    @WrapWithCondition(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;centeredText(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
+    private boolean shouldRenderTitle(GuiGraphicsExtractor context, Font font, Component text, int x, int y, int color){
         return !isInfoCorrect();
     }
 
-    @WrapOperation(method = "renderSign", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix3x2fStack;translate(FF)Lorg/joml/Matrix3x2f;"))
+    @WrapOperation(method = "extractSign", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix3x2fStack;translate(FF)Lorg/joml/Matrix3x2f;"))
     private Matrix3x2f translateForRender(Matrix3x2fStack instance, float x, float y, Operation<Matrix3x2f> original){
         if (isInfoCorrect()) {
             float offset = 0f;
             //noinspection ConstantValue,EqualsBetweenInconvertibleTypes
             if (this.getClass().equals(SignEditScreen.class)) {
-                offset = blockEntity.getCachedState().getBlock() instanceof SignBlock ? -16.0f : -4.0f;
+                offset = sign.getBlockState().getBlock() instanceof StandingSignBlock ? -16.0f : -4.0f;
             }
             // 97.5 is centered, but it looks a bit weird, deliberately offcentering it ends up looking better
             original.call(instance, 86f, 38.0f + offset);
@@ -120,8 +119,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Unique
     private PaintingInfo getInfo() {
-        SignBlockEntityAccessor sign = (SignBlockEntityAccessor) blockEntity;
-        return front ? sign.signedPaintings$getFrontPaintingInfo() : sign.signedPaintings$getBackPaintingInfo();
+        SignBlockEntityAccessor signAccessor = (SignBlockEntityAccessor) sign;
+        return isFrontText ? signAccessor.signedPaintings$getFrontPaintingInfo() : signAccessor.signedPaintings$getBackPaintingInfo();
     }
 
     @Unique
@@ -131,49 +130,44 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+    public void extractBackground(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
         if (!isInfoCorrect() || UIHelper.isBackgroundEnabled()) {
-            super.renderBackground(context, mouseX, mouseY, delta);
+            super.extractBackground(context, mouseX, mouseY, delta);
         }
-    }
-
-    @Redirect(method = "renderSignText", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/AbstractSignEditScreen;getTextScale()Lorg/joml/Vector3f;"))
-    private Vector3f modifyGetTextScale(AbstractSignEditScreen instance) {
-        return new Vector3f(1.0f, 1.0f, 1.0f); // For some reason Signs had ugly 0.96
     }
 
     @Inject(at = @At("TAIL"), method = "init")
     private void onInit(CallbackInfo ci) {
         if (!this.children().isEmpty()) {
-            doneButton = (ClickableWidget) this.children().get(0);
+            doneButton = (AbstractWidget) this.children().getFirst();
         }
 
-        UIHelper.init(front, this, (SignBlockEntityAccessor) blockEntity);
-        ArrayList<ClickableWidget> uiButtons = UIHelper.getButtons();
-        for (ClickableWidget widget : uiButtons) {
-            addDrawableChild(widget);
-            addSelectableChild(widget);
+        UIHelper.init(isFrontText, this, (SignBlockEntityAccessor) sign);
+        ArrayList<AbstractWidget> uiButtons = UIHelper.getButtons();
+        for (AbstractWidget widget : uiButtons) {
+            addRenderableWidget(widget);
+            addWidget(widget);
         }
 
         int y = FabricLoader.getInstance().isModLoaded("stendhal") ? 40 : (this.height / 4 + 144);
 
-        disclaimer = new TextWidget(0, y-43, this.width, 25, Text.empty(), textRenderer);
+        disclaimer = new StringWidget(0, y-43, this.width, 25, Component.empty(), font);
         disclaimer.visible = false;
-        addDrawableChild(disclaimer);
+        addRenderableWidget(disclaimer);
 
-        uploadButton = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".create_prompt"), button -> this.createPainting()).dimensions(this.width / 2 - 100, y-25, 200, 20).build();
-        addDrawableChild(uploadButton);
-        addSelectableChild(uploadButton);
+        uploadButton = Button.builder(Component.translatable(SignedPaintingsClient.MODID + ".create_prompt"), button -> this.createPainting()).bounds(this.width / 2 - 100, y-25, 200, 20).build();
+        addRenderableWidget(uploadButton);
+        addWidget(uploadButton);
 
         BackgroundClick backgroundClick = new BackgroundClick(UIHelper.getInputSliders(), width, height);
-        addSelectableChild(backgroundClick);
+        addWidget(backgroundClick);
         UIHelper.addBackground(backgroundClick);
 
-        SignedPaintingsClient.currentSignEdit.setSelectionManager(selectionManager);
+        SignedPaintingsClient.currentSignEdit.setSelectionManager(signField);
 
         boolean correct = isInfoCorrect();
         signedPaintings$setVisibility(correct);
-        SignSideInfo sideInfo = ((SignBlockEntityAccessor)blockEntity).signedPaintings$getSideInfo(front);
+        SignSideInfo sideInfo = ((SignBlockEntityAccessor)sign).signedPaintings$getSideInfo(isFrontText);
         String currentUrl = sideInfo.getUrl();
         if (correct || currentUrl.isBlank() || currentUrl.equals("https://")) {
             uploadButton.visible = false;
@@ -189,18 +183,18 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
 
-    @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/block/entity/SignBlockEntity;ZZLnet/minecraft/text/Text;)V")
-    private void onScreenOpen(SignBlockEntity blockEntity, boolean front, boolean filtered, Text title, CallbackInfo ci) {
+    @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/world/level/block/entity/SignBlockEntity;ZZLnet/minecraft/network/chat/Component;)V")
+    private void onScreenOpen(SignBlockEntity blockEntity, boolean front, boolean filtered, Component title, CallbackInfo ci) {
         SignedPaintingsClient.currentSignEdit = new SignEditingInfo(blockEntity, this);
     }
 
-    @Inject(at = @At("TAIL"), method = "finishEditing")
+    @Inject(at = @At("TAIL"), method = "onDone")
     private void onScreenClose(CallbackInfo ci) {
         SignedPaintingsClient.currentSignEdit = null;
     }
 
     @Inject(at = @At("HEAD"), method = "keyPressed", cancellable = true)
-    private void onKeyPress(KeyInput input, CallbackInfoReturnable<Boolean> cir) {
+    private void onKeyPress(KeyEvent input, CallbackInfoReturnable<Boolean> cir) {
         for (InputSlider slider : UIHelper.getInputSliders()) {
             if (slider != null && slider.isFocused() && slider.keyPressed(input)) {
                 cir.setReturnValue(true);
@@ -211,7 +205,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Inject(at = @At("HEAD"), method = "charTyped", cancellable = true)
-    private void onCharType(CharInput input, CallbackInfoReturnable<Boolean> cir) {
+    private void onCharType(CharacterEvent input, CallbackInfoReturnable<Boolean> cir) {
         for (InputSlider slider : UIHelper.getInputSliders()) {
             if (slider != null && slider.isFocused() && slider.charTyped(input)) {
                 cir.setReturnValue(true);
@@ -221,33 +215,33 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         }
     }
 
-    @ModifyVariable(at = @At("STORE"), method = "renderSignText", ordinal = 0)
-    private boolean stopTextCaret(boolean bl) {
+    @ModifyVariable(at = @At("STORE"), method = "extractSignText", name = "showCursor")
+    private boolean stopTextCaret(boolean showCursor) {
         for (InputSlider slider : UIHelper.getInputSliders()) {
-            if (slider != null && slider.isFocused() && selectionManager != null) {
-                selectionManager.setSelectionEnd(selectionManager.getSelectionStart());
+            if (slider != null && slider.isFocused() && signField != null) {
+                signField.setSelectionPos(signField.getCursorPos());
                 return false;
             }
         }
-        return bl;
+        return showCursor;
     }
 
     @Override
     public void signedPaintings$clear(boolean setText) {
         for (int i = 0; i < messages.length; i++) {
             this.messages[i] = "";
-            this.text = this.text.withMessage(i, Text.literal(""));
+            this.text = this.text.setMessage(i, Component.literal(""));
         }
         if (setText) {
-            this.blockEntity.setText(this.text, this.front);
+            this.sign.setText(this.text, this.isFrontText);
         }
-        this.currentRow = 0;
+        this.line = 0;
     }
 
     @Override
     public int signedPaintings$paste(String pasteString, int selectionStart, int selectionEnd, boolean setText) {
-        int maxWidthPerLine = this.blockEntity.getMaxTextWidth();
-        TextRenderer textRenderer = SignedPaintingsClient.client.textRenderer;
+        int maxWidthPerLine = this.sign.getMaxTextLineWidth();
+        Font textRenderer = SignedPaintingsClient.client.font;
 
         String pasteURL = SignedPaintingsClient.imageManager.applyURLInferences(pasteString);
 
@@ -262,51 +256,51 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         String[] newMessages = new String[messages.length];
         System.arraycopy(messages, 0, newMessages, 0, messages.length);
 
-        selectionStart = MathHelper.clamp(selectionStart, 0, newMessages[currentRow].length());
-        selectionEnd = MathHelper.clamp(selectionEnd, 0, newMessages[currentRow].length());
+        selectionStart = Mth.clamp(selectionStart, 0, newMessages[line].length());
+        selectionEnd = Mth.clamp(selectionEnd, 0, newMessages[line].length());
         if (selectionStart > selectionEnd) {
             int temp = selectionEnd;
             selectionEnd = selectionStart;
             selectionStart = temp;
         }
 
-        newMessages[currentRow] = newMessages[currentRow].substring(0, selectionStart) + pasteString + newMessages[currentRow].substring(selectionEnd);
-        int currentWidth = textRenderer.getWidth(newMessages[currentRow]);
+        newMessages[line] = newMessages[line].substring(0, selectionStart) + pasteString + newMessages[line].substring(selectionEnd);
+        int currentWidth = textRenderer.width(newMessages[line]);
         int cursor = selectionStart + pasteString.length();
 
         if (currentWidth < maxWidthPerLine) {
-            setCurrentRowMessage(newMessages[currentRow]);
+            setMessage(newMessages[line]);
             return cursor;
         }
 
-        int cursorRow = currentRow;
+        int cursorRow = line;
 
         while (true) {
-            String line = newMessages[currentRow];
-            int index = SignedPaintingsClient.getMaxFittingIndex(line, maxWidthPerLine, textRenderer);
-            newMessages[currentRow] = line.substring(0, index);
-            if (currentRow == messages.length - 1 || line.length() <= index) {
+            String lineText = newMessages[line];
+            int index = SignedPaintingsClient.getMaxFittingIndex(lineText, maxWidthPerLine, textRenderer);
+            newMessages[line] = lineText.substring(0, index);
+            if (line == messages.length - 1 || lineText.length() <= index) {
                 break;
             }
-            if (currentRow == cursorRow && cursor > index) {
+            if (line == cursorRow && cursor > index) {
                 cursorRow++;
                 cursor -= index;
             }
-            currentRow++;
-            newMessages[currentRow] = line.substring(index) + newMessages[currentRow];
+            line++;
+            newMessages[line] = lineText.substring(index) + newMessages[line];
         }
-        cursor = MathHelper.clamp(cursor, 0, newMessages[cursorRow].length());
+        cursor = Mth.clamp(cursor, 0, newMessages[cursorRow].length());
 
         for (int i = 0; i < messages.length; i++) {
             this.messages[i] = newMessages[i];
-            this.text = this.text.withMessage(i, Text.literal(this.messages[i]));
+            this.text = this.text.setMessage(i, Component.literal(this.messages[i]));
         }
 
         if (setText) {
-            this.blockEntity.setText(this.text, this.front);
+            this.sign.setText(this.text, this.isFrontText);
         }
 
-        currentRow = cursorRow;
+        line = cursorRow;
         return cursor;
     }
 
@@ -322,13 +316,13 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         boolean blocked = SignedPaintingsClient.imageManager.domainBlocked(domain);
 
         String key = blocked ? (isExisting ? ".trust" : ".create_trust") : ".create";
-        uploadButton.setMessage(Text.translatable(SignedPaintingsClient.MODID + key));
-        uploadButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + key+"_info", domain.substring(start, domain.length()-1), Text.translatable(SignedPaintingsClient.MODID + ".trust_disclaimer"))));
+        uploadButton.setMessage(Component.translatable(SignedPaintingsClient.MODID + key));
+        uploadButton.setTooltip(Tooltip.create(Component.translatable(SignedPaintingsClient.MODID + key+"_info", domain.substring(start, domain.length()-1), Component.translatable(SignedPaintingsClient.MODID + ".trust_disclaimer"))));
         uploadButton.visible = true;
 
         if (url.startsWith("https://media.discordapp.net")) {
             url = url.replace("format=webp", "format=png");
-            activateDisclaimer(Text.translatable(SignedPaintingsClient.MODID+".disclaimer.discord"));
+            activateDisclaimer(Component.translatable(SignedPaintingsClient.MODID+".disclaimer.discord"));
             return;
         }
 
@@ -337,7 +331,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         int i = Math.max(path.lastIndexOf('.'), path.lastIndexOf('@'));
 
         if (i == -1) {
-            activateDisclaimer(Text.translatable(SignedPaintingsClient.MODID + ".disclaimer.image_address"));
+            activateDisclaimer(Component.translatable(SignedPaintingsClient.MODID + ".disclaimer.image_address"));
             return;
         }
 
@@ -349,11 +343,11 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             }
         }
 
-        activateDisclaimer(Text.translatable(SignedPaintingsClient.MODID + ".disclaimer.format", format));
+        activateDisclaimer(Component.translatable(SignedPaintingsClient.MODID + ".disclaimer.format", format));
     }
 
     @Unique
-    private void activateDisclaimer(Text text) {
+    private void activateDisclaimer(Component text) {
         disclaimer.setMessage(text);
         disclaimer.visible = true;
         disclaimer.setX((width - disclaimer.getWidth()) / 2);
@@ -370,17 +364,17 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         signedPaintings$clear(false);
         int newSelection = signedPaintings$paste(SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(url)), 0, 0, false);
-        selectionManager.setSelection(newSelection, newSelection);
+        signField.setSelectionRange(newSelection, newSelection);
 
-        SignSideInfo info = ((SignBlockEntityAccessor) this.blockEntity).signedPaintings$getSideInfo(this.front);
-        info.loadPainting(this.front, this.blockEntity, true);
+        SignSideInfo info = ((SignBlockEntityAccessor) this.sign).signedPaintings$getSideInfo(this.isFrontText);
+        info.loadPainting(this.isFrontText, this.sign, true);
 
         url = null;
     }
 
     @Override
     public void signedPaintings$setVisibility(boolean to) {
-        for (ClickableWidget clickableWidget : UIHelper.getButtons()) {
+        for (AbstractWidget clickableWidget : UIHelper.getButtons()) {
             clickableWidget.visible = to;
         }
 
@@ -397,8 +391,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             // doing nothing here causes everything to break moments later
             // just force closing the screen stops this
             // TODO: fix this propery?
-            MinecraftClient.getInstance().send(() -> MinecraftClient.getInstance().setScreen(null));
-            selectionManager = new SelectionManager(() -> "", (s) -> {}, () -> "", (s) -> {}, (s) -> true);
+            Minecraft.getInstance().schedule(() -> Minecraft.getInstance().setScreen(null));
+            signField = new TextFieldHelper(() -> "", (s) -> {}, () -> "", (s) -> {}, (s) -> true);
             onInit(null);
         }
     }
@@ -422,6 +416,6 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         if (!isInfoCorrect()) {
             return 0;
         }
-        return blockEntity.getCachedState().getBlock() instanceof SignBlock ? -16 : -4;
+        return sign.getBlockState().getBlock() instanceof StandingSignBlock ? -16 : -4;
     }
 }

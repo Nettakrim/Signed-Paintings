@@ -2,17 +2,17 @@ package com.nettakrim.signed_paintings.rendering;
 
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.util.ImageData;
-import net.minecraft.block.AbstractSignBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.SignBlockEntity;
-import net.minecraft.client.texture.Sprite;
-import net.minecraft.client.util.SpriteIdentifier;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.sprite.SpriteId;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SignBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Vector3f;
 
 public class PaintingInfo extends ImageInfo {
@@ -20,7 +20,7 @@ public class PaintingInfo extends ImageInfo {
     public final boolean isFront;
     public final SignType.Type signType;
 
-    private Sprite back;
+    private TextureAtlasSprite back;
 
     public Vector3f rotationVec = zero;
     public Vector3f offsetVec = zero;
@@ -44,7 +44,7 @@ public class PaintingInfo extends ImageInfo {
     public PaintingInfo(ImageData image, boolean isFront, SignBlockEntity blockEntity) {
         this.blockEntity = blockEntity;
         this.image = image;
-        this.signType = SignType.getType(blockEntity.getCachedState().getBlock());
+        this.signType = SignType.getType(blockEntity.getBlockState().getBlock());
         this.isFront = isFront;
         resetCuboid();
     }
@@ -125,45 +125,45 @@ public class PaintingInfo extends ImageInfo {
     private void updateBack() {
         BlockState blockState = null;
         if (this.backType == BackType.Type.BLOCK) {
-            World world = this.blockEntity.getWorld();
-            if (world == null) world = SignedPaintingsClient.client.world;
+            Level world = this.blockEntity.getLevel();
+            if (world == null) world = SignedPaintingsClient.client.level;
             if (world == null) {
                 needsBackUpdate = true;
                 return;
             }
-            BlockPos blockPos = this.blockEntity.getPos();
-            double rotation = ((AbstractSignBlock)this.blockEntity.getCachedState().getBlock()).getRotationDegrees(this.blockEntity.getCachedState());
+            BlockPos blockPos = this.blockEntity.getBlockPos();
+            double rotation = ((SignBlock)this.blockEntity.getBlockState().getBlock()).getYRotationDegrees(this.blockEntity.getBlockState());
             blockPos = switch (signType) {
-                case STANDING -> blockPos.down();
-                case WALL -> blockPos.offset(Direction.fromHorizontalDegrees(rotation+180), 1);
-                case HANGING -> blockPos.up();
-                case WALL_HANGING -> getSolidWallHang(world, blockPos, Direction.fromHorizontalDegrees(rotation+90));
+                case STANDING -> blockPos.below();
+                case WALL -> blockPos.relative(Direction.fromYRot(rotation+180), 1);
+                case HANGING -> blockPos.above();
+                case WALL_HANGING -> getSolidWallHang(world, blockPos, Direction.fromYRot(rotation+90));
             };
             blockState = world.getBlockState(blockPos);
 
             // while the world is loading it can end up detecting void air instead of the actual block
             // the performance impact if the sign actually does have void air should be negligible, as well as unlikely
-            if (blockState.isOf(Blocks.VOID_AIR)) {
+            if (blockState.is(Blocks.VOID_AIR)) {
                 needsBackUpdate = true;
             }
         }
 
-        if (blockState == null || blockState.isAir()) blockState = this.blockEntity.getCachedState();
+        if (blockState == null || blockState.isAir()) blockState = this.blockEntity.getBlockState();
 
-        Sprite back = null;
+        TextureAtlasSprite back = null;
         if (this.backType == BackType.Type.SIGN) {
-            String name = ((AbstractSignBlock) this.blockEntity.getCachedState().getBlock()).getWoodType().name();
+            String name = ((SignBlock) this.blockEntity.getBlockState().getBlock()).type().name();
             try {
-                back = SignedPaintingsClient.client.getAtlasManager().getSprite(new SpriteIdentifier( Identifier.of("minecraft", "textures/atlas/blocks.png"), Identifier.of("minecraft", "block/" + name + "_planks")));
+                back = SignedPaintingsClient.client.getAtlasManager().get(new SpriteId( Identifier.fromNamespaceAndPath("minecraft", "textures/atlas/blocks.png"), Identifier.fromNamespaceAndPath("minecraft", "block/" + name + "_planks")));
             } catch (Exception ignored) {}
         }
-        if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getBlockModels().getModelParticleSprite(blockState);
-        if (back == null) back = SignedPaintingsClient.client.getBakedModelManager().getMissingModel().particleSprite();
+        if (back == null) back = SignedPaintingsClient.client.getModelManager().getBlockModelShaper().getParticleIcon(blockState);
+        if (back == null) back = SignedPaintingsClient.client.getModelManager().getMissingBlockStateModel().particleIcon();
         this.back = back;
     }
 
-    private BlockPos getSolidWallHang(World world, BlockPos blockPos, Direction direction) {
-        return blockPos.offset(direction, world.getBlockState(blockPos.offset(direction, 1)).isAir() ? -1 : 1);
+    private BlockPos getSolidWallHang(Level world, BlockPos blockPos, Direction direction) {
+        return blockPos.relative(direction, world.getBlockState(blockPos.relative(direction, 1)).isAir() ? -1 : 1);
     }
 
     @Override
@@ -175,7 +175,7 @@ public class PaintingInfo extends ImageInfo {
         }
     }
 
-    public Sprite getBackSprite() {
+    public TextureAtlasSprite getBackSprite() {
         if (needsBackUpdate || back == null) updateBack();
         return back;
     }

@@ -1,9 +1,9 @@
 package com.nettakrim.signed_paintings.access;
 
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.util.math.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 public interface SignBlockEntityRendererAccessor {
-    boolean signedPaintings$enhancedRender(BlockEntity blockEntity, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay);
+    boolean signedPaintings$enhancedRender(BlockEntity blockEntity, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay);
 }

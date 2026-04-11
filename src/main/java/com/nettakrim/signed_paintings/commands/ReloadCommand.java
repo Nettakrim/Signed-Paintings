@@ -4,16 +4,16 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 
 public class ReloadCommand {
     public static LiteralCommandNode<FabricClientCommandSource> getCommandNode() {
-        LiteralCommandNode<FabricClientCommandSource> reloadNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> reloadNode = ClientCommands
                 .literal("paintings:reload")
                 .executes(ReloadCommand::reloadAll)
                 .then(
-                        ClientCommandManager.argument("url", StringArgumentType.greedyString())
+                        ClientCommands.argument("url", StringArgumentType.greedyString())
                         .suggests(SignedPaintingsCommands.images)
                         .executes(ReloadCommand::reload)
                 )

@@ -4,9 +4,9 @@ import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import com.nettakrim.signed_paintings.util.ImageData;
 import com.nettakrim.signed_paintings.util.SignByteMapper;
-import net.minecraft.block.entity.SignBlockEntity;
-import net.minecraft.block.entity.SignText;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.SignText;
 import org.joml.Vector3f;
 
 public class SignSideInfo {
@@ -244,8 +244,8 @@ public class SignSideInfo {
             String[] parts = s.split("[/:]");
             float[] values = new float[2];
             try {
-                values[0] = MathHelper.clamp(Float.parseFloat(parts[0]), 1f/32f, 64f);
-                values[1] = MathHelper.clamp(Float.parseFloat(parts[1]), 1f/32f, 64f);
+                values[0] = Mth.clamp(Float.parseFloat(parts[0]), 1f/32f, 64f);
+                values[1] = Mth.clamp(Float.parseFloat(parts[1]), 1f/32f, 64f);
             } catch (Exception ignored) {
                 return false;
             }
@@ -256,7 +256,7 @@ public class SignSideInfo {
 
         private boolean tryParseXOffset(String s) {
             try {
-                this.offsetVec.x = MathHelper.clamp(Float.parseFloat(s), -64f, 64f);
+                this.offsetVec.x = Mth.clamp(Float.parseFloat(s), -64f, 64f);
             } catch (Exception ignored) {
                 return false;
             }
@@ -265,7 +265,7 @@ public class SignSideInfo {
 
         private boolean tryParseYOffset(String s) {
             try {
-                this.offsetVec.y = MathHelper.clamp(Float.parseFloat(s), -64f, 64f);
+                this.offsetVec.y = Mth.clamp(Float.parseFloat(s), -64f, 64f);
             } catch (Exception ignored) {
                 return false;
             }
@@ -274,7 +274,7 @@ public class SignSideInfo {
 
         private boolean tryParseZOffset(String s) {
             try {
-                this.offsetVec.z = MathHelper.clamp(Float.parseFloat(s), -64f, 64f);
+                this.offsetVec.z = Mth.clamp(Float.parseFloat(s), -64f, 64f);
             } catch (Exception ignored) {
                 return false;
             }
@@ -298,7 +298,7 @@ public class SignSideInfo {
 
         private boolean tryParsePixelsPerBlock(String s) {
             try {
-                this.pixelsPerBlock = MathHelper.clamp(Float.parseFloat(s), 0, 1024);
+                this.pixelsPerBlock = Mth.clamp(Float.parseFloat(s), 0, 1024);
             } catch (Exception ignored) {
                 return false;
             }
@@ -323,7 +323,7 @@ public class SignSideInfo {
 
             SignedPaintingsClient.currentSignEdit.screen.signedPaintings$clear(false);
             int newSelection = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(actualText, 0, 0, true);
-            SignedPaintingsClient.currentSignEdit.selectionManager.setSelection(newSelection, newSelection);
+            SignedPaintingsClient.currentSignEdit.selectionManager.setSelectionRange(newSelection, newSelection);
         }
 
         private String getShortFloatString(float value) {

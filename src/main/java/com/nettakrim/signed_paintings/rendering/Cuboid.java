@@ -1,12 +1,11 @@
 package com.nettakrim.signed_paintings.rendering;
 
-import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
 import org.joml.*;
-
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.lang.Math;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.util.Mth;
 
 public class Cuboid {
     private final Vector3fc size;
@@ -40,21 +39,21 @@ public class Cuboid {
         return new Cuboid(width, height, 1/8f, 0, -5/6f, 0);
     }
 
-    public void renderFace(MatrixStack.Entry matrix, VertexConsumer vertexConsumer, Vector3f face, boolean split, float minU, float maxU, float minV, float maxV, int light) {
+    public void renderFace(PoseStack.Pose matrix, VertexConsumer vertexConsumer, Vector3f face, boolean split, float minU, float maxU, float minV, float maxV, int light) {
         AxisAngle4f rotation;
 
         if (face.y == 0) {
             float angle = 0;
             if (face.z == 0) {
-                angle = face.x < 0 ? MathHelper.HALF_PI : -MathHelper.HALF_PI;
+                angle = face.x < 0 ? Mth.HALF_PI : -Mth.HALF_PI;
             } else {
                 if (face.z < 0) {
-                    angle = MathHelper.PI;
+                    angle = Mth.PI;
                 }
             }
             rotation = new AxisAngle4f(angle, 0, 1, 0);
         } else {
-            float angle = face.y < 0 ? MathHelper.HALF_PI : -MathHelper.HALF_PI;
+            float angle = face.y < 0 ? Mth.HALF_PI : -Mth.HALF_PI;
             rotation = new AxisAngle4f(angle, 1, 0, 0);
         }
 
@@ -68,7 +67,7 @@ public class Cuboid {
         return vertex;
     }
 
-    private void renderFaceRotated(MatrixStack.Entry matrix, VertexConsumer vertexConsumer, AxisAngle4f rotation, boolean split, float minU, float maxU, float minV, float maxV, int light) {
+    private void renderFaceRotated(PoseStack.Pose matrix, VertexConsumer vertexConsumer, AxisAngle4f rotation, boolean split, float minU, float maxU, float minV, float maxV, int light) {
         Vector3f normal;
         if (light == -1) {
             light = 15728640;
@@ -104,18 +103,18 @@ public class Cuboid {
         }
     }
 
-    private void renderQuad(MatrixStack.Entry matrix, VertexConsumer vertexConsumer, float minX, float maxX, float minY, float maxY, AxisAngle4f rotation, float minU, float maxU, float minV, float maxV, Vector3f normal, int light) {
+    private void renderQuad(PoseStack.Pose matrix, VertexConsumer vertexConsumer, float minX, float maxX, float minY, float maxY, AxisAngle4f rotation, float minU, float maxU, float minV, float maxV, Vector3f normal, int light) {
         vertexFromVector(matrix, vertexConsumer, adjustVertex(new Vector3f(minX, minY, 0.5f), rotation), minU, maxV, normal, light);
         vertexFromVector(matrix, vertexConsumer, adjustVertex(new Vector3f(maxX, minY, 0.5f), rotation), maxU, maxV, normal, light);
         vertexFromVector(matrix, vertexConsumer, adjustVertex(new Vector3f(maxX, maxY, 0.5f), rotation), maxU, minV, normal, light);
         vertexFromVector(matrix, vertexConsumer, adjustVertex(new Vector3f(minX, maxY, 0.5f), rotation), minU, minV, normal, light);
     }
 
-    private void vertexFromVector(MatrixStack.Entry matrix, VertexConsumer vertexConsumer, Vector3f vertexPos, float u, float v, Vector3f normal, int light) {
+    private void vertexFromVector(PoseStack.Pose matrix, VertexConsumer vertexConsumer, Vector3f vertexPos, float u, float v, Vector3f normal, int light) {
         this.vertex(matrix, vertexConsumer, vertexPos.x, vertexPos.y, vertexPos.z, u, v, normal.x, normal.y, normal.z, light);
     }
 
-    private void vertex(MatrixStack.Entry matrix, VertexConsumer vertexConsumer, float x, float y, float z, float u, float v, float normalX, float normalY, float normalZ, int light) {
-        vertexConsumer.vertex(matrix.getPositionMatrix(), x, y, z).color(255, 255, 255, 255).texture(u, v).overlay(OverlayTexture.DEFAULT_UV).light(light).normal(matrix, normalX, normalY, normalZ);
+    private void vertex(PoseStack.Pose matrix, VertexConsumer vertexConsumer, float x, float y, float z, float u, float v, float normalX, float normalY, float normalZ, int light) {
+        vertexConsumer.addVertex(matrix.pose(), x, y, z).setColor(255, 255, 255, 255).setUv(u, v).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(matrix, normalX, normalY, normalZ);
     }
 }

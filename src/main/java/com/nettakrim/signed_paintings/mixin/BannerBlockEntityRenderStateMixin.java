@@ -2,11 +2,11 @@ package com.nettakrim.signed_paintings.mixin;
 
 import com.nettakrim.signed_paintings.access.BannerBlockEntityRenderStateAccessor;
 import com.nettakrim.signed_paintings.rendering.OverlayInfo;
-import net.minecraft.client.render.block.entity.state.BannerBlockEntityRenderState;
+import net.minecraft.client.renderer.blockentity.state.BannerRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(BannerBlockEntityRenderState.class)
+@Mixin(BannerRenderState.class)
 public class BannerBlockEntityRenderStateMixin implements BannerBlockEntityRenderStateAccessor {
     @Unique
     private OverlayInfo overlayInfo;

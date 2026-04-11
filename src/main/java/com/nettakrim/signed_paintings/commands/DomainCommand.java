@@ -6,12 +6,11 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.nettakrim.signed_paintings.DomainWarningScreen;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
@@ -38,34 +37,34 @@ public class DomainCommand {
         if (SignedPaintingsClient.imageManager.blockPromptedDomains.size() >= 2) {
             builder.suggest("all_prompted");
         }
-        builder.suggest("anything", Text.translatable(SignedPaintingsClient.MODID+".domain.warning"));
+        builder.suggest("anything", Component.translatable(SignedPaintingsClient.MODID+".domain.warning"));
         return CompletableFuture.completedFuture(builder.build());
     };
 
     public static LiteralCommandNode<FabricClientCommandSource> getCommandNode() {
-        LiteralCommandNode<FabricClientCommandSource> domainNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> domainNode = ClientCommands
                 .literal("paintings:domain")
                 .build();
 
-        LiteralCommandNode<FabricClientCommandSource> trustNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> trustNode = ClientCommands
                 .literal("trust")
                 .then(
-                        ClientCommandManager.argument("domain", StringArgumentType.greedyString())
+                        ClientCommands.argument("domain", StringArgumentType.greedyString())
                                 .suggests(trust)
                                 .executes(DomainCommand::trust)
                 )
                 .build();
 
-        LiteralCommandNode<FabricClientCommandSource> untrustNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> untrustNode = ClientCommands
                 .literal("untrust")
                 .then(
-                        ClientCommandManager.argument("domain", StringArgumentType.greedyString())
+                        ClientCommands.argument("domain", StringArgumentType.greedyString())
                                 .suggests(untrust)
                                 .executes(DomainCommand::untrust)
                 )
                 .build();
 
-        LiteralCommandNode<FabricClientCommandSource> listNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> listNode = ClientCommands
                 .literal("list")
                 .executes(DomainCommand::list)
                 .build();
@@ -86,13 +85,13 @@ public class DomainCommand {
         }
 
         if (domain.endsWith("//")) {
-            Text warning = Text.translatable(SignedPaintingsClient.MODID+".domain.warning");
+            Component warning = Component.translatable(SignedPaintingsClient.MODID+".domain.warning");
             if (SignedPaintingsClient.imageManager.trustedDomains.contains(domain)) {
                 SignedPaintingsClient.sayTranslated("commands.domain.trust.anything.exists", warning);
                 return 0;
             }
 
-            SignedPaintingsClient.client.send(() -> SignedPaintingsClient.client.setScreen(new DomainWarningScreen(domain, DomainCommand::confirmAnything)));
+            SignedPaintingsClient.client.schedule(() -> SignedPaintingsClient.client.setScreen(new DomainWarningScreen(domain, DomainCommand::confirmAnything)));
             return 1;
         } else if (domain.equals("all_prompted")) {
             int count = 0;
@@ -116,7 +115,7 @@ public class DomainCommand {
     }
 
     private static void confirmAnything(String domain) {
-        MutableText warning = Text.translatable(SignedPaintingsClient.MODID+".domain.warning");
+        MutableComponent warning = Component.translatable(SignedPaintingsClient.MODID+".domain.warning");
         if (SignedPaintingsClient.imageManager.trustDomain(domain)) {
             if (domain.equals("https://")) {
                 SignedPaintingsClient.sayTranslated("commands.domain.trust.anything", warning);
@@ -168,16 +167,16 @@ public class DomainCommand {
     }
 
     private static int list(CommandContext<FabricClientCommandSource> context) {
-        MutableText text = Text.translatable(SignedPaintingsClient.MODID+".commands.domain.list.start");
+        MutableComponent text = Component.translatable(SignedPaintingsClient.MODID+".commands.domain.list.start");
         for (String domain : SignedPaintingsClient.imageManager.trustedDomains) {
             if (!domain.equals("https://")) {
-                text.append(Text.translatable(SignedPaintingsClient.MODID + ".commands.domain.list", domain).setStyle(SignedPaintingsClient.getUrlButton(domain)));
+                text.append(Component.translatable(SignedPaintingsClient.MODID + ".commands.domain.list", domain).setStyle(SignedPaintingsClient.getUrlButton(domain)));
             }
         }
         if (SignedPaintingsClient.imageManager.trustedDomains.isEmpty()) {
-            text.append(Text.translatable(SignedPaintingsClient.MODID+".commands.domain.list.none"));
+            text.append(Component.translatable(SignedPaintingsClient.MODID+".commands.domain.list.none"));
         } else if (SignedPaintingsClient.imageManager.trustedDomains.contains("https://")) {
-            text.append(Text.translatable(SignedPaintingsClient.MODID + ".commands.domain.list.anything", Text.translatable(SignedPaintingsClient.MODID + ".domain.warning")));
+            text.append(Component.translatable(SignedPaintingsClient.MODID + ".commands.domain.list.anything", Component.translatable(SignedPaintingsClient.MODID + ".domain.warning")));
         }
 
         SignedPaintingsClient.longSay(text);

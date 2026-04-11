@@ -1,26 +1,22 @@
 package com.nettakrim.signed_paintings.util;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.gui.UIHelper;
 import com.nettakrim.signed_paintings.mixin.TextureManagerAccessor;
 import com.nettakrim.signed_paintings.rendering.OverlayInfo;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.AbstractTexture;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.PngInfo;
 import java.net.URI;
 import java.nio.IntBuffer;
-import java.util.Map;
-import java.util.HashMap;
-
-import net.minecraft.util.PngMetadata;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.STBImage;
@@ -124,7 +120,7 @@ public class ImageManager {
                         phase = -1;
                     } else {
                         // loading older format without version header, user needs to be notified about upload removal
-                        SignedPaintingsClient.sayText(Text.translatable(SignedPaintingsClient.MODID+".upload_change_notification").setStyle(SignedPaintingsClient.getUrlButton("https://github.com/Nettakrim/Signed-Paintings/blob/fixes/upload_removal.md")));
+                        SignedPaintingsClient.sayText(Component.translatable(SignedPaintingsClient.MODID+".upload_change_notification").setStyle(SignedPaintingsClient.getUrlButton("https://github.com/Nettakrim/Signed-Paintings/blob/fixes/upload_removal.md")));
                         makeChange();
                     }
                 }
@@ -248,8 +244,8 @@ public class ImageManager {
                 ClickEvent clickEvent = new ClickEvent.SuggestCommand("/paintings:domain trust " + domain);
 
                 SignedPaintingsClient.sayRaw(
-                        Text.translatable(SignedPaintingsClient.MODID + ".commands.domain.notify",
-                                Text.translatable(SignedPaintingsClient.MODID + ".commands.domain.notify.click")
+                        Component.translatable(SignedPaintingsClient.MODID + ".commands.domain.notify",
+                                Component.translatable(SignedPaintingsClient.MODID + ".commands.domain.notify.click")
                                         .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.nameTextColor).withClickEvent(clickEvent)
                                         ),
                                 domain
@@ -263,8 +259,8 @@ public class ImageManager {
 
         if (!blocked && autoBlockNew) {
             SignedPaintingsClient.sayRaw(
-                Text.translatable(SignedPaintingsClient.MODID+".commands.block.notify.base",
-                    Text.translatable(SignedPaintingsClient.MODID+".commands.block.notify.text", url)
+                Component.translatable(SignedPaintingsClient.MODID+".commands.block.notify.base",
+                    Component.translatable(SignedPaintingsClient.MODID+".commands.block.notify.text", url)
                             .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.textColor).withClickEvent(new ClickEvent.SuggestCommand("/paintings:block remove "+url)))
                     )
                     .setStyle(Style.EMPTY.withColor(SignedPaintingsClient.nameTextColor)
@@ -316,7 +312,7 @@ public class ImageManager {
     }
 
     private void onImageLoad(BufferedImage image, String url, ImageData data) {
-        Identifier identifier = Identifier.of(SignedPaintingsClient.MODID, createIdentifierSafeStringFromURL(url));
+        Identifier identifier = Identifier.fromNamespaceAndPath(SignedPaintingsClient.MODID, createIdentifierSafeStringFromURL(url));
         data.onImageReady(image, identifier);
         SignedPaintingsClient.info("Ready to render Image "+url, true);
     }
@@ -358,7 +354,7 @@ public class ImageManager {
         data.flip();
 
         try {
-            PngMetadata.validate(data);
+            PngInfo.validateHeader(data);
 
             try (MemoryStack memoryStack = MemoryStack.stackPush()) {
                 IntBuffer xBuffer = memoryStack.mallocInt(1);
@@ -367,20 +363,20 @@ public class ImageManager {
                 ByteBuffer byteBuffer = STBImage.stbi_load_from_memory(data, xBuffer, yBuffer, channelBuffer, 4);
 
                 AtomicReference<NativeImage> nativeImage = new AtomicReference<>();
-                MinecraftClient.getInstance().submitAndJoin(() ->
+                Minecraft.getInstance().executeBlocking(() ->
                         nativeImage.set(new NativeImage(NativeImage.Format.RGBA, xBuffer.get(0), yBuffer.get(0), true)));
 
                 if (byteBuffer == null) {
                     throw new IOException("Could not load image: " + STBImage.stbi_failure_reason());
                 }
 
-                var nativeImageBuffer = MemoryUtil.memByteBuffer(nativeImage.get().imageId(),
-                        nativeImage.get().getHeight() * nativeImage.get().getWidth() * nativeImage.get().getFormat().getChannelCount());
+                var nativeImageBuffer = MemoryUtil.memByteBuffer(nativeImage.get().getPointer(),
+                        nativeImage.get().getHeight() * nativeImage.get().getWidth() * nativeImage.get().format().components());
 
                 MemoryUtil.memCopy(byteBuffer, nativeImageBuffer);
-                MinecraftClient.getInstance().submitAndJoin(() -> {
-                    NativeImageBackedTexture texture = new NativeImageBackedTexture(identifier::toString, nativeImage.get());
-                    MinecraftClient.getInstance().getTextureManager().registerTexture(identifier, texture);
+                Minecraft.getInstance().executeBlocking(() -> {
+                    DynamicTexture texture = new DynamicTexture(identifier::toString, nativeImage.get());
+                    Minecraft.getInstance().getTextureManager().register(identifier, texture);
                 });
             }
         } catch (IOException e) {
@@ -397,7 +393,7 @@ public class ImageManager {
     }
 
     public static void removeImage(Identifier identifier) {
-        MinecraftClient.getInstance().execute(() -> MinecraftClient.getInstance().getTextureManager().destroyTexture(identifier));
+        Minecraft.getInstance().execute(() -> Minecraft.getInstance().getTextureManager().release(identifier));
     }
 
     public static boolean hasImage(Identifier identifier) {
@@ -405,7 +401,7 @@ public class ImageManager {
     }
 
     public static AbstractTexture getTexture(Identifier identifier) {
-        return ((TextureManagerAccessor)SignedPaintingsClient.client.getTextureManager()).getTextures().get(identifier);
+        return ((TextureManagerAccessor)SignedPaintingsClient.client.getTextureManager()).getByPath().get(identifier);
     }
 
     private CompletableFuture<BufferedImage> downloadImageBuffer(String urlStr) {

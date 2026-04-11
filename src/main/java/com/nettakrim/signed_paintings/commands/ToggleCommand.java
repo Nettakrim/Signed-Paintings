@@ -3,37 +3,37 @@ package com.nettakrim.signed_paintings.commands;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 
 public class ToggleCommand {
     public static LiteralCommandNode<FabricClientCommandSource> getCommandNode() {
-        LiteralCommandNode<FabricClientCommandSource> toggleNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> toggleNode = ClientCommands
                 .literal("paintings:toggle")
                 .executes(ToggleCommand::toggleAll)
                 .build();
 
-        LiteralCommandNode<FabricClientCommandSource> allNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> allNode = ClientCommands
                 .literal("all")
                 .executes(ToggleCommand::toggleAll)
                 .build();
 
-        LiteralCommandNode<FabricClientCommandSource> signNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> signNode = ClientCommands
                 .literal("signs")
                 .executes(ToggleCommand::toggleSigns)
                 .build();
 
-        LiteralCommandNode<FabricClientCommandSource> bannersNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> bannersNode = ClientCommands
                 .literal("banners")
                 .executes(ToggleCommand::toggleBanners)
                 .build();
 
-        LiteralCommandNode<FabricClientCommandSource> shieldsNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> shieldsNode = ClientCommands
                 .literal("shields")
                 .executes(ToggleCommand::toggleShields)
                 .build();
 
-        LiteralCommandNode<FabricClientCommandSource> cullingNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> cullingNode = ClientCommands
                 .literal("culling")
                 .executes(ToggleCommand::toggleCulling)
                 .build();

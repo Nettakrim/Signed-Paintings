@@ -3,22 +3,22 @@ package com.nettakrim.signed_paintings.gui;
 import com.nettakrim.signed_paintings.access.AbstractSignEditScreenAccessor;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import com.nettakrim.signed_paintings.rendering.SignSideInfo;
-import net.minecraft.block.entity.SignBlockEntity;
-import net.minecraft.client.util.SelectionManager;
+import net.minecraft.client.gui.font.TextFieldHelper;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
 
 public class SignEditingInfo {
     public final SignBlockEntity sign;
 
     public final AbstractSignEditScreenAccessor screen;
 
-    public SelectionManager selectionManager;
+    public TextFieldHelper selectionManager;
 
     public SignEditingInfo(SignBlockEntity sign, AbstractSignEditScreenAccessor screen) {
         this.sign = sign;
         this.screen = screen;
     }
 
-    public void setSelectionManager(SelectionManager selectionManager) {
+    public void setSelectionManager(TextFieldHelper selectionManager) {
         this.selectionManager = selectionManager;
     }
 

@@ -1,7 +1,6 @@
 package com.nettakrim.signed_paintings.mixin;
 
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
-import net.minecraft.client.util.SelectionManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -10,20 +9,21 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.Supplier;
+import net.minecraft.client.gui.font.TextFieldHelper;
 
-@Mixin(SelectionManager.class)
+@Mixin(TextFieldHelper.class)
 public class SelectionManagerMixin {
     @Final
-    @Shadow private Supplier<String> clipboardGetter;
+    @Shadow private Supplier<String> getClipboardFn;
 
-    @Shadow private int selectionStart;
-    @Shadow private int selectionEnd;
+    @Shadow private int cursorPos;
+    @Shadow private int selectionPos;
 
     @Inject(at = @At("HEAD"), method = "paste", cancellable = true)
     private void onPaste(CallbackInfo ci) {
         if (SignedPaintingsClient.currentSignEdit == null) return;
-        selectionStart = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(this.clipboardGetter.get(), selectionStart, selectionEnd, true);
-        selectionEnd = selectionStart;
+        cursorPos = SignedPaintingsClient.currentSignEdit.screen.signedPaintings$paste(this.getClipboardFn.get(), cursorPos, selectionPos, true);
+        selectionPos = cursorPos;
         ci.cancel();
     }
 }

@@ -5,11 +5,10 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import java.util.concurrent.CompletableFuture;
 
 public class BlockCommand {
@@ -24,34 +23,34 @@ public class BlockCommand {
     };
 
     public static LiteralCommandNode<FabricClientCommandSource> getCommandNode() {
-        LiteralCommandNode<FabricClientCommandSource> blockNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> blockNode = ClientCommands
                 .literal("paintings:block")
                 .build();
 
-        LiteralCommandNode<FabricClientCommandSource> addNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> addNode = ClientCommands
                 .literal("add")
                 .then(
-                        ClientCommandManager.argument("url", StringArgumentType.greedyString())
+                        ClientCommands.argument("url", StringArgumentType.greedyString())
                         .suggests(SignedPaintingsCommands.images)
                         .executes(BlockCommand::block)
                 )
                 .build();
 
-        LiteralCommandNode<FabricClientCommandSource> removeNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> removeNode = ClientCommands
                 .literal("remove")
                 .then(
-                        ClientCommandManager.argument("url", StringArgumentType.greedyString())
+                        ClientCommands.argument("url", StringArgumentType.greedyString())
                         .suggests(blocked)
                         .executes(BlockCommand::unblock)
                 )
                 .build();
 
-        LiteralCommandNode<FabricClientCommandSource> listNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> listNode = ClientCommands
                 .literal("list")
                 .executes(BlockCommand::list)
                 .build();
 
-        LiteralCommandNode<FabricClientCommandSource> autoNode = ClientCommandManager
+        LiteralCommandNode<FabricClientCommandSource> autoNode = ClientCommands
                 .literal("auto")
                 .executes(BlockCommand::auto)
                 .build();
@@ -67,9 +66,9 @@ public class BlockCommand {
         String url = StringArgumentType.getString(context, "url");
         if (url.equals("all")) {
             SignedPaintingsClient.imageManager.blockedURLs.addAll(SignedPaintingsClient.imageManager.getUrls());
-            MutableText text = Text.translatable(SignedPaintingsClient.MODID+".commands.block.add.all");
+            MutableComponent text = Component.translatable(SignedPaintingsClient.MODID+".commands.block.add.all");
             for (String newBlock : SignedPaintingsClient.imageManager.getUrls()) {
-                text.append(Text.translatable(SignedPaintingsClient.MODID+".commands.block.list", newBlock).setStyle(SignedPaintingsClient.getUrlButton(newBlock)));
+                text.append(Component.translatable(SignedPaintingsClient.MODID+".commands.block.list", newBlock).setStyle(SignedPaintingsClient.getUrlButton(newBlock)));
             }
             SignedPaintingsClient.imageManager.reloadAll();
             SignedPaintingsClient.longSay(text);
@@ -100,12 +99,12 @@ public class BlockCommand {
     }
 
     private static int list(CommandContext<FabricClientCommandSource> context) {
-        MutableText text = Text.translatable(SignedPaintingsClient.MODID+".commands.block.list.start");
+        MutableComponent text = Component.translatable(SignedPaintingsClient.MODID+".commands.block.list.start");
         for (String url : SignedPaintingsClient.imageManager.blockedURLs) {
-            text.append(Text.translatable(SignedPaintingsClient.MODID+".commands.block.list", url).setStyle(SignedPaintingsClient.getUrlButton(url)));
+            text.append(Component.translatable(SignedPaintingsClient.MODID+".commands.block.list", url).setStyle(SignedPaintingsClient.getUrlButton(url)));
         }
         if (SignedPaintingsClient.imageManager.blockedURLs.isEmpty()) {
-            text.append(Text.translatable(SignedPaintingsClient.MODID+".commands.block.list.none"));
+            text.append(Component.translatable(SignedPaintingsClient.MODID+".commands.block.list.none"));
         }
         SignedPaintingsClient.longSay(text);
         return SignedPaintingsClient.imageManager.blockedURLs.size();
@@ -114,7 +113,7 @@ public class BlockCommand {
     private static int auto(CommandContext<FabricClientCommandSource> context) {
         SignedPaintingsClient.imageManager.autoBlockNew = !SignedPaintingsClient.imageManager.autoBlockNew;
         if (SignedPaintingsClient.imageManager.autoBlockNew) {
-            SignedPaintingsClient.longSay(Text.translatable(SignedPaintingsClient.MODID+".commands.block.auto.on"));
+            SignedPaintingsClient.longSay(Component.translatable(SignedPaintingsClient.MODID+".commands.block.auto.on"));
             return 1;
         } else {
             SignedPaintingsClient.sayTranslated("commands.block.auto.off");

@@ -1,10 +1,6 @@
 package com.nettakrim.signed_paintings.mixin;
 
 import com.nettakrim.signed_paintings.access.SignBlockEntityRendererAccessor;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.block.entity.BlockEntityRenderer;
-import net.minecraft.client.util.math.MatrixStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;

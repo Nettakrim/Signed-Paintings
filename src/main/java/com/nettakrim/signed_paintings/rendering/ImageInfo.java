@@ -2,7 +2,7 @@ package com.nettakrim.signed_paintings.rendering;
 
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.util.ImageData;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 public abstract class ImageInfo {
     public Cuboid cuboid;

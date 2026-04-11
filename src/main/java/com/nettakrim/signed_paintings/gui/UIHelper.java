@@ -1,24 +1,24 @@
 package com.nettakrim.signed_paintings.gui;
 
+import com.mojang.blaze3d.platform.ClipboardManager;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import com.nettakrim.signed_paintings.rendering.BackType;
 import com.nettakrim.signed_paintings.rendering.Centering;
 import com.nettakrim.signed_paintings.rendering.PaintingInfo;
 import com.nettakrim.signed_paintings.rendering.SignSideInfo;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.util.Clipboard;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 public class UIHelper {
     private static final int BUTTON_HEIGHT = 14;
@@ -35,7 +35,7 @@ public class UIHelper {
     private static final int AREA_SIZE = BUTTON_HEIGHT * 2 + 5;
 
     private static final InputSlider[] inputSliders = new InputSlider[9];
-    private static final ArrayList<ClickableWidget> buttons = new ArrayList<>();
+    private static final ArrayList<AbstractWidget> buttons = new ArrayList<>();
 
     private static Screen screen;
 
@@ -45,9 +45,9 @@ public class UIHelper {
     private static boolean isBackgroundEnabled = false;
     private static float aspectRatio;
     private static PaintingInfo info;
-    private static ButtonWidget backModeButton;
-    private static ButtonWidget untrustButton;
-    private static ClickableWidget activeCentering;
+    private static Button backModeButton;
+    private static Button untrustButton;
+    private static AbstractWidget activeCentering;
 
     private static Vector3f offsetVec;
     private static Vector3f rotationVec;
@@ -84,8 +84,8 @@ public class UIHelper {
 
         // LEFT
         createCenteringButtons();
-        createButton(PADDING, Y_OFF, (BUTTON_WIDTH - SPACING_X) / 2, Text.translatable(SignedPaintingsClient.MODID + ".copy_url"), UIHelper::copyURL);
-        createButton(MathHelper.ceil(PADDING + (BUTTON_WIDTH + SPACING_X) / 2f), Y_OFF, (BUTTON_WIDTH - SPACING_X) / 2, Text.translatable(SignedPaintingsClient.MODID + ".copy_data"), UIHelper::copyData);
+        createButton(PADDING, Y_OFF, (BUTTON_WIDTH - SPACING_X) / 2, Component.translatable(SignedPaintingsClient.MODID + ".copy_url"), UIHelper::copyURL);
+        createButton(Mth.ceil(PADDING + (BUTTON_WIDTH + SPACING_X) / 2f), Y_OFF, (BUTTON_WIDTH - SPACING_X) / 2, Component.translatable(SignedPaintingsClient.MODID + ".copy_data"), UIHelper::copyData);
 
         inputSliders[3] = createInputSlider(PADDING, getYPosition(Y_OFF, 1.25f), SignedPaintingsClient.MODID + ".offset_x", -8f, 8f, 0.25f, -64f, 64f, offsetVec.x);
         inputSliders[3].setOnValueChanged(UIHelper::onXOffsetSliderChanged);
@@ -104,7 +104,7 @@ public class UIHelper {
         //RIGHT
         inputSliders[0] = createInputSlider(-PADDING, 0, SignedPaintingsClient.MODID + ".size.x", 0.5f, 10f, 0.5f, 1/32f, 64f, width);
         createButton(BUTTON_HEIGHT - PADDING - BUTTON_WIDTH, SPACING_Y, BUTTON_HEIGHT, getAspectLockIcon(aspectLocked), UIHelper::toggleAspectLock);
-        createButton(-PADDING, SPACING_Y, BUTTON_WIDTH - BUTTON_HEIGHT - SPACING_X, Text.translatable(SignedPaintingsClient.MODID + ".size.reset"), UIHelper::resetSize);
+        createButton(-PADDING, SPACING_Y, BUTTON_WIDTH - BUTTON_HEIGHT - SPACING_X, Component.translatable(SignedPaintingsClient.MODID + ".size.reset"), UIHelper::resetSize);
         inputSliders[1] = createInputSlider(-PADDING, getYPosition(0, 2f), SignedPaintingsClient.MODID + ".size.y", 0.5f, 10f, 0.5f, 1/32f, 64f, height);
 
         inputSliders[0].setOnValueChanged(value -> onSizeSliderChanged(value, true));
@@ -115,9 +115,9 @@ public class UIHelper {
         inputSliders[2] = createInputSlider(-PADDING, getYPosition(0, 4.25f), SignedPaintingsClient.MODID + ".pixels_per_block", 0, 64, 16, 0, 1024, pixelsPerBlock);
         inputSliders[2].setOnValueChanged(UIHelper::onPixelSliderChanged);
 
-        untrustButton = createButton(-PADDING, getYPosition(Y_OFF, 4.5f), BUTTON_WIDTH, Text.translatable(SignedPaintingsClient.MODID + ".untrust"), UIHelper::untrust);
+        untrustButton = createButton(-PADDING, getYPosition(Y_OFF, 4.5f), BUTTON_WIDTH, Component.translatable(SignedPaintingsClient.MODID + ".untrust"), UIHelper::untrust);
         createButton(-PADDING, getYPosition(Y_OFF, 5.5f), BUTTON_WIDTH, getBackgroundText(isBackgroundEnabled), UIHelper::cycleBackground);
-        createButton(-PADDING, getYPosition(Y_OFF, 6.5f), BUTTON_WIDTH, ScreenTexts.DONE, (ButtonWidget a) -> screen.close());
+        createButton(-PADDING, getYPosition(Y_OFF, 6.5f), BUTTON_WIDTH, CommonComponents.GUI_DONE, (Button a) -> screen.onClose());
     }
 
     private static void createCenteringButtons() {
@@ -135,12 +135,12 @@ public class UIHelper {
         String id = (Centering.getName(true, xCentering) + Centering.getName(false, yCentering)).toLowerCase(Locale.ROOT);
         int xPos = getCenteringButtonPosition(AREA_SIZE, xCentering, BUTTON_HEIGHT, 0) + (AREA_SIZE / 2) + (BUTTON_HEIGHT / 2) + PADDING;
         int yPos = -getCenteringButtonPosition(AREA_SIZE, yCentering, BUTTON_HEIGHT, 0) + (AREA_SIZE / 2) - (BUTTON_HEIGHT / 2) + PADDING;
-        ButtonWidget widget = ButtonWidget.builder(Text.translatable(SignedPaintingsClient.MODID + ".align." + id),
+        Button widget = Button.builder(Component.translatable(SignedPaintingsClient.MODID + ".align." + id),
                         button -> {
                             updateActiveCentering(button);
                             getSideInfo().updatePaintingCentering(xCentering, yCentering);
                         })
-                .position(xPos, yPos)
+                .pos(xPos, yPos)
                 .size(BUTTON_HEIGHT, BUTTON_HEIGHT)
                 .build();
 
@@ -148,7 +148,7 @@ public class UIHelper {
     }
 
     private static int getCenteringButtonPosition(int size, Centering.Type centering, int buttonSize, int screenSize) {
-        return MathHelper.floor(Centering.getOffset(size, centering)) + screenSize / 2 - buttonSize / 2;
+        return Mth.floor(Centering.getOffset(size, centering)) + screenSize / 2 - buttonSize / 2;
     }
 
     private static int getYPosition(int offset, float count) {
@@ -162,20 +162,20 @@ public class UIHelper {
         return (screenWidth - width) + offset;
     }
 
-    private static ButtonWidget createButton(int xOffset, int yOffset, int width, Text text, ButtonWidget.PressAction pressAction) {
-        ButtonWidget button = ButtonWidget.builder(text, pressAction).position(getAlignedOffset(xOffset, width), PADDING + yOffset).size(width, BUTTON_HEIGHT).build();
+    private static Button createButton(int xOffset, int yOffset, int width, Component text, Button.OnPress pressAction) {
+        Button button = Button.builder(text, pressAction).pos(getAlignedOffset(xOffset, width), PADDING + yOffset).size(width, BUTTON_HEIGHT).build();
         buttons.add(button);
         return button;
     }
 
     private static InputSlider createInputSlider(int xOffset, int yOffset, String key, float sliderMin, float sliderMax, float sliderStep, float valueMin, float valueMax, float valueCurrent) {
-        InputSlider inputSlider = new InputSlider(getAlignedOffset(xOffset, BUTTON_WIDTH), PADDING + yOffset, INPUT_SLIDER_TEXT, INPUT_SLIDER_SLIDER, BUTTON_HEIGHT, SPACING_X + 1, sliderMin, sliderMax, sliderStep, valueCurrent, valueMin, valueMax, Text.translatable(key));
+        InputSlider inputSlider = new InputSlider(getAlignedOffset(xOffset, BUTTON_WIDTH), PADDING + yOffset, INPUT_SLIDER_TEXT, INPUT_SLIDER_SLIDER, BUTTON_HEIGHT, SPACING_X + 1, sliderMin, sliderMax, sliderStep, valueCurrent, valueMin, valueMax, Component.translatable(key));
         buttons.add(inputSlider.sliderWidget);
         buttons.add(inputSlider.textFieldWidget);
         return inputSlider;
     }
 
-    private static void toggleAspectLock(ButtonWidget button) {
+    private static void toggleAspectLock(Button button) {
         setAspectLock(!aspectLocked);
         button.setMessage(getAspectLockIcon(aspectLocked));
     }
@@ -187,7 +187,7 @@ public class UIHelper {
         }
     }
 
-    private static void resetSize(ButtonWidget button) {
+    private static void resetSize(Button button) {
         SignSideInfo info = getSideInfo();
         info.resetSize();
         inputSliders[0].setValue(info.paintingInfo.getWidth());
@@ -195,24 +195,24 @@ public class UIHelper {
         aspectRatio = inputSliders[0].getValue() / inputSliders[1].getValue();
     }
 
-    private static Text getAspectLockIcon(boolean aspectLocked) {
-        return Text.translatable(SignedPaintingsClient.MODID + ".aspect." + (aspectLocked ? "locked" : "unlocked"));
+    private static Component getAspectLockIcon(boolean aspectLocked) {
+        return Component.translatable(SignedPaintingsClient.MODID + ".aspect." + (aspectLocked ? "locked" : "unlocked"));
     }
 
-    private static Text getBackTypeText(BackType.Type backType) {
-        return Text.translatable(SignedPaintingsClient.MODID + ".back_mode." + (backType.toString().toLowerCase(Locale.ROOT)));
+    private static Component getBackTypeText(BackType.Type backType) {
+        return Component.translatable(SignedPaintingsClient.MODID + ".back_mode." + (backType.toString().toLowerCase(Locale.ROOT)));
     }
 
-    private static Text getBackgroundText(boolean isEnabled) {
-        return Text.translatable(SignedPaintingsClient.MODID + ".background." + (isEnabled ? "y" : "n"));
+    private static Component getBackgroundText(boolean isEnabled) {
+        return Component.translatable(SignedPaintingsClient.MODID + ".background." + (isEnabled ? "y" : "n"));
     }
 
-    private static void cyclePaintingBack(ButtonWidget button) {
+    private static void cyclePaintingBack(Button button) {
         BackType.Type newType = getSideInfo().cyclePaintingBack();
         button.setMessage(getBackTypeText(newType));
     }
 
-    private static void cycleBackground(ButtonWidget button) {
+    private static void cycleBackground(Button button) {
         isBackgroundEnabled = !isBackgroundEnabled;
         button.setMessage(getBackgroundText(isBackgroundEnabled));
         SignedPaintingsClient.imageManager.makeChange();
@@ -269,30 +269,30 @@ public class UIHelper {
         getSideInfo().updatePaintingPixelsPerBlock(value);
     }
 
-    private static void copyURL(ButtonWidget button) {
+    private static void copyURL(Button button) {
         copyToClipboard(getSideInfo().getUrl());
-        screen.close();
+        screen.onClose();
     }
 
-    private static void copyData(ButtonWidget button) {
+    private static void copyData(Button button) {
         copyToClipboard(getSideInfo().getData());
-        screen.close();
+        screen.onClose();
     }
 
     private static void copyToClipboard(String string) {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client.player != null) {
-            Clipboard clipboard = new Clipboard();
-            clipboard.set(client.getWindow(), string);
+            ClipboardManager clipboard = new ClipboardManager();
+            clipboard.setClipboard(client.getWindow(), string);
         }
     }
 
-    private static void untrust(ButtonWidget button) {
+    private static void untrust(Button button) {
         SignedPaintingsClient.imageManager.untrustDomain(SignedPaintingsClient.getDomain(getSideInfo().getUrl()));
-        screen.close();
+        screen.onClose();
     }
 
-    public static ArrayList<ClickableWidget> getButtons() {
+    public static ArrayList<AbstractWidget> getButtons() {
         return buttons;
     }
 
@@ -324,11 +324,11 @@ public class UIHelper {
         inputSliders[8].setValue(info.paintingInfo.rotationVec.z);
         backModeButton.setMessage(getBackTypeText(info.paintingInfo.getBackType()));
         aspectRatio = info.paintingInfo.getWidth() / info.paintingInfo.getHeight();
-        untrustButton.setTooltip(Tooltip.of(Text.translatable(SignedPaintingsClient.MODID + ".untrust_info", SignedPaintingsClient.getDomain(info.getUrl()))));
+        untrustButton.setTooltip(Tooltip.create(Component.translatable(SignedPaintingsClient.MODID + ".untrust_info", SignedPaintingsClient.getDomain(info.getUrl()))));
         updateActiveCentering(buttons.get(info.paintingInfo.getCenterIndex()));
     }
 
-    private static void updateActiveCentering(ClickableWidget newCentering) {
+    private static void updateActiveCentering(AbstractWidget newCentering) {
         if (activeCentering != null) {
             activeCentering.active = true;
         }

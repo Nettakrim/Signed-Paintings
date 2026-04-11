@@ -3,46 +3,48 @@ package com.nettakrim.signed_paintings.mixin;
 import com.nettakrim.signed_paintings.access.SignBlockEntityRenderStateAccessor;
 import com.nettakrim.signed_paintings.access.SignBlockEntityRendererAccessor;
 import com.nettakrim.signed_paintings.rendering.PaintingInfo;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
-import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.SignBlockEntity;
-import net.minecraft.block.entity.SignText;
 import net.minecraft.client.model.Model;
-import net.minecraft.client.render.*;
-import net.minecraft.client.render.block.entity.AbstractSignBlockEntityRenderer;
-import net.minecraft.client.render.block.entity.BlockEntityRenderer;
-import net.minecraft.client.render.block.entity.state.SignBlockEntityRenderState;
-import net.minecraft.client.render.command.ModelCommandRenderer;
-import net.minecraft.client.render.command.OrderedRenderCommandQueue;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.blockentity.AbstractSignRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.state.SignRenderState;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.world.level.block.SignBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.SignText;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.WoodType;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(AbstractSignBlockEntityRenderer.class)
-public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRendererAccessor, BlockEntityRenderer<SignBlockEntity, SignBlockEntityRenderState> {
+@Mixin(AbstractSignRenderer.class)
+public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRendererAccessor, BlockEntityRenderer<SignBlockEntity, SignRenderState> {
     @Inject(
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/render/block/entity/AbstractSignBlockEntityRenderer;renderSign(Lnet/minecraft/client/util/math/MatrixStack;ILnet/minecraft/block/WoodType;Lnet/minecraft/client/model/Model$SinglePartModel;Lnet/minecraft/client/render/command/ModelCommandRenderer$CrumblingOverlayCommand;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;)V"
+                    target = "Lnet/minecraft/client/renderer/blockentity/AbstractSignRenderer;submitSign(Lcom/mojang/blaze3d/vertex/PoseStack;ILnet/minecraft/world/level/block/state/properties/WoodType;Lnet/minecraft/client/model/Model$Simple;Lnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;Lnet/minecraft/client/renderer/SubmitNodeCollector;)V"
             ),
-            method = "render(Lnet/minecraft/client/render/block/entity/state/SignBlockEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/block/BlockState;Lnet/minecraft/block/AbstractSignBlock;Lnet/minecraft/block/WoodType;Lnet/minecraft/client/model/Model$SinglePartModel;Lnet/minecraft/client/render/command/ModelCommandRenderer$CrumblingOverlayCommand;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;)V",
+            method = "submitSignWithText(Lnet/minecraft/client/renderer/blockentity/state/SignRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/SignBlock;Lnet/minecraft/world/level/block/state/properties/WoodType;Lnet/minecraft/client/model/Model$Simple;Lnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;Lnet/minecraft/client/renderer/SubmitNodeCollector;)V",
             cancellable = true
     )
-    private void onRender(SignBlockEntityRenderState renderState, MatrixStack matrices, BlockState blockState, AbstractSignBlock block, WoodType woodType, Model.SinglePartModel model, ModelCommandRenderer.CrumblingOverlayCommand crumblingOverlay, OrderedRenderCommandQueue queue, CallbackInfo ci) {
+    private void onRender(SignRenderState renderState, PoseStack matrices, BlockState blockState, SignBlock block, WoodType woodType, Model.Simple model, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay, SubmitNodeCollector queue, CallbackInfo ci) {
         if (renderPaintings(renderState, matrices, block, queue)) {
-            matrices.pop();
+            matrices.popPose();
             ci.cancel();
         }
     }
 
     @Override
-    public boolean signedPaintings$enhancedRender(BlockEntity signBlockEntity, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay) {
+    public boolean signedPaintings$enhancedRender(BlockEntity signBlockEntity, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay) {
         if (!SignedPaintingsClient.renderSigns) return false;
 
         //return renderPaintings();
@@ -50,7 +52,7 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
     }
 
     @Unique
-    private boolean renderPaintings(SignBlockEntityRenderState renderState, MatrixStack matrices, AbstractSignBlock block, OrderedRenderCommandQueue queue) {
+    private boolean renderPaintings(SignRenderState renderState, PoseStack matrices, SignBlock block, SubmitNodeCollector queue) {
         if (!SignedPaintingsClient.renderSigns) return false;
 
         boolean success = false;
@@ -61,16 +63,16 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
     }
 
     @Unique
-    private boolean renderPaintingInfo(PaintingInfo info, OrderedRenderCommandQueue queue, MatrixStack matrices, SignBlockEntityRenderState state, SignText text) {
+    private boolean renderPaintingInfo(PaintingInfo info, SubmitNodeCollector queue, PoseStack matrices, SignRenderState state, SignText text) {
         if (info != null && info.isReady()) {
-            SignedPaintingsClient.paintingRenderer.renderOrQueuePainting(matrices, queue, info, text != null && text.isGlowing() ? -1 : state.lightmapCoordinates);
+            SignedPaintingsClient.paintingRenderer.renderOrQueuePainting(matrices, queue, info, text != null && text.hasGlowingText() ? -1 : state.lightCoords);
             return true;
         }
         return false;
     }
 
-    public boolean isInRenderDistance(SignBlockEntity blockEntity, Vec3d pos) {
-        return (hasPainting((SignBlockEntityAccessor)blockEntity) && SignedPaintingsClient.reduceCulling) || BlockEntityRenderer.super.isInRenderDistance(blockEntity, pos);
+    public boolean isInRenderDistance(SignBlockEntity blockEntity, Vec3 pos) {
+        return (hasPainting((SignBlockEntityAccessor)blockEntity) && SignedPaintingsClient.reduceCulling) || BlockEntityRenderer.super.shouldRender(blockEntity, pos);
     }
 
     @Unique
@@ -82,8 +84,8 @@ public abstract class SignBlockEntityRendererMixin implements SignBlockEntityRen
         return paintingInfo != null && paintingInfo.isReady();
     }
 
-    @Inject(at = @At("TAIL"), method = "updateRenderState(Lnet/minecraft/block/entity/SignBlockEntity;Lnet/minecraft/client/render/block/entity/state/SignBlockEntityRenderState;FLnet/minecraft/util/math/Vec3d;Lnet/minecraft/client/render/command/ModelCommandRenderer$CrumblingOverlayCommand;)V")
-    private void updateRenderState(SignBlockEntity signBlockEntity, SignBlockEntityRenderState signBlockEntityRenderState, float f, Vec3d vec3d, ModelCommandRenderer.CrumblingOverlayCommand crumblingOverlayCommand, CallbackInfo ci) {
+    @Inject(at = @At("TAIL"), method = "extractRenderState(Lnet/minecraft/world/level/block/entity/SignBlockEntity;Lnet/minecraft/client/renderer/blockentity/state/SignRenderState;FLnet/minecraft/world/phys/Vec3;Lnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;)V")
+    private void updateRenderState(SignBlockEntity signBlockEntity, SignRenderState signBlockEntityRenderState, float f, Vec3 vec3d, ModelFeatureRenderer.CrumblingOverlay crumblingOverlayCommand, CallbackInfo ci) {
         SignBlockEntityAccessor accessor = (SignBlockEntityAccessor)signBlockEntity;
         accessor.signedPaintings$reloadIfNeeded();
 

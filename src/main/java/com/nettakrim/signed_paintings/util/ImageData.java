@@ -1,15 +1,15 @@
 package com.nettakrim.signed_paintings.util;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.util.Identifier;
 import org.joml.Vector2i;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.resources.Identifier;
 
 public class ImageData {
     private BufferedImage baseImage;
@@ -39,7 +39,7 @@ public class ImageData {
         this.width = image.getWidth();
         this.height = image.getHeight();
         this.baseIdentifier = baseIdentifier;
-        this.workingIdentifier = baseIdentifier.withSuffixedPath("_working");
+        this.workingIdentifier = baseIdentifier.withSuffix("_working");
         this.ready = true;
     }
 
@@ -74,7 +74,7 @@ public class ImageData {
                 identifier = baseIdentifier;
                 bufferedImage = baseImage;
             } else {
-                identifier = baseIdentifier.withSuffixedPath("_"+width+"x"+height);
+                identifier = baseIdentifier.withSuffix("_"+width+"x"+height);
                 bufferedImage = scaleImage(baseImage, width, height);
             }
 
@@ -135,13 +135,13 @@ public class ImageData {
 
     public ImageStatus getStatus() {
         ImageStatus imageStatus = new ImageStatus();
-        images.forEach((key, value) -> imageStatus.addResolution(key, getBytes(Objects.requireNonNull(((NativeImageBackedTexture) ImageManager.getTexture(value.identifier)).getImage())), value.identifier != baseIdentifier));
+        images.forEach((key, value) -> imageStatus.addResolution(key, getBytes(Objects.requireNonNull(((DynamicTexture) ImageManager.getTexture(value.identifier)).getPixels())), value.identifier != baseIdentifier));
         imageStatus.ready = ready;
         return imageStatus;
     }
 
     private long getBytes(NativeImage image) {
-        long bytesPerPixel = image.getFormat().getChannelCount();
+        long bytesPerPixel = image.format().components();
         return image.getWidth()*image.getHeight()*bytesPerPixel;
     }
 

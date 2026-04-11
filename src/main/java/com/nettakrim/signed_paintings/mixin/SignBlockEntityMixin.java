@@ -3,13 +3,13 @@ package com.nettakrim.signed_paintings.mixin;
 import com.nettakrim.signed_paintings.*;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import com.nettakrim.signed_paintings.rendering.*;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.entity.SignBlockEntity;
-import net.minecraft.block.entity.SignText;
-import net.minecraft.storage.ReadView;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.SignText;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -68,7 +68,7 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
 
     public SignBlockEntityMixin(BlockEntityType<?> type, BlockPos pos, BlockState state) {super(type, pos, state);}
 
-    @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/block/entity/BlockEntityType;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)V")
+    @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/world/level/block/entity/BlockEntityType;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V")
     private void onInit(BlockEntityType<?> blockEntityType, BlockPos blockPos, BlockState blockState, CallbackInfo ci) {
         frontInfo = new SignSideInfo(frontText, null);
         backInfo = new SignSideInfo(backText, null);
@@ -93,11 +93,11 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
         }
     }
 
-    @Inject(at = @At("TAIL"), method = "readData")
-    private void onNBTRead(ReadView view, CallbackInfo ci) {
+    @Inject(at = @At("TAIL"), method = "loadAdditional")
+    private void onNBTRead(ValueInput view, CallbackInfo ci) {
         frontInfo.text = frontText;
         backInfo.text = backText;
-        SignedPaintingsClient.info("nbt read "+frontText.getMessage(0, false).toString()+" at "+getPos(), false);
+        SignedPaintingsClient.info("nbt read "+frontText.getMessage(0, false).toString()+" at "+getBlockPos(), false);
         frontInfo.loadPainting(true, entity, false);
         backInfo.loadPainting(false, entity, false);
     }
