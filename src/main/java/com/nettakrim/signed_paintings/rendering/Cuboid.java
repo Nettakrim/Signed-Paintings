@@ -17,7 +17,7 @@ public class Cuboid {
     }
 
     public static Cuboid CreateWallCuboid(float xSize, Centering.Type xCentering, float ySize, Centering.Type yCentering, float zSize) {
-        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering), Centering.getOffset(ySize, yCentering), -0.0025f + (zSize/2) - 1/16f);
+        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering), Centering.getOffset(ySize, yCentering), -0.0025f + (zSize/2));
     }
 
     public static Cuboid CreateFlushCuboid(float xSize, Centering.Type xCentering, float ySize, Centering.Type yCentering, float zSize) {
@@ -25,7 +25,7 @@ public class Cuboid {
     }
 
     public static Cuboid CreateCentralCuboid(float xSize, Centering.Type xCentering, float ySize, Centering.Type yCentering, float zSize) {
-        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering), Centering.getOffset(ySize, yCentering), (zSize/2) - 0.0025f);
+        return new Cuboid(xSize, ySize, zSize, Centering.getOffset(xSize, xCentering), Centering.getOffset(ySize, yCentering), (zSize/2) - 0.0025f + 0.5f);
     }
 
     public static Cuboid CreateOverlayCuboid(float aspectRatio) {

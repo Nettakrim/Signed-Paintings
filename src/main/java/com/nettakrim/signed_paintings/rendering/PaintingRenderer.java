@@ -48,15 +48,17 @@ public class PaintingRenderer {
     }
     */
 
-    public boolean renderOrQueuePainting(PoseStack matrices, float rotation, SubmitNodeCollector queue, PaintingInfo info, int light) {
+    public boolean renderOrQueuePainting(PoseStack matrices, float rotation, boolean standing, SubmitNodeCollector queue, PaintingInfo info, int light) {
         Identifier image = info.getImageIdentifier();
         if (!ImageManager.hasImage(image)) return false;
 
         matrices.pushPose();
-        matrices.translate(info.offsetVec.x + 0.5f, info.offsetVec.y + 0.5f, info.offsetVec.z);
+        float z = standing ? 0f : 0.5f;
+        matrices.translate(info.offsetVec.x + 0.5f, info.offsetVec.y + 0.5f, info.offsetVec.z + z);
         matrices.mulPose(Axis.YP.rotationDegrees(info.rotationVec.y + (info.isFront ? 0 : 180) - rotation));
         matrices.mulPose(Axis.ZP.rotationDegrees(info.rotationVec.z));
         matrices.mulPose(Axis.XP.rotationDegrees(info.rotationVec.x));
+        matrices.translate(0.0f, 0.0f, -z);
 
         if (info.hasTranslucency()) {
             // TODO: this
