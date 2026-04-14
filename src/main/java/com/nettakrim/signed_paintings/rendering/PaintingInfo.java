@@ -157,8 +157,9 @@ public class PaintingInfo extends ImageInfo {
                 back = SignedPaintingsClient.client.getAtlasManager().get(new SpriteId( Identifier.fromNamespaceAndPath("minecraft", "textures/atlas/blocks.png"), Identifier.fromNamespaceAndPath("minecraft", "block/" + name + "_planks")));
             } catch (Exception ignored) {}
         }
-        if (back == null) back = SignedPaintingsClient.client.getModelManager().getBlockModelShaper().getParticleIcon(blockState);
-        if (back == null) back = SignedPaintingsClient.client.getModelManager().getMissingBlockStateModel().particleIcon();
+        if (back == null) {
+            back = SignedPaintingsClient.client.getModelManager().getBlockStateModelSet().getParticleMaterial(blockState).sprite();
+        }
         this.back = back;
     }
 
