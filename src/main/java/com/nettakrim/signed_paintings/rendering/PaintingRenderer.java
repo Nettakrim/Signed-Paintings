@@ -53,11 +53,10 @@ public class PaintingRenderer {
         if (!ImageManager.hasImage(image)) return;
 
         matrices.pushPose();
-        matrices.translate(info.offsetVec.x + 0.5f, info.offsetVec.y + 0.5f, info.offsetVec.z + 0.5f);
+        matrices.translate(info.offsetVec.x + 0.5f, info.offsetVec.y + 0.5f, info.offsetVec.z);
         matrices.mulPose(Axis.YP.rotationDegrees(info.rotationVec.y + (info.isFront ? 0 : 180) - rotation));
         matrices.mulPose(Axis.ZP.rotationDegrees(info.rotationVec.z));
         matrices.mulPose(Axis.XP.rotationDegrees(info.rotationVec.x));
-        matrices.translate(0f, 0f, -0.5f);
 
         if (info.hasTranslucency()) {
             // TODO: this
