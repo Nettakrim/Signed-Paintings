@@ -1,5 +1,7 @@
 package com.nettakrim.signed_paintings.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.nettakrim.signed_paintings.access.SignBlockEntityRenderStateAccessor;
 import com.nettakrim.signed_paintings.rendering.PaintingInfo;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -10,6 +12,7 @@ import net.minecraft.client.renderer.blockentity.AbstractSignRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.state.SignRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.world.level.block.SignBlock;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.phys.Vec3;
@@ -23,36 +26,30 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AbstractSignRenderer.class)
 public abstract class SignBlockEntityRendererMixin implements BlockEntityRenderer<SignBlockEntity, SignRenderState> {
-    @Inject(
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/renderer/blockentity/AbstractSignRenderer;submitSign(Lcom/mojang/blaze3d/vertex/PoseStack;ILnet/minecraft/world/level/block/state/properties/WoodType;Lnet/minecraft/client/model/Model$Simple;Lnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;Lnet/minecraft/client/renderer/SubmitNodeCollector;)V"
-            ),
-            method = "submitSignWithText",
-            cancellable = true
-    )
-    private void onRender(SignRenderState state, PoseStack poseStack, ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress, SubmitNodeCollector submitNodeCollector, CallbackInfo ci) {
+    @WrapMethod(method = "submitSignWithText")
+    private void onRender(SignRenderState state, PoseStack poseStack, ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress, SubmitNodeCollector submitNodeCollector, Operation<Void> original) {
         if (renderPaintings(state, poseStack, submitNodeCollector)) {
-            poseStack.popPose();
-            ci.cancel();
+            return;
         }
+        original.call(state, poseStack, breakProgress, submitNodeCollector);
     }
 
     @Unique
     private boolean renderPaintings(SignRenderState renderState, PoseStack matrices, SubmitNodeCollector queue) {
         if (!SignedPaintingsClient.renderSigns) return false;
 
-        boolean success = false;
         SignBlockEntityRenderStateAccessor accessor = (SignBlockEntityRenderStateAccessor)renderState;
-        success |= renderPaintingInfo(accessor.signedPaintings$getFrontInfo(), queue, matrices, renderState, renderState.frontText);
-        success |= renderPaintingInfo(accessor.signedPaintings$getBackInfo(), queue, matrices, renderState, renderState.backText);
+        boolean success = false;
+        success |= renderPaintingInfo(accessor.signedPaintings$getFrontInfo(), accessor.signedPaintings$getRotation(), queue, matrices, renderState, renderState.frontText);
+        success |= renderPaintingInfo(accessor.signedPaintings$getBackInfo(), accessor.signedPaintings$getRotation(), queue, matrices, renderState, renderState.backText);
+
         return success;
     }
 
     @Unique
-    private boolean renderPaintingInfo(PaintingInfo info, SubmitNodeCollector queue, PoseStack matrices, SignRenderState state, SignText text) {
+    private boolean renderPaintingInfo(PaintingInfo info, float rotation, SubmitNodeCollector queue, PoseStack matrices, SignRenderState state, SignText text) {
         if (info != null && info.isReady()) {
-            SignedPaintingsClient.paintingRenderer.renderOrQueuePainting(matrices, queue, info, text != null && text.hasGlowingText() ? -1 : state.lightCoords);
+            SignedPaintingsClient.paintingRenderer.renderOrQueuePainting(matrices, rotation, queue, info, text != null && text.hasGlowingText() ? -1 : state.lightCoords);
             return true;
         }
         return false;
@@ -80,5 +77,10 @@ public abstract class SignBlockEntityRendererMixin implements BlockEntityRendere
         SignBlockEntityRenderStateAccessor state = (SignBlockEntityRenderStateAccessor)signBlockEntityRenderState;
         state.signedPaintings$setFrontInfo(accessor.signedPaintings$getFrontPaintingInfo());
         state.signedPaintings$setBackInfo(accessor.signedPaintings$getBackPaintingInfo());
+
+        if (signBlockEntity.getBlockState().getBlock() instanceof SignBlock sign) {
+            float rotation = sign.getYRotationDegrees(signBlockEntity.getBlockState());
+            state.signedPaintings$setRotation(rotation);
+        }
     }
 }

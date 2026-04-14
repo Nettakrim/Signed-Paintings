@@ -14,6 +14,9 @@ public class SignBlockEntityRenderStateMixin implements SignBlockEntityRenderSta
     @Unique
     PaintingInfo backInfo;
 
+    @Unique
+    float rotation;
+
     @Override
     public void signedPaintings$setFrontInfo(PaintingInfo info) {
         frontInfo = info;
@@ -25,6 +28,11 @@ public class SignBlockEntityRenderStateMixin implements SignBlockEntityRenderSta
     }
 
     @Override
+    public void signedPaintings$setRotation(float rotation) {
+        this.rotation = rotation;
+    }
+
+    @Override
     public PaintingInfo signedPaintings$getFrontInfo() {
         return frontInfo;
     }
@@ -32,5 +40,10 @@ public class SignBlockEntityRenderStateMixin implements SignBlockEntityRenderSta
     @Override
     public PaintingInfo signedPaintings$getBackInfo() {
         return backInfo;
+    }
+
+    @Override
+    public float signedPaintings$getRotation() {
+        return rotation;
     }
 }
