@@ -48,9 +48,9 @@ public class PaintingRenderer {
     }
     */
 
-    public void renderOrQueuePainting(PoseStack matrices, float rotation, SubmitNodeCollector queue, PaintingInfo info, int light) {
+    public boolean renderOrQueuePainting(PoseStack matrices, float rotation, SubmitNodeCollector queue, PaintingInfo info, int light) {
         Identifier image = info.getImageIdentifier();
-        if (!ImageManager.hasImage(image)) return;
+        if (!ImageManager.hasImage(image)) return false;
 
         matrices.pushPose();
         matrices.translate(info.offsetVec.x + 0.5f, info.offsetVec.y + 0.5f, info.offsetVec.z);
@@ -67,6 +67,7 @@ public class PaintingRenderer {
             renderPainting(matrices, queue, info, light, RenderTypes.entityCutout(info.getImageIdentifier()));
         }
         matrices.popPose();
+        return true;
     }
 
     private void renderPainting(PoseStack matrices, SubmitNodeCollector queue, PaintingInfo info, int light, RenderType renderLayer) {

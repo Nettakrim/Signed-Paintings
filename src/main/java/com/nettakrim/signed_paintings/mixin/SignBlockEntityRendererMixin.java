@@ -49,8 +49,7 @@ public abstract class SignBlockEntityRendererMixin implements BlockEntityRendere
     @Unique
     private boolean renderPaintingInfo(PaintingInfo info, float rotation, SubmitNodeCollector queue, PoseStack matrices, SignRenderState state, SignText text) {
         if (info != null && info.isReady()) {
-            SignedPaintingsClient.paintingRenderer.renderOrQueuePainting(matrices, rotation, queue, info, text != null && text.hasGlowingText() ? -1 : state.lightCoords);
-            return true;
+            return SignedPaintingsClient.paintingRenderer.renderOrQueuePainting(matrices, rotation, queue, info, text != null && text.hasGlowingText() ? -1 : state.lightCoords);
         }
         return false;
     }
