@@ -13,7 +13,6 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.state.SignRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.world.level.block.SignBlock;
-import net.minecraft.world.level.block.StandingSignBlock;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.phys.Vec3;
@@ -50,7 +49,7 @@ public abstract class SignBlockEntityRendererMixin implements BlockEntityRendere
     @Unique
     private boolean renderPaintingInfo(PaintingInfo info, SignBlockEntityRenderStateAccessor accessor, SubmitNodeCollector queue, PoseStack matrices, SignRenderState state, SignText text) {
         if (info != null && info.isReady()) {
-            return SignedPaintingsClient.paintingRenderer.renderOrQueuePainting(matrices, accessor.signedPaintings$getRotation(), accessor.signedPaintings$getStanding(), queue, info, text != null && text.hasGlowingText() ? -1 : state.lightCoords);
+            return SignedPaintingsClient.paintingRenderer.renderOrQueuePainting(matrices, accessor.signedPaintings$getRotation(), queue, info, text != null && text.hasGlowingText() ? -1 : state.lightCoords);
         }
         return false;
     }
@@ -80,7 +79,6 @@ public abstract class SignBlockEntityRendererMixin implements BlockEntityRendere
 
         if (signBlockEntity.getBlockState().getBlock() instanceof SignBlock sign) {
             state.signedPaintings$setRotation(sign.getYRotationDegrees(signBlockEntity.getBlockState()));
-            state.signedPaintings$setStanding(sign instanceof StandingSignBlock);
         }
     }
 }
