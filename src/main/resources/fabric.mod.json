@@ -19,6 +19,9 @@
 	"entrypoints": {
 		"client": [
           "com.nettakrim.signed_paintings.SignedPaintingsClient"
+		],
+		"bbe:renderer_registration_api": [
+			"com.nettakrim.signed_paintings.BBEEntryPoint"
 		]
 	},
 	"mixins": [

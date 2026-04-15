@@ -3,13 +3,20 @@ package com.nettakrim.signed_paintings.rendering;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import com.nettakrim.signed_paintings.SignedPaintingsClient;
+import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
+import com.nettakrim.signed_paintings.access.SignBlockEntityRenderStateAccessor;
 import com.nettakrim.signed_paintings.util.ImageManager;
 import net.minecraft.client.model.object.banner.BannerFlagModel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.blockentity.state.SignRenderState;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.SignBlock;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.SignText;
 import org.joml.Vector3f;
 
 public class PaintingRenderer {
@@ -47,6 +54,48 @@ public class PaintingRenderer {
         }
     }
     */
+
+    public boolean renderSignPaintings(SignRenderState renderState, PoseStack matrices, SubmitNodeCollector queue) {
+        if (!SignedPaintingsClient.renderSigns) return false;
+
+        SignBlockEntityRenderStateAccessor accessor = (SignBlockEntityRenderStateAccessor)renderState;
+        boolean success = false;
+        success |= renderSignPaintingInfo(accessor.signedPaintings$getFrontInfo(), accessor, queue, matrices, renderState, renderState.frontText);
+        success |= renderSignPaintingInfo(accessor.signedPaintings$getBackInfo(), accessor, queue, matrices, renderState, renderState.backText);
+
+        return success;
+    }
+
+    private boolean renderSignPaintingInfo(PaintingInfo info, SignBlockEntityRenderStateAccessor accessor, SubmitNodeCollector queue, PoseStack matrices, SignRenderState state, SignText text) {
+        if (info != null && info.isReady()) {
+            return renderOrQueuePainting(matrices, accessor.signedPaintings$getRotation(), queue, info, text != null && text.hasGlowingText() ? -1 : state.lightCoords);
+        }
+        return false;
+    }
+
+    public void modifySignRenderState(SignBlockEntity signBlockEntity, SignRenderState signBlockEntityRenderState) {
+        SignBlockEntityAccessor accessor = (SignBlockEntityAccessor)signBlockEntity;
+        accessor.signedPaintings$reloadIfNeeded();
+
+        SignBlockEntityRenderStateAccessor state = (SignBlockEntityRenderStateAccessor)signBlockEntityRenderState;
+        state.signedPaintings$setFrontInfo(accessor.signedPaintings$getFrontPaintingInfo());
+        state.signedPaintings$setBackInfo(accessor.signedPaintings$getBackPaintingInfo());
+
+        if (signBlockEntity.getBlockState().getBlock() instanceof SignBlock sign) {
+            state.signedPaintings$setRotation(sign.getYRotationDegrees(signBlockEntity.getBlockState()));
+        }
+    }
+
+    public boolean renderWithReducedCulling(SignBlockEntityAccessor accessor) {
+        if (SignedPaintingsClient.reduceCulling) {
+            if (!SignedPaintingsClient.renderSigns) return false;
+            PaintingInfo paintingInfo = accessor.signedPaintings$getFrontPaintingInfo();
+            if (paintingInfo != null && paintingInfo.isReady()) return true;
+            paintingInfo = accessor.signedPaintings$getBackPaintingInfo();
+            return paintingInfo != null && paintingInfo.isReady();
+        }
+        return false;
+    }
 
     public boolean renderOrQueuePainting(PoseStack matrices, float rotation, SubmitNodeCollector queue, PaintingInfo info, int light) {
         Identifier image = info.getImageIdentifier();
