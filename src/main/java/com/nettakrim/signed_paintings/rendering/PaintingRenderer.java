@@ -163,7 +163,7 @@ public class PaintingRenderer {
         matrices.popPose();
     }
 
-    private void renderOverlay(PoseStack matrices, SubmitNodeCollector queue, OverlayInfo info, int light) {
+    public void renderOverlay(PoseStack matrices, SubmitNodeCollector queue, OverlayInfo info, int light) {
         Identifier image = info.getImageIdentifier();
         if (!ImageManager.hasImage(image)) return;
 
