@@ -62,7 +62,7 @@ public class ImageData {
             if (width != workingWidth || height != workingHeight) {
                 workingWidth = width;
                 workingHeight = height;
-                ImageManager.saveBufferedImageAsIdentifier(scaleImage(baseImage, width, height), workingIdentifier);
+                ImageManager.saveBufferedImageAsIdentifier(ImageManager.scaleImage(baseImage, width, height), workingIdentifier);
             }
 
             return workingIdentifier;
@@ -75,20 +75,17 @@ public class ImageData {
                 bufferedImage = baseImage;
             } else {
                 identifier = baseIdentifier.withSuffix("_"+width+"x"+height);
-                bufferedImage = scaleImage(baseImage, width, height);
+                bufferedImage = ImageManager.scaleImage(baseImage, width, height);
             }
 
             if (identifier == null)
                 return null;
 
-            if (loadingImages.contains(identifier))
+            if (!loadingImages.add(identifier))
                 return identifier;
 
-            loadingImages.add(identifier);
-
             ImageManager.saveBufferedImageAsIdentifierAsync(bufferedImage, identifier).handleAsync((v, e) -> {
-                if (e != null)
-                {
+                if (e != null) {
                     loadingImages.remove(identifier);
                     return null;
                 }
@@ -100,18 +97,6 @@ public class ImageData {
 
             return identifier;
         }
-    }
-
-    private BufferedImage scaleImage(BufferedImage referenceImage, int width, int height) {
-        width = Math.max(width, 1);
-        height = Math.max(height, 1);
-        BufferedImage resizedImage = new BufferedImage(width, height, referenceImage.getType());
-        Graphics2D graphics2D = resizedImage.createGraphics();
-        // refer to https://docs.oracle.com/javase/tutorial/2d/advanced/quality.html
-        //graphics2D.addRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY));
-        graphics2D.drawImage(referenceImage, 0, 0, width, height, null);
-        graphics2D.dispose();
-        return resizedImage;
     }
 
     public int reload() {
