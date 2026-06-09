@@ -32,6 +32,8 @@ import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -39,6 +41,10 @@ public class ImageManager {
     private final String dataHeader = "https://modrinth.com/mod/signed-paintings config v";
     private final int dataVersion = 2;
     private final File data;
+
+    private static final ExecutorService imageDecodeExecutor = Executors.newFixedThreadPool(
+            Math.max(4, Runtime.getRuntime().availableProcessors())
+    );
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ArrayList<URLAlias> urlAliases;
@@ -356,40 +362,50 @@ public class ImageManager {
         return CompletableFuture.supplyAsync(() -> {
             saveBufferedImageAsIdentifier(bufferedImage, identifier);
             return null;
-        });
+        }, imageDecodeExecutor);
     }
 
     private CompletableFuture<BufferedImage> downloadImageBuffer(String urlStr) {
-        return CompletableFuture.supplyAsync(() -> {
-            if (!isValid(urlStr)) {
-                SignedPaintingsClient.info("invalid url string " + urlStr, false);
+        if (!isValid(urlStr)) {
+            SignedPaintingsClient.info("invalid url string " + urlStr, false);
+            return CompletableFuture.completedFuture(null);
+        }
+
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(urlStr))
+                .GET()
+                .timeout(Duration.ofSeconds(60))
+                .header("User-Agent", "Signed Paintings mod");
+
+        if (urlStr.startsWith("https://i.imgur.com")) {
+            requestBuilder.header("Sec-Fetch-Site", "same-site");
+            requestBuilder.header("Referer", "https://imgur.com/");
+        }
+
+        return httpClient.sendAsync(requestBuilder.build(), HttpResponse.BodyHandlers.ofByteArray())
+            .thenApply(HttpResponse::body)
+            .exceptionally(e -> {
+                SignedPaintingsClient.info("error downloading image " + urlStr + " : " + e, true);
                 return null;
-            }
+            })
+            .thenApplyAsync(bytes -> {
+                if (bytes == null) {
+                    return null;
+                }
 
-            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                    .uri(URI.create(urlStr))
-                    .GET()
-                    .timeout(Duration.ofSeconds(60))
-                    .header("User-Agent", "Signed Paintings mod");
+                try (ByteArrayInputStream input = new ByteArrayInputStream(bytes)) {
+                    BufferedImage image = ImageIO.read(input);
 
-            if (urlStr.startsWith("https://i.imgur.com")) {
-                requestBuilder.header("Sec-Fetch-Site", "same-site");
-                requestBuilder.header("Referer", "https://imgur.com/");
-            }
+                    if (image == null) {
+                        return null;
+                    }
 
-            try (InputStream downloadStream = httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofInputStream()).body()) {
-                try {
-                    BufferedImage readImage = ImageIO.read(downloadStream);
-                    return scaleImage(readImage, readImage.getWidth(), readImage.getHeight());
+                    return scaleImage(image, image.getWidth(), image.getHeight());
                 } catch (IOException | IllegalArgumentException e) {
                     SignedPaintingsClient.info("error decoding image " + urlStr + " : " + e, true);
                     return null;
                 }
-            } catch (InterruptedException | IOException e) {
-                SignedPaintingsClient.info("error downloading image " + urlStr + " : " + e, true);
-                return null;
-            }
-        });
+            }, imageDecodeExecutor);
     }
 
     public static BufferedImage createRGBAImage(int width, int height) {
