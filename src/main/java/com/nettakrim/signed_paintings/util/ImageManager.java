@@ -14,23 +14,25 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.PngInfo;
+
+import java.awt.*;
+import java.awt.color.ColorSpace;
+import java.awt.image.*;
 import java.net.URI;
-import java.nio.IntBuffer;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.stb.STBImage;
-import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
 import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.URLConnection;
 import java.nio.ByteBuffer;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -40,6 +42,11 @@ public class ImageManager {
     private final int dataVersion = 2;
     private final File data;
 
+    private static final ExecutorService imageDecodeExecutor = Executors.newFixedThreadPool(
+            Math.max(4, Runtime.getRuntime().availableProcessors())
+    );
+
+    private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ArrayList<URLAlias> urlAliases;
     private final Map<Identifier, Boolean> translucencyCache = new HashMap<>();
     private final HashMap<String, ImageData> urlToImageData;
@@ -50,9 +57,6 @@ public class ImageManager {
     public final Set<String> blockPromptedDomains;
     public boolean autoBlockNew = false;
     public int renderTime = 0;
-
-    private static final Executor virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
-    private static final Executor singleThreadExecutor = Executors.newSingleThreadExecutor();
 
     private boolean changesMade = false;
     public boolean hasTranslucency(Identifier id) {
@@ -330,66 +334,107 @@ public class ImageManager {
     }
 
     public static void saveBufferedImageAsIdentifier(BufferedImage bufferedImage, Identifier identifier) {
+        // https://discord.com/channels/507304429255393322/807617488313516032/934395931380576287
         if (SignedPaintingsClient.imageManager != null) {
             SignedPaintingsClient.imageManager.checkAndCacheTranslucency(identifier, bufferedImage);
         } else {
             SignedPaintingsClient.info("ImageManager instance not available for transparency check: " + identifier, true);
         }
 
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        byte[] imageBytes = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
 
-        try {
-            ImageIO.write(bufferedImage, "png", stream);
-        } catch (IOException e) {
-            SignedPaintingsClient.info("Failed to convert/register BufferedImage for identifier \"" + identifier + "\": " + e.getMessage(), true);
-            if (SignedPaintingsClient.imageManager != null) {
-                SignedPaintingsClient.imageManager.translucencyCache.put(identifier, false);
-            }
-            return;
-        }
+        AtomicReference<NativeImage> nativeImage = new AtomicReference<>();
+        Minecraft.getInstance().executeBlocking(() ->
+                nativeImage.set(new NativeImage(NativeImage.Format.RGBA, bufferedImage.getWidth(), bufferedImage.getHeight(), false)));
 
-        byte[] bytes = stream.toByteArray();
+        ByteBuffer nativeImageBuffer = MemoryUtil.memByteBuffer(nativeImage.get().getPointer(),
+                nativeImage.get().getHeight() * nativeImage.get().getWidth() * nativeImage.get().format().components());
 
-        ByteBuffer data = BufferUtils.createByteBuffer(bytes.length).put(bytes);
-        data.flip();
+        nativeImageBuffer.put(imageBytes);
 
-        try {
-            PngInfo.validateHeader(data);
-
-            try (MemoryStack memoryStack = MemoryStack.stackPush()) {
-                IntBuffer xBuffer = memoryStack.mallocInt(1);
-                IntBuffer yBuffer = memoryStack.mallocInt(1);
-                IntBuffer channelBuffer = memoryStack.mallocInt(1);
-                ByteBuffer byteBuffer = STBImage.stbi_load_from_memory(data, xBuffer, yBuffer, channelBuffer, 4);
-
-                AtomicReference<NativeImage> nativeImage = new AtomicReference<>();
-                Minecraft.getInstance().executeBlocking(() ->
-                        nativeImage.set(new NativeImage(NativeImage.Format.RGBA, xBuffer.get(0), yBuffer.get(0), true)));
-
-                if (byteBuffer == null) {
-                    throw new IOException("Could not load image: " + STBImage.stbi_failure_reason());
-                }
-
-                var nativeImageBuffer = MemoryUtil.memByteBuffer(nativeImage.get().getPointer(),
-                        nativeImage.get().getHeight() * nativeImage.get().getWidth() * nativeImage.get().format().components());
-
-                MemoryUtil.memCopy(byteBuffer, nativeImageBuffer);
-                Minecraft.getInstance().executeBlocking(() -> {
-                    DynamicTexture texture = new DynamicTexture(identifier::toString, nativeImage.get());
-                    Minecraft.getInstance().getTextureManager().register(identifier, texture);
-                });
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        Minecraft.getInstance().executeBlocking(() -> {
+            DynamicTexture texture = new DynamicTexture(identifier::toString, nativeImage.get());
+            Minecraft.getInstance().getTextureManager().register(identifier, texture);
+        });
     }
 
     public static CompletableFuture<Void> saveBufferedImageAsIdentifierAsync(BufferedImage bufferedImage, Identifier identifier) {
-        // https://discord.com/channels/507304429255393322/807617488313516032/934395931380576287
         return CompletableFuture.supplyAsync(() -> {
             saveBufferedImageAsIdentifier(bufferedImage, identifier);
             return null;
-        }, singleThreadExecutor);
+        }, imageDecodeExecutor);
+    }
+
+    private CompletableFuture<BufferedImage> downloadImageBuffer(String urlStr) {
+        if (!isValid(urlStr)) {
+            SignedPaintingsClient.info("invalid url string " + urlStr, false);
+            return CompletableFuture.completedFuture(null);
+        }
+
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(urlStr))
+                .GET()
+                .timeout(Duration.ofSeconds(60))
+                .header("User-Agent", "Signed Paintings mod");
+
+        if (urlStr.startsWith("https://i.imgur.com")) {
+            requestBuilder.header("Sec-Fetch-Site", "same-site");
+            requestBuilder.header("Referer", "https://imgur.com/");
+        }
+
+        return httpClient.sendAsync(requestBuilder.build(), HttpResponse.BodyHandlers.ofByteArray())
+            .thenApply(HttpResponse::body)
+            .exceptionally(e -> {
+                SignedPaintingsClient.info("error downloading image " + urlStr + " : " + e, true);
+                return null;
+            })
+            .thenApplyAsync(bytes -> {
+                if (bytes == null) {
+                    return null;
+                }
+
+                try (ByteArrayInputStream input = new ByteArrayInputStream(bytes)) {
+                    BufferedImage image = ImageIO.read(input);
+
+                    if (image == null) {
+                        return null;
+                    }
+
+                    return scaleImage(image, image.getWidth(), image.getHeight());
+                } catch (IOException | IllegalArgumentException e) {
+                    SignedPaintingsClient.info("error decoding image " + urlStr + " : " + e, true);
+                    return null;
+                }
+            }, imageDecodeExecutor);
+    }
+
+    public static BufferedImage createRGBAImage(int width, int height) {
+        int[] bandOffsets = {0, 1, 2, 3};
+
+        ComponentColorModel colorModel = new ComponentColorModel(
+                ColorSpace.getInstance(ColorSpace.CS_sRGB),
+                new int[]{8, 8, 8, 8}, true, false,
+                Transparency.TRANSLUCENT, DataBuffer.TYPE_BYTE
+        );
+
+        WritableRaster raster = Raster.createInterleavedRaster(
+                DataBuffer.TYPE_BYTE, width, height, width * 4, 4, bandOffsets, null
+        );
+
+        return new BufferedImage(colorModel, raster, false, null);
+    }
+
+    public static BufferedImage scaleImage(BufferedImage referenceImage, int width, int height) {
+        width = Math.max(width, 1);
+        height = Math.max(height, 1);
+        BufferedImage resizedImage = createRGBAImage(width, height);
+        Graphics2D graphics2D = resizedImage.createGraphics();
+        // refer to https://docs.oracle.com/javase/tutorial/2d/advanced/quality.html
+        //graphics2D.addRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY));
+        graphics2D.setComposite(AlphaComposite.Src);
+        graphics2D.drawImage(referenceImage, 0, 0, width, height, null);
+        graphics2D.dispose();
+        return resizedImage;
     }
 
     public static void removeImage(Identifier identifier) {
@@ -402,29 +447,6 @@ public class ImageManager {
 
     public static AbstractTexture getTexture(Identifier identifier) {
         return ((TextureManagerAccessor)SignedPaintingsClient.client.getTextureManager()).getByPath().get(identifier);
-    }
-
-    private CompletableFuture<BufferedImage> downloadImageBuffer(String urlStr) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                if (isValid(urlStr)) {
-                    URLConnection connection = URI.create(urlStr).toURL().openConnection();
-                    connection.setRequestProperty("User-Agent", "Signed Paintings mod");
-                    if (urlStr.startsWith("https://i.imgur.com")) {
-                        connection.setRequestProperty("Sec-Fetch-Site", "same-site");
-                        connection.setRequestProperty("Referer", "https://imgur.com/");
-                    }
-                    connection.connect();
-                    return ImageIO.read(connection.getInputStream());
-                } else {
-                    SignedPaintingsClient.info("invalid url string "+urlStr, false);
-                    return null;
-                }
-            } catch (Throwable e) {
-                SignedPaintingsClient.info("error downloading image "+urlStr+" : "+e, true);
-                return null;
-            }
-        }, virtualThreadExecutor);
     }
 
     public static boolean isValid(@NotNull String url) {
