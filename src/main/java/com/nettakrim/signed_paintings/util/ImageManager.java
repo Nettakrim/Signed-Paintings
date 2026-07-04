@@ -43,7 +43,12 @@ public class ImageManager {
     private final File data;
 
     private static final ExecutorService imageDecodeExecutor = Executors.newFixedThreadPool(
-            Math.max(4, Runtime.getRuntime().availableProcessors())
+            Math.max(4, Runtime.getRuntime().availableProcessors()),
+            runnable -> {
+                Thread thread = new Thread(runnable, "signed-paintings-image-decode");
+                thread.setDaemon(true);
+                return thread;
+            }
     );
 
     private final HttpClient httpClient = HttpClient.newHttpClient();

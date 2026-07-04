@@ -141,6 +141,7 @@ public class ImageData {
         }
 
         if (working) {
+            if (workingIdentifier == null) return null;
             workingRenderTime = SignedPaintingsClient.imageManager.renderTime;
             if (width != workingWidth || height != workingHeight) {
                 workingWidth = width;
@@ -153,6 +154,8 @@ public class ImageData {
             Identifier identifier;
             BufferedImage bufferedImage;
 
+            if (baseIdentifier == null) return null;
+
             if (width == this.width && height == this.height) {
                 identifier = baseIdentifier;
                 bufferedImage = baseImage;
@@ -160,9 +163,6 @@ public class ImageData {
                 identifier = baseIdentifier.withSuffix("_"+width+"x"+height);
                 bufferedImage = ImageManager.scaleImage(baseImage, width, height);
             }
-
-            if (identifier == null)
-                return null;
 
             if (!loadingImages.add(identifier))
                 return identifier;
