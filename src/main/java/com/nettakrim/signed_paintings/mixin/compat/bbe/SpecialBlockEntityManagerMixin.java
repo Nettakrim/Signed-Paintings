@@ -22,6 +22,8 @@ public class SpecialBlockEntityManagerMixin {
     }
     @Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
     private static void forceRenderSignedPaintings(BlockEntity blockEntity, CallbackInfoReturnable<Boolean> cir) {
+        if (!SignedPaintingsClient.renderSigns) return;
+
         if (blockEntity instanceof SignBlockEntity sign) {
             Entity camera = Minecraft.getInstance().getCameraEntity();
             if (camera == null) return;

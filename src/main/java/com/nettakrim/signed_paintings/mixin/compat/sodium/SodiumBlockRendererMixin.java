@@ -1,5 +1,6 @@
 package com.nettakrim.signed_paintings.mixin.compat.sodium;
 
+import com.nettakrim.signed_paintings.SignedPaintingsClient;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.BlockRenderer;
 import net.caffeinemc.mods.sodium.client.world.LevelSlice;
@@ -26,6 +27,8 @@ public class SodiumBlockRendererMixin {
             BlockStateModel model, BlockState state, BlockPos pos, BlockPos origin,
             CallbackInfo ci
     ) {
+        if (!SignedPaintingsClient.renderSigns) return;
+
         if (state.hasBlockEntity()) {
             LevelSlice slice = ((AbstractBlockRenderContextAccessor) (Object) this).getSlice();
             BlockEntity blockEntity = slice.getBlockEntity(pos);
