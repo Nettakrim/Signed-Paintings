@@ -14,4 +14,6 @@ public interface SignBlockEntityAccessor {
     void signedPaintings$reloadIfNeeded();
 
     boolean signedPaintings$shouldHide();
+
+    void signedPaintings$tryRegisterRefreshOnLoadCallback();
 }

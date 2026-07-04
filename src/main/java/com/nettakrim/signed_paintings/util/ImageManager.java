@@ -637,6 +637,10 @@ public class ImageManager {
             int expireFully = renderTime - 16384;
             urlToImageData.values().removeIf(imageData -> imageData.checkRenderTime(expireVram, expireFully));
 
+            for (ImageData imageData : urlToImageData.values()) {
+                imageData.pruneSectionUpdateListeners();
+            }
+
             if (urlToImageData.isEmpty()) {
                 renderTime = 0;
             }

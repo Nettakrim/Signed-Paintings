@@ -1,14 +1,13 @@
 {
   "required": true,
   "package": "com.nettakrim.signed_paintings.mixin",
-  "compatibilityLevel": "JAVA_17",
+  "compatibilityLevel": "JAVA_25",
   "plugin": "com.nettakrim.signed_paintings.SignedPaintingsMixinPlugin",
   "client": [
     "AbstractSignEditScreenMixin",
     "BannerBlockEntityMixin",
     "BannerBlockEntityRendererMixin",
     "BannerBlockEntityRenderStateMixin",
-    "FabricationFixMixin",
     "MinecraftClientMixin",
     "ScreenshotRecorderMixin",
     "SectionCompilerMixin",
@@ -18,7 +17,12 @@
     "SignBlockEntityRendererMixin",
     "SignBlockEntityRenderStateMixin",
     "SignEditScreenMixin",
-    "TextureManagerAccessor"
+    "TextureManagerAccessor",
+    "compat.fabrication.FabricationFixMixin",
+    "compat.bbe.BBEAbstractSignRendererMixin",
+    "compat.bbe.SpecialBlockEntityManagerMixin",
+    "compat.sodium.AbstractBlockRenderContextAccessor",
+    "compat.sodium.SodiumBlockRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

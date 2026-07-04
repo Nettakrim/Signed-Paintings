@@ -2,6 +2,9 @@ package com.nettakrim.signed_paintings.util;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Vector2i;
 
 import java.awt.*;
@@ -34,6 +37,44 @@ public class ImageData {
     public ImageData() {
     }
 
+    private final Map<Identifier, Set<BlockEntity>> sectionUpdateListeners = new ConcurrentHashMap<>();
+
+    public void addSectionUpdateListener(Identifier identifier, BlockEntity blockEntity) {
+        sectionUpdateListeners
+                .computeIfAbsent(identifier, _ -> Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<>())))
+                .add(blockEntity);
+    }
+
+    public void pruneSectionUpdateListeners() {
+        sectionUpdateListeners.values().removeIf(Set::isEmpty);
+    }
+
+    public void removeSectionUpdateListener(Identifier identifier, BlockEntity blockEntity) {
+        if (sectionUpdateListeners.containsKey(identifier)) {
+            var set = sectionUpdateListeners.get(identifier);
+            set.remove(blockEntity);
+            if (set.isEmpty()) {
+                sectionUpdateListeners.remove(identifier);
+            }
+        }
+    }
+
+    public void notifySectionUpdateListeners(Identifier identifier) {
+        Set<BlockEntity> listeners = sectionUpdateListeners.get(identifier);
+        if (listeners == null) return;
+
+        synchronized (listeners) {
+            for (BlockEntity blockEntity : listeners) {
+                SignedPaintingsClient.client.execute(() -> {
+                    if (blockEntity.isRemoved()) return;
+                    BlockPos pos = blockEntity.getBlockPos();
+                    BlockState state = blockEntity.getLevel().getBlockState(pos);
+                    blockEntity.getLevel().sendBlockUpdated(pos, state, state, 3);
+                });
+            }
+        }
+    }
+
     public void onImageReady(BufferedImage image, Identifier baseIdentifier) {
         this.baseImage = image;
         this.width = image.getWidth();
@@ -41,6 +82,7 @@ public class ImageData {
         this.baseIdentifier = baseIdentifier;
         this.workingIdentifier = baseIdentifier.withSuffix("_working");
         this.ready = true;
+        notifySectionUpdateListeners(baseIdentifier);
     }
 
     public Identifier getBaseIdentifier() {
@@ -91,6 +133,7 @@ public class ImageData {
                 }
                 images.put(resolution, new VariantData(identifier));
                 loadingImages.remove(identifier);
+                notifySectionUpdateListeners(identifier);
 
                 return null;
             });

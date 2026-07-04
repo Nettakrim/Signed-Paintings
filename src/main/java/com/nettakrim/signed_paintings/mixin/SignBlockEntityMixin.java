@@ -60,15 +60,19 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
         return isValidPaintingInfo(frontInfo.paintingInfo) || isValidPaintingInfo(backInfo.paintingInfo);
     }
 
-    @Unique
-    private boolean isValidPaintingInfo(PaintingInfo paintingInfo) {
-        SignedPaintingsClient.info("Painting NN:" + (paintingInfo != null), true);
-        if (paintingInfo != null) {
-            SignedPaintingsClient.info("Painting Ready:" + (paintingInfo.isReady()), true);
-            SignedPaintingsClient.info("Painting HasImage:" + (ImageManager.hasImage(paintingInfo.getImageIdentifier())), true);
+    @Override
+    public void signedPaintings$tryRegisterRefreshOnLoadCallback() {
+        if (frontInfo.paintingInfo != null) {
+            frontInfo.paintingInfo.registerRefreshSectionCallback();
         }
 
+        if (backInfo.paintingInfo != null) {
+            backInfo.paintingInfo.registerRefreshSectionCallback();
+        }
+    }
 
+    @Unique
+    private boolean isValidPaintingInfo(PaintingInfo paintingInfo) {
         if (paintingInfo == null || !paintingInfo.isReady()) return false;
         return ImageManager.hasImage(paintingInfo.getImageIdentifier());
     }
