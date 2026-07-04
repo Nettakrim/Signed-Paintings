@@ -64,6 +64,7 @@ public class ImageData {
     }
 
     public void notifySectionUpdateListeners(Identifier identifier) {
+        if (identifier == null) return;
         Set<BlockEntity> listeners = sectionUpdateListeners.get(identifier);
         if (listeners == null) return;
 
