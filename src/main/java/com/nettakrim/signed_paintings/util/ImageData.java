@@ -106,6 +106,16 @@ public class ImageData {
         }
     }
 
+    public void notifyAllListenerUpdates() {
+        for (Set<BlockEntity> listeners : sectionUpdateListeners.values()) {
+            synchronized (listeners) {
+                for (BlockEntity blockEntity : listeners) {
+                    requestSectionUpdate(blockEntity);
+                }
+            }
+        }
+    }
+
     public void onImageReady(BufferedImage image, Identifier baseIdentifier) {
         this.baseImage = image;
         this.width = image.getWidth();

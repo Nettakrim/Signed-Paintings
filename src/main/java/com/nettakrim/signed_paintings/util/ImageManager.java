@@ -625,6 +625,12 @@ public class ImageManager {
         changesMade = true;
     }
 
+    public void requestAllSectionUpdates() {
+        for (ImageData imageData : urlToImageData.values()) {
+            imageData.notifyAllListenerUpdates();
+        }
+    }
+
     public void onTick() {
         ImageData.tickDrainPendingSectionUpdates();
         renderTime++;
