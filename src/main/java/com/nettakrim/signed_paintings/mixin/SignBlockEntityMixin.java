@@ -3,6 +3,7 @@ package com.nettakrim.signed_paintings.mixin;
 import com.nettakrim.signed_paintings.*;
 import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import com.nettakrim.signed_paintings.rendering.*;
+import com.nettakrim.signed_paintings.util.ImageManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -52,6 +53,24 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
     @Override
     public boolean signedPaintings$hasSignSideInfo(SignSideInfo info) {
         return frontInfo == info || backInfo == info;
+    }
+
+    @Override
+    public boolean signedPaintings$shouldHide() {
+        return isValidPaintingInfo(frontInfo.paintingInfo) || isValidPaintingInfo(backInfo.paintingInfo);
+    }
+
+    @Unique
+    private boolean isValidPaintingInfo(PaintingInfo paintingInfo) {
+        SignedPaintingsClient.info("Painting NN:" + (paintingInfo != null), true);
+        if (paintingInfo != null) {
+            SignedPaintingsClient.info("Painting Ready:" + (paintingInfo.isReady()), true);
+            SignedPaintingsClient.info("Painting HasImage:" + (ImageManager.hasImage(paintingInfo.getImageIdentifier())), true);
+        }
+
+
+        if (paintingInfo == null || !paintingInfo.isReady()) return false;
+        return ImageManager.hasImage(paintingInfo.getImageIdentifier());
     }
 
     @Override

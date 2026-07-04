@@ -12,4 +12,6 @@ public interface SignBlockEntityAccessor {
     boolean signedPaintings$hasSignSideInfo(SignSideInfo info);
 
     void signedPaintings$reloadIfNeeded();
+
+    boolean signedPaintings$shouldHide();
 }
