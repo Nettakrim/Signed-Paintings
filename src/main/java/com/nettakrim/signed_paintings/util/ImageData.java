@@ -40,6 +40,8 @@ public class ImageData {
     private final Map<Identifier, Set<BlockEntity>> sectionUpdateListeners = new ConcurrentHashMap<>();
 
     public void addSectionUpdateListener(Identifier identifier, BlockEntity blockEntity) {
+        if (identifier == null) return;
+
         sectionUpdateListeners
                 .computeIfAbsent(identifier, _ -> Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<>())))
                 .add(blockEntity);
@@ -50,6 +52,8 @@ public class ImageData {
     }
 
     public void removeSectionUpdateListener(Identifier identifier, BlockEntity blockEntity) {
+        if (identifier == null) return;
+
         if (sectionUpdateListeners.containsKey(identifier)) {
             var set = sectionUpdateListeners.get(identifier);
             set.remove(blockEntity);
