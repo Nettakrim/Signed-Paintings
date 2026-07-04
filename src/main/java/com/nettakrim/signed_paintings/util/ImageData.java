@@ -2,12 +2,15 @@ package com.nettakrim.signed_paintings.util;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.nettakrim.signed_paintings.SignedPaintingsClient;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Vector2i;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,11 +36,39 @@ public class ImageData {
 
     private int expiredAllAt = -1;
 
+    private final Map<Identifier, Set<BlockEntity>> sectionUpdateListeners = new ConcurrentHashMap<>();
+    private static final Set<Long> pendingSectionUpdates = ConcurrentHashMap.newKeySet();
+    private static final int SECTION_UPDATES_PER_TICK = 5;
 
     public ImageData() {
     }
 
-    private final Map<Identifier, Set<BlockEntity>> sectionUpdateListeners = new ConcurrentHashMap<>();
+    public static void requestSectionUpdate(BlockEntity blockEntity) {
+        Level level = blockEntity.getLevel();
+        if (level == null || blockEntity.isRemoved()) return;
+
+        long sectionKey = SectionPos.asLong(blockEntity.getBlockPos());
+        pendingSectionUpdates.add(sectionKey);
+    }
+
+    public static void tickDrainPendingSectionUpdates() {
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level == null) {
+            pendingSectionUpdates.clear();
+            return;
+        }
+
+        int budget = SECTION_UPDATES_PER_TICK;
+        Iterator<Long> iterator = pendingSectionUpdates.iterator();
+        while (budget-- > 0 && iterator.hasNext()) {
+            long sectionKey = iterator.next();
+            iterator.remove();
+
+            BlockPos pos = SectionPos.of(sectionKey).origin();
+            BlockState state = level.getBlockState(pos);
+            level.sendBlockUpdated(pos, state, state, 3);
+        }
+    }
 
     public void addSectionUpdateListener(Identifier identifier, BlockEntity blockEntity) {
         if (identifier == null) return;
@@ -70,12 +101,7 @@ public class ImageData {
 
         synchronized (listeners) {
             for (BlockEntity blockEntity : listeners) {
-                SignedPaintingsClient.client.execute(() -> {
-                    if (blockEntity.isRemoved()) return;
-                    BlockPos pos = blockEntity.getBlockPos();
-                    BlockState state = blockEntity.getLevel().getBlockState(pos);
-                    blockEntity.getLevel().sendBlockUpdated(pos, state, state, 3);
-                });
+                requestSectionUpdate(blockEntity);
             }
         }
     }

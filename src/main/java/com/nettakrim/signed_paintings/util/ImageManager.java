@@ -626,6 +626,7 @@ public class ImageManager {
     }
 
     public void onTick() {
+        ImageData.tickDrainPendingSectionUpdates();
         renderTime++;
         // check every ~50 seconds
         if ((renderTime & 1023) == 0) {
