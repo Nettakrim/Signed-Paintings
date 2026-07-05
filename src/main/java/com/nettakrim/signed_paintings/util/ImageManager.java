@@ -382,6 +382,7 @@ public class ImageManager {
                 .timeout(Duration.ofSeconds(60))
                 .header("User-Agent", "Signed Paintings mod");
 
+        // apparently a similar trick can be done with discord images, but i couldnt get it to work
         if (urlStr.startsWith("https://i.imgur.com")) {
             requestBuilder.header("Sec-Fetch-Site", "same-site");
             requestBuilder.header("Referer", "https://imgur.com/");
