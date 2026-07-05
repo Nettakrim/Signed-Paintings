@@ -91,7 +91,7 @@ public class DomainCommand {
                 return 0;
             }
 
-            SignedPaintingsClient.client.schedule(() -> SignedPaintingsClient.client.setScreen(new DomainWarningScreen(domain, DomainCommand::confirmAnything)));
+            SignedPaintingsClient.client.schedule(() -> SignedPaintingsClient.client.setScreenAndShow(new DomainWarningScreen(domain, DomainCommand::confirmAnything)));
             return 1;
         } else if (domain.equals("all_prompted")) {
             int count = 0;

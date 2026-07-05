@@ -43,7 +43,12 @@ public class ImageManager {
     private final File data;
 
     private static final ExecutorService imageDecodeExecutor = Executors.newFixedThreadPool(
-            Math.max(4, Runtime.getRuntime().availableProcessors())
+            Math.max(4, Runtime.getRuntime().availableProcessors()),
+            runnable -> {
+                Thread thread = new Thread(runnable, "signed-paintings-image-decode");
+                thread.setDaemon(true);
+                return thread;
+            }
     );
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
@@ -625,7 +630,14 @@ public class ImageManager {
         changesMade = true;
     }
 
+    public void requestAllSectionUpdates() {
+        for (ImageData imageData : urlToImageData.values()) {
+            imageData.notifyAllListenerUpdates();
+        }
+    }
+
     public void onTick() {
+        ImageData.tickDrainPendingSectionUpdates();
         renderTime++;
         // check every ~50 seconds
         if ((renderTime & 1023) == 0) {
@@ -636,6 +648,10 @@ public class ImageManager {
             // expire fully after ~15 minutes
             int expireFully = renderTime - 16384;
             urlToImageData.values().removeIf(imageData -> imageData.checkRenderTime(expireVram, expireFully));
+
+            for (ImageData imageData : urlToImageData.values()) {
+                imageData.pruneSectionUpdateListeners();
+            }
 
             if (urlToImageData.isEmpty()) {
                 renderTime = 0;

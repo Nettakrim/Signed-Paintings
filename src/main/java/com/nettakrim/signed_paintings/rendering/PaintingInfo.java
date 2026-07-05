@@ -57,6 +57,7 @@ public class PaintingInfo extends ImageInfo {
     }
 
     public void resetSize() {
+        image.removeSectionUpdateListener(getImageIdentifier(), blockEntity);
         this.width = image.width/16f;
         this.height = image.height/16f;
         while (this.width > 8 || this.height > 8) {
@@ -66,6 +67,12 @@ public class PaintingInfo extends ImageInfo {
         this.width = SignedPaintingsClient.roundFloatTo3DP(this.width);
         this.height = SignedPaintingsClient.roundFloatTo3DP(this.height);
         updateCuboid();
+        image.addSectionUpdateListener(getImageIdentifier(), blockEntity);
+    }
+
+    public void registerRefreshSectionCallback() {
+        if (this.image == null) return;
+        image.addSectionUpdateListener(getImageIdentifier(), blockEntity);
     }
 
     private void updateCuboid() {
@@ -89,9 +96,11 @@ public class PaintingInfo extends ImageInfo {
     }
 
     public void updateCuboidSize(float xSize, float ySize) {
+        image.removeSectionUpdateListener(getImageIdentifier(), blockEntity);
         this.width = xSize;
         this.height = ySize;
         updateCuboid();
+        image.addSectionUpdateListener(getImageIdentifier(), blockEntity);
     }
 
     public void updateOffsetVec(Vector3f offsetVec) {
@@ -105,7 +114,9 @@ public class PaintingInfo extends ImageInfo {
     }
 
     public void updatePixelsPerBlock(float pixelsPerBlock) {
+        image.removeSectionUpdateListener(getImageIdentifier(), blockEntity);
         this.pixelsPerBlock = pixelsPerBlock;
+        image.addSectionUpdateListener(getImageIdentifier(), blockEntity);
     }
 
     public float getPixelsPerBlock() {

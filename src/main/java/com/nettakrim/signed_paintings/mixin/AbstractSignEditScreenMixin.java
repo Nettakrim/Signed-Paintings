@@ -391,7 +391,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             // doing nothing here causes everything to break moments later
             // just force closing the screen stops this
             // TODO: fix this propery?
-            Minecraft.getInstance().schedule(() -> Minecraft.getInstance().setScreen(null));
+            Minecraft.getInstance().schedule(() -> Minecraft.getInstance().setScreenAndShow(null));
             signField = new TextFieldHelper(() -> "", (s) -> {}, () -> "", (s) -> {}, (s) -> true);
             onInit(null);
         }

@@ -53,6 +53,7 @@ public class ToggleCommand {
         SignedPaintingsClient.renderShields = value;
         sayMessage("all", value);
         SignedPaintingsClient.imageManager.makeChange();
+        SignedPaintingsClient.imageManager.requestAllSectionUpdates();
         return 1;
     }
 
@@ -60,6 +61,7 @@ public class ToggleCommand {
         SignedPaintingsClient.renderSigns = !SignedPaintingsClient.renderSigns;
         sayMessage("signs", SignedPaintingsClient.renderSigns);
         SignedPaintingsClient.imageManager.makeChange();
+        SignedPaintingsClient.imageManager.requestAllSectionUpdates();
         return 1;
     }
 
@@ -81,6 +83,7 @@ public class ToggleCommand {
         SignedPaintingsClient.reduceCulling = !SignedPaintingsClient.reduceCulling;
         sayMessage("culling", SignedPaintingsClient.reduceCulling);
         SignedPaintingsClient.imageManager.makeChange();
+        SignedPaintingsClient.imageManager.requestAllSectionUpdates();
         return 1;
     }
 

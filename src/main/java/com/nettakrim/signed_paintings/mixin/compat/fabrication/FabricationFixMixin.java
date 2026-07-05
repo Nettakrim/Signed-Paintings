@@ -1,4 +1,4 @@
-package com.nettakrim.signed_paintings.mixin;
+package com.nettakrim.signed_paintings.mixin.compat.fabrication;
 
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.font.TextFieldHelper;

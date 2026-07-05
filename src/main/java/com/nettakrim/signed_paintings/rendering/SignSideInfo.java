@@ -81,6 +81,8 @@ public class SignSideInfo {
             SignedPaintingsClient.currentSignEdit.screen.signedPaintings$setVisibility(true);
             SignedPaintingsClient.currentSignEdit.screen.signedPaintings$initSliders(this);
         }
+
+        data.notifySectionUpdateListeners(paintingInfo.getImageIdentifier());
     }
 
     public void updatePaintingCentering(Centering.Type xCentering, Centering.Type yCentering) {
