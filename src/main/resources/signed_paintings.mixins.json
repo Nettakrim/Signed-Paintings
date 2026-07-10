@@ -19,8 +19,6 @@
     "SignEditScreenMixin",
     "TextureManagerAccessor",
     "compat.fabrication.FabricationFixMixin",
-    "compat.bbe.BBEAbstractSignRendererMixin",
-    "compat.bbe.SpecialBlockEntityManagerMixin",
     "compat.sodium.AbstractBlockRenderContextAccessor",
     "compat.sodium.SodiumBlockRendererMixin"
   ],

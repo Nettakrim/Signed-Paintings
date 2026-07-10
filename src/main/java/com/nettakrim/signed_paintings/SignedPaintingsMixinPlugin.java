@@ -23,10 +23,8 @@ public class SignedPaintingsMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.contains("mixin.compat.fabrication.")) {
             return FabricLoader.getInstance().isModLoaded("fabrication");
         }
-        if (mixinClassName.contains("mixin.compat.bbe.")) {
-            return FabricLoader.getInstance().isModLoaded("betterblockentities");
-        }
-        if (mixinClassName.contains("mixin.compat.sodium")) {
+
+        if (mixinClassName.contains("mixin.compat.sodium.")) {
             return FabricLoader.getInstance().isModLoaded("sodium");
         }
 
