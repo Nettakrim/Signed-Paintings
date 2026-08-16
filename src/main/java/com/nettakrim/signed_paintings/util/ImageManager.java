@@ -36,6 +36,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class ImageManager {
     private final String dataHeader = "https://modrinth.com/mod/signed-paintings config v";
@@ -241,11 +245,11 @@ public class ImageManager {
     //https://github.com/Patbox/Image2Map/blob/1.20/src/main/java/space/essem/image2map/Image2Map.java
     public void loadImage(String url, ImageDataLoadInterface onLoadCallback) {
         if (url.equals("https://")) return;
-        ImageData imageData = urlToImageData.get(url);
 
+        ImageData imageData = urlToImageData.get(url);
         boolean blocked = blockedURLs.contains(url);
 
-        if (!blocked && domainBlocked(url)) {
+        if (!url.startsWith("file://") && !blocked && domainBlocked(url)) {
             String domain = SignedPaintingsClient.getDomain(url);
             SignedPaintingsClient.info("Prompting domain trust for '"+ domain +"' from url '"+url+"'", false);
 
@@ -307,7 +311,7 @@ public class ImageManager {
         downloadImageBuffer(url).orTimeout(60, TimeUnit.SECONDS).handleAsync((image, ex) -> {
             if (image == null || ex != null) {
                 urlToImageData.remove(url);
-                SignedPaintingsClient.info("Couldn't load image "+url+"\n"+ex.toString(), true);
+                SignedPaintingsClient.info("Couldn't load image " + url +(ex != null ? "\n" + ex : ""),true);
             } else {
                 SignedPaintingsClient.info("Loaded image "+url, false);
                 onImageLoad(image, url, data);
@@ -371,48 +375,92 @@ public class ImageManager {
     }
 
     private CompletableFuture<BufferedImage> downloadImageBuffer(String urlStr) {
-        if (!isValid(urlStr)) {
-            SignedPaintingsClient.info("invalid url string " + urlStr, false);
-            return CompletableFuture.completedFuture(null);
-        }
-
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                .uri(URI.create(urlStr))
-                .GET()
-                .timeout(Duration.ofSeconds(60))
-                .header("User-Agent", "Signed Paintings mod");
-
-        // apparently a similar trick can be done with discord images, but i couldnt get it to work
-        if (urlStr.startsWith("https://i.imgur.com")) {
-            requestBuilder.header("Sec-Fetch-Site", "same-site");
-            requestBuilder.header("Referer", "https://imgur.com/");
-        }
-
-        return httpClient.sendAsync(requestBuilder.build(), HttpResponse.BodyHandlers.ofByteArray())
-            .thenApply(HttpResponse::body)
-            .exceptionally(e -> {
-                SignedPaintingsClient.info("error downloading image " + urlStr + " : " + e, true);
-                return null;
-            })
-            .thenApplyAsync(bytes -> {
-                if (bytes == null) {
-                    return null;
-                }
-
-                try (ByteArrayInputStream input = new ByteArrayInputStream(bytes)) {
-                    BufferedImage image = ImageIO.read(input);
-
-                    if (image == null) {
-                        return null;
-                    }
-
-                    return scaleImage(image, image.getWidth(), image.getHeight());
-                } catch (IOException | IllegalArgumentException e) {
-                    SignedPaintingsClient.info("error decoding image " + urlStr + " : " + e, true);
-                    return null;
-                }
-            }, imageDecodeExecutor);
+    if (!isValid(urlStr)) {
+        SignedPaintingsClient.info("invalid url string " + urlStr, false);
+        return CompletableFuture.completedFuture(null);
     }
+
+    if (urlStr.startsWith("file://")) {
+    return CompletableFuture.supplyAsync(() -> {
+        try {
+            URI uri = URI.create(urlStr);
+            Path path = Paths.get(uri);
+
+
+            try (InputStream input = Files.newInputStream(path)) {
+                BufferedImage image = ImageIO.read(input);
+
+                if (image == null) {
+                    SignedPaintingsClient.info(
+                            "ImageIO could not decode local image: " + path,
+                            true
+                    );
+                    return null;
+                }
+
+                return scaleImage(image, image.getWidth(), image.getHeight());
+            }
+        } catch (Exception e) {
+            SignedPaintingsClient.info(
+                    "Error loading local image " + urlStr +
+                    " : " + e,
+                    true
+            );
+            return null;
+        }
+    }, imageDecodeExecutor);
+}
+
+    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+            .uri(URI.create(urlStr))
+            .GET()
+            .timeout(Duration.ofSeconds(60))
+            .header("User-Agent", "Signed Paintings mod");
+
+    // existing Imgur handling...
+    if (urlStr.startsWith("https://i.imgur.com")) {
+        requestBuilder.header("Sec-Fetch-Site", "same-site");
+        requestBuilder.header("Referer", "https://imgur.com/");
+    }
+
+    return httpClient.sendAsync(
+            requestBuilder.build(),
+            HttpResponse.BodyHandlers.ofByteArray()
+    )
+    .thenApply(HttpResponse::body)
+    .exceptionally(e -> {
+        SignedPaintingsClient.info(
+                "error downloading image " + urlStr + " : " + e,
+                true
+        );
+        return null;
+    })
+    .thenApplyAsync(bytes -> {
+        if (bytes == null) {
+            return null;
+        }
+
+        try (ByteArrayInputStream input = new ByteArrayInputStream(bytes)) {
+            BufferedImage image = ImageIO.read(input);
+
+            if (image == null) {
+                return null;
+            }
+
+            return scaleImage(
+                    image,
+                    image.getWidth(),
+                    image.getHeight()
+            );
+        } catch (IOException | IllegalArgumentException e) {
+            SignedPaintingsClient.info(
+                    "error decoding image " + urlStr + " : " + e,
+                    true
+            );
+            return null;
+        }
+    }, imageDecodeExecutor);
+}
 
     public static BufferedImage createRGBAImage(int width, int height) {
         int[] bandOffsets = {0, 1, 2, 3};
@@ -509,7 +557,7 @@ public class ImageManager {
     }
 
     public String applyURLInferences(String text) {
-        if (text.startsWith("ftp://")) {
+        if (text.startsWith("ftp://") || text.startsWith("file://")) {
             return text;
         }
 
