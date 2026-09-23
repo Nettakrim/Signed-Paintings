@@ -5,10 +5,7 @@ import com.nettakrim.signed_paintings.access.SignBlockEntityAccessor;
 import com.nettakrim.signed_paintings.rendering.*;
 import com.nettakrim.signed_paintings.util.ImageManager;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.entity.SignBlockEntity;
-import net.minecraft.world.level.block.entity.SignText;
+import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import org.spongepowered.asm.mixin.Mixin;
@@ -99,7 +96,8 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
     }
 
     @Inject(at = @At("TAIL"), method = "setText")
-    private void onSetText(SignText text, boolean front, CallbackInfoReturnable<Boolean> cir) {
+    private void onSetText(SignText text, SignTextSlot slot, CallbackInfo ci) {
+        boolean front = slot == SignTextSlot.FRONT;
         frontInfo.text = frontText;
         backInfo.text = backText;
         SignSideInfo info = (front ? frontInfo : backInfo);
@@ -120,7 +118,7 @@ public abstract class SignBlockEntityMixin extends BlockEntity implements SignBl
     private void onNBTRead(ValueInput view, CallbackInfo ci) {
         frontInfo.text = frontText;
         backInfo.text = backText;
-        SignedPaintingsClient.info("nbt read "+frontText.getMessage(0, false).toString()+" at "+getBlockPos(), false);
+        SignedPaintingsClient.info("nbt read "+ frontText.getMessages(false).getFirst().toString()+" at "+getBlockPos(), false);
         frontInfo.loadPainting(true, entity, false);
         backInfo.loadPainting(false, entity, false);
     }

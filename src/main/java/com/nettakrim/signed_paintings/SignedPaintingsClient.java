@@ -74,7 +74,9 @@ public class SignedPaintingsClient implements ClientModInitializer {
 	}
 
 	public static String combineSignText(SignText text) {
-		Component[] layers = text.getMessages(false);
+		Component[] layers = text
+                .getMessages(false)
+                .toArray(new Component[0]);
 		if (layers == null) return "";
 		StringBuilder combined = new StringBuilder();
 		for (Component line : layers) {

@@ -30,6 +30,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.StandingSignBlock;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
+import net.minecraft.world.level.block.entity.SignTextSlot;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
 import org.jspecify.annotations.NonNull;
@@ -52,8 +53,9 @@ import java.util.ArrayList;
 @Mixin(AbstractSignEditScreen.class)
 public abstract class AbstractSignEditScreenMixin extends Screen implements AbstractSignEditScreenAccessor {
 
+    @Final
     @Shadow
-    private SignText text;
+    private SignText.Mutable text;
 
     @Final
     @Shadow
@@ -65,7 +67,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
     @Final
     @Shadow
-    private boolean isFrontText;
+    private SignTextSlot slot;
 
     @Shadow
     private int line;
@@ -120,7 +122,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Unique
     private PaintingInfo getInfo() {
         SignBlockEntityAccessor signAccessor = (SignBlockEntityAccessor) sign;
-        return isFrontText ? signAccessor.signedPaintings$getFrontPaintingInfo() : signAccessor.signedPaintings$getBackPaintingInfo();
+        return slot == SignTextSlot.FRONT ? signAccessor.signedPaintings$getFrontPaintingInfo() : signAccessor.signedPaintings$getBackPaintingInfo();
     }
 
     @Unique
@@ -142,7 +144,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             doneButton = (AbstractWidget) this.children().getFirst();
         }
 
-        UIHelper.init(isFrontText, this, (SignBlockEntityAccessor) sign);
+        UIHelper.init(slot == SignTextSlot.FRONT, this, (SignBlockEntityAccessor) sign);
         ArrayList<AbstractWidget> uiButtons = UIHelper.getButtons();
         for (AbstractWidget widget : uiButtons) {
             addRenderableWidget(widget);
@@ -167,7 +169,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         boolean correct = isInfoCorrect();
         signedPaintings$setVisibility(correct);
-        SignSideInfo sideInfo = ((SignBlockEntityAccessor)sign).signedPaintings$getSideInfo(isFrontText);
+        SignSideInfo sideInfo = ((SignBlockEntityAccessor)sign).signedPaintings$getSideInfo(slot == SignTextSlot.FRONT);
         String currentUrl = sideInfo.getUrl();
         if (correct || currentUrl.isBlank() || currentUrl.equals("https://")) {
             uploadButton.visible = false;
@@ -183,8 +185,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
 
-    @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/world/level/block/entity/SignBlockEntity;ZZLnet/minecraft/network/chat/Component;)V")
-    private void onScreenOpen(SignBlockEntity blockEntity, boolean front, boolean filtered, Component title, CallbackInfo ci) {
+    @Inject(at = @At("TAIL"), method = "<init>(Lnet/minecraft/world/level/block/entity/SignBlockEntity;Lnet/minecraft/world/level/block/entity/SignTextSlot;ZLnet/minecraft/network/chat/Component;)V")
+    private void onScreenOpen(SignBlockEntity blockEntity, SignTextSlot slot, boolean filtered, Component title, CallbackInfo ci) {
         SignedPaintingsClient.currentSignEdit = new SignEditingInfo(blockEntity, this);
     }
 
@@ -230,10 +232,10 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     public void signedPaintings$clear(boolean setText) {
         for (int i = 0; i < messages.length; i++) {
             this.messages[i] = "";
-            this.text = this.text.setMessage(i, Component.literal(""));
+            this.text.setLine(i, Component.literal(""));
         }
         if (setText) {
-            this.sign.setText(this.text, this.isFrontText);
+            this.sign.setText(this.text.asImmutable(), this.slot);
         }
         this.line = 0;
     }
@@ -293,11 +295,11 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
 
         for (int i = 0; i < messages.length; i++) {
             this.messages[i] = newMessages[i];
-            this.text = this.text.setMessage(i, Component.literal(this.messages[i]));
+            this.text.setLine(i, Component.literal(this.messages[i]));
         }
 
         if (setText) {
-            this.sign.setText(this.text, this.isFrontText);
+            this.sign.setText(this.text.asImmutable(), this.slot);
         }
 
         line = cursorRow;
@@ -366,8 +368,8 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         int newSelection = signedPaintings$paste(SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(url)), 0, 0, false);
         signField.setSelectionRange(newSelection, newSelection);
 
-        SignSideInfo info = ((SignBlockEntityAccessor) this.sign).signedPaintings$getSideInfo(this.isFrontText);
-        info.loadPainting(this.isFrontText, this.sign, true);
+        SignSideInfo info = ((SignBlockEntityAccessor) this.sign).signedPaintings$getSideInfo(this.slot == SignTextSlot.FRONT);
+        info.loadPainting(this.slot == SignTextSlot.FRONT, this.sign, true);
 
         url = null;
     }
