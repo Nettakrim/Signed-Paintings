@@ -39,7 +39,7 @@ public class Cuboid {
         return new Cuboid(width, height, 1/8f, 0, -5/6f, 0);
     }
 
-    public void renderFace(PoseStack.Pose matrix, VertexConsumer vertexConsumer, Vector3f face, boolean split, float minU, float maxU, float minV, float maxV, int light) {
+    public void renderFace(PoseStack.Pose matrix, VertexConsumer vertexConsumer, Vector3f face, boolean split, int light) {
         AxisAngle4f rotation;
 
         if (face.y == 0) {
@@ -57,7 +57,7 @@ public class Cuboid {
             rotation = new AxisAngle4f(angle, 1, 0, 0);
         }
 
-        renderFaceRotated(matrix, vertexConsumer, rotation, split, minU, maxU, minV, maxV, light);
+        renderFaceRotated(matrix, vertexConsumer, rotation, split, light);
     }
 
     private Vector3f adjustVertex(Vector3f v, AxisAngle4f rotation) {
@@ -67,7 +67,7 @@ public class Cuboid {
         return vertex;
     }
 
-    private void renderFaceRotated(PoseStack.Pose matrix, VertexConsumer vertexConsumer, AxisAngle4f rotation, boolean split, float minU, float maxU, float minV, float maxV, int light) {
+    private void renderFaceRotated(PoseStack.Pose matrix, VertexConsumer vertexConsumer, AxisAngle4f rotation, boolean split, int light) {
         Vector3f normal;
         if (light == -1) {
             light = 15728640;
@@ -77,7 +77,7 @@ public class Cuboid {
         }
 
         if (!split) {
-            renderQuad(matrix, vertexConsumer, -0.5f, 0.5f, -0.5f, 0.5f, rotation, minU, maxU, minV, maxV, normal, light);
+            renderQuad(matrix, vertexConsumer, -0.5f, 0.5f, -0.5f, 0.5f, rotation, 0, 1, 0, 1, normal, light);
             return;
         }
 
@@ -95,10 +95,7 @@ public class Cuboid {
                 float scaledMinY = (minY/relevantSize.y)-0.5f;
                 float scaledMaxY = (maxY/relevantSize.y)-0.5f;
 
-                float newMaxU = minU+((maxU-minU)*(maxX-minX));
-                float newMinV = maxV-((maxV-minV)*(maxY-minY));
-
-                renderQuad(matrix, vertexConsumer, scaledMinX, scaledMaxX, scaledMinY, scaledMaxY, rotation, minU, newMaxU, newMinV, maxV, normal, light);
+                renderQuad(matrix, vertexConsumer, scaledMinX, scaledMaxX, scaledMinY, scaledMaxY, rotation, 0, (maxX - minX), 1 - (maxY - minY), 1, normal, light);
             }
         }
     }

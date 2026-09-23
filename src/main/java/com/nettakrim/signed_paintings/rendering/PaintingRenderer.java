@@ -125,22 +125,22 @@ public class PaintingRenderer {
 
         if (info.getBackType() != BackType.Type.NONE) {
             TextureAtlasSprite sprite = info.getBackSprite();
-            queue.submitCustomGeometry(matrices, RenderTypes.entityCutout(sprite.atlasLocation()), (matrix, vertexConsumer) -> renderBack(matrix, sprite.wrap(vertexConsumer), sprite, info, light));
+            queue.submitCustomGeometry(matrices, RenderTypes.entityCutout(sprite.atlasLocation()), (matrix, vertexConsumer) -> renderBack(matrix, sprite.wrap(vertexConsumer), info, light));
         }
     }
 
     private void renderImage(PoseStack.Pose matrix, VertexConsumer vertexConsumer, PaintingInfo info, int light) {
-        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light);
+        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0, 0, 1), false, light);
     }
 
-    private void renderBack(PoseStack.Pose matrix, VertexConsumer vertexConsumer, TextureAtlasSprite backSprite, PaintingInfo info, int light) {
-        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0,  0,  -1), true, backSprite.getU0(), backSprite.getU1(), backSprite.getV0(), backSprite.getV1(), light);
+    private void renderBack(PoseStack.Pose matrix, VertexConsumer vertexConsumer, PaintingInfo info, int light) {
+        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0,  0,  -1), true, light);
 
-        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(1,  0,  0),  true, backSprite.getU0(), backSprite.getU1(), backSprite.getV0(), backSprite.getV1(), light);
-        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(-1, 0,  0),  true, backSprite.getU0(), backSprite.getU1(), backSprite.getV0(), backSprite.getV1(), light);
+        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(1,  0,  0),  true, light);
+        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(-1, 0,  0),  true, light);
 
-        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0,  1,  0),  true, backSprite.getU0(), backSprite.getU1(), backSprite.getV0(), backSprite.getV1(), light);
-        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0,  -1, 0),  true, backSprite.getU0(), backSprite.getU1(), backSprite.getV0(), backSprite.getV1(), light);
+        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0,  1,  0),  true, light);
+        info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0,  -1, 0),  true, light);
     }
 
     public void renderImageOverlay(PoseStack matrices, SubmitNodeCollector queue, OverlayInfo info, int light, BannerFlagModel flagBlockModel, float pitch) {
@@ -168,6 +168,6 @@ public class PaintingRenderer {
         if (!ImageManager.hasImage(image)) return;
 
         RenderType layer = info.hasTranslucency() ? RenderTypes.entityTranslucent(image) : RenderTypes.entityCutout(image);
-        queue.submitCustomGeometry(matrices, layer, (matrix, vertexConsumer) -> info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0, 0, 1), false, 0, 1, 0, 1, light));
+        queue.submitCustomGeometry(matrices, layer, (matrix, vertexConsumer) -> info.cuboid.renderFace(matrix, vertexConsumer, new Vector3f(0, 0, 1), false, light));
     }
 }
