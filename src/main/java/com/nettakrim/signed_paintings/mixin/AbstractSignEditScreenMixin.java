@@ -72,11 +72,15 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     @Shadow
     private int line;
 
+    @Final
     @Shadow
     private TextFieldHelper signField;
 
     @Unique
     private String url = null;
+
+    @Unique
+    private String data = null;
 
     @Unique
     private String domain = null;
@@ -85,7 +89,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private StringWidget disclaimer;
 
     @Unique
-    private AbstractWidget uploadButton;
+    private AbstractWidget createButton;
 
     @Unique
     private AbstractWidget doneButton;
@@ -157,9 +161,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         disclaimer.visible = false;
         addRenderableWidget(disclaimer);
 
-        uploadButton = Button.builder(Component.translatable(SignedPaintingsClient.MODID + ".create_prompt"), button -> this.createPainting()).bounds(this.width / 2 - 100, y-25, 200, 20).build();
-        addRenderableWidget(uploadButton);
-        addWidget(uploadButton);
+        createButton = Button.builder(Component.translatable(SignedPaintingsClient.MODID + ".create_prompt"), button -> this.createPainting()).bounds(this.width / 2 - 100, y-25, 200, 20).build();
+        addRenderableWidget(createButton);
+        addWidget(createButton);
 
         BackgroundClick backgroundClick = new BackgroundClick(UIHelper.getInputSliders(), width, height);
         addWidget(backgroundClick);
@@ -171,11 +175,15 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         signedPaintings$setVisibility(correct);
         SignSideInfo sideInfo = ((SignBlockEntityAccessor)sign).signedPaintings$getSideInfo(slot == SignTextSlot.FRONT);
         String currentUrl = sideInfo.getUrl();
-        if (correct || currentUrl.isBlank() || currentUrl.equals("https://")) {
-            uploadButton.visible = false;
+        if (correct || currentUrl.isBlank() || currentUrl.equals("https://") || currentUrl.startsWith(SignByteMapper.INITIALIZER_STRING)) {
+            createButton.visible = false;
         } else {
             url = currentUrl;
-            updateUploadButton(true);
+
+            data = sideInfo.getData();
+            data = data.substring(data.indexOf('|'));
+
+            updateCreateButton(true);
             url = null;
         }
 
@@ -245,14 +253,29 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         int maxWidthPerLine = this.sign.getMaxTextLineWidth();
         Font textRenderer = SignedPaintingsClient.client.font;
 
-        String pasteURL = SignedPaintingsClient.imageManager.applyURLInferences(pasteString);
+        if (!pasteString.startsWith(SignByteMapper.INITIALIZER_STRING)) {
+            try {
+                String pasteURL = SignedPaintingsClient.imageManager.applyURLInferences(pasteString);
+                String pasteData = null;
 
-        if (ImageManager.isValid(pasteString) || pasteString.matches(".*([/:\\\\]).*\\|$")) {
-            url = pasteURL;
-            if (url.startsWith("https://images-ext-1.discordapp.net/external/")) {
-                url = URLDecoder.decode(url.substring(url.substring(45).indexOf('/')+46).replaceFirst("/","://"), StandardCharsets.UTF_8);
+                int dataIndex = pasteURL.indexOf('|');
+                if (dataIndex >= 0) {
+                    pasteData = pasteURL.substring(dataIndex);
+                    pasteURL = pasteURL.substring(0, dataIndex);
+                }
+
+                if (ImageManager.isValid(pasteURL)) {
+                    url = pasteURL;
+                    if (url.startsWith("https://images-ext-1.discordapp.net/external/")) {
+                        url = URLDecoder.decode(url.substring(url.substring(45).indexOf('/') + 46).replaceFirst("/", "://"), StandardCharsets.UTF_8);
+                    }
+                    data = pasteData;
+
+                    updateCreateButton(false);
+                }
+            } catch (Exception e) {
+                SignedPaintingsClient.info("Error detecting \"" + pasteString + "\" as a url: " + e.getMessage(), true);
             }
-            updateUploadButton(false);
         }
 
         String[] newMessages = new String[messages.length];
@@ -307,9 +330,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     }
 
     @Unique
-    private void updateUploadButton(boolean isExisting) {
+    private void updateCreateButton(boolean isExisting) {
         // stendhal compat
-        if (uploadButton == null) {
+        if (createButton == null) {
             onInit(null);
         }
 
@@ -318,9 +341,9 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
         boolean blocked = SignedPaintingsClient.imageManager.domainBlocked(domain);
 
         String key = blocked ? (isExisting ? ".trust" : ".create_trust") : ".create";
-        uploadButton.setMessage(Component.translatable(SignedPaintingsClient.MODID + key));
-        uploadButton.setTooltip(Tooltip.create(Component.translatable(SignedPaintingsClient.MODID + key+"_info", domain.substring(start, domain.length()-1), Component.translatable(SignedPaintingsClient.MODID + ".trust_disclaimer"))));
-        uploadButton.visible = true;
+        createButton.setMessage(Component.translatable(SignedPaintingsClient.MODID + key));
+        createButton.setTooltip(Tooltip.create(Component.translatable(SignedPaintingsClient.MODID + key+"_info", domain.substring(start, domain.length()-1), Component.translatable(SignedPaintingsClient.MODID + ".trust_disclaimer"))));
+        createButton.visible = true;
 
         if (url.startsWith("https://media.discordapp.net")) {
             url = url.replace("format=webp", "format=png");
@@ -359,13 +382,18 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
     private void createPainting() {
         SignedPaintingsClient.imageManager.trustDomain(domain);
         SignedPaintingsClient.imageManager.blockPromptedDomains.remove(domain);
-        uploadButton.visible = false;
+        createButton.visible = false;
         disclaimer.visible = false;
 
         if (url == null) return;
 
+        url = SignedPaintingsClient.imageManager.getShortestURLInference(url);
+        if (data != null) {
+            url += data;
+        }
+
         signedPaintings$clear(false);
-        int newSelection = signedPaintings$paste(SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(SignedPaintingsClient.imageManager.getShortestURLInference(url)), 0, 0, false);
+        int newSelection = signedPaintings$paste(SignByteMapper.INITIALIZER_STRING + SignByteMapper.encode(url), 0, 0, false);
         signField.setSelectionRange(newSelection, newSelection);
 
         SignSideInfo info = ((SignBlockEntityAccessor) this.sign).signedPaintings$getSideInfo(this.slot == SignTextSlot.FRONT);
@@ -384,7 +412,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             doneButton.visible = !to;
         } else {
             // stendhal compat
-            if (uploadButton == null) {
+            if (createButton == null) {
                 onInit(null);
                 return;
             }
@@ -392,7 +420,7 @@ public abstract class AbstractSignEditScreenMixin extends Screen implements Abst
             // litematica sets text before the edit screen appears when touching a sign in a schematic
             // doing nothing here causes everything to break moments later
             // just force closing the screen stops this
-            // TODO: fix this propery?
+            // TODO: fix this properly?
             Minecraft.getInstance().schedule(() -> Minecraft.getInstance().setScreenAndShow(null));
             signField = new TextFieldHelper(() -> "", (s) -> {}, () -> "", (s) -> {}, (s) -> true);
             onInit(null);
