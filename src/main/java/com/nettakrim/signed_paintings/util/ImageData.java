@@ -199,6 +199,9 @@ public class ImageData {
 
         needsReload = true;
         images.clear();
+
+        // update chunks
+        notifyAllListenerUpdates();
         return i;
     }
 
