@@ -36,7 +36,7 @@ public abstract class SignBlockEntityRendererMixin implements BlockEntityRendere
     }
 
     @Inject(at = @At("TAIL"), method = "extractRenderState(Lnet/minecraft/world/level/block/entity/SignBlockEntity;Lnet/minecraft/client/renderer/blockentity/state/SignRenderState;FLnet/minecraft/world/phys/Vec3;Lnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;)V")
-    private void updateRenderState(SignBlockEntity signBlockEntity, SignRenderState signBlockEntityRenderState, float f, Vec3 vec3d, ModelFeatureRenderer.CrumblingOverlay crumblingOverlayCommand, CallbackInfo ci) {
-        SignedPaintingsClient.paintingRenderer.modifySignRenderState(signBlockEntity, signBlockEntityRenderState);
+    private void updateRenderState(SignBlockEntity blockEntity, SignRenderState state, float partialTicks, Vec3 cameraPosition, ModelFeatureRenderer.CrumblingOverlay breakProgress, CallbackInfo ci) {
+        SignedPaintingsClient.paintingRenderer.modifySignRenderState(blockEntity, state);
     }
 }

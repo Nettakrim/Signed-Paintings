@@ -102,8 +102,10 @@ public class PaintingRenderer {
         if (!ImageManager.hasImage(image)) return false;
 
         matrices.pushPose();
-        matrices.translate(info.offsetVec.x + 0.5f, info.offsetVec.y + 0.5f, info.offsetVec.z + 0.5f);
-        matrices.rotate(Axis.YP.rotationDegrees(info.rotationVec.y + (info.isFront ? 0 : 180) - rotation));
+        matrices.translate(0.5f, 0.5f, 0.5f);
+        matrices.rotate(Axis.YP.rotationDegrees(-rotation));
+        matrices.translate(info.offsetVec.x, info.offsetVec.y, info.offsetVec.z);
+        matrices.rotate(Axis.YP.rotationDegrees(info.rotationVec.y + (info.isFront ? 0 : 180)));
         matrices.rotate(Axis.ZP.rotationDegrees(info.rotationVec.z));
         matrices.rotate(Axis.XP.rotationDegrees(info.rotationVec.x));
         matrices.translate(0.0f, 0.0f, -0.5f);
